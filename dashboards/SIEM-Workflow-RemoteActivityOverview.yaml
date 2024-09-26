@@ -1,0 +1,163 @@
+name: 'SIEM-Workflow - Remote Activity Overview'
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: false
+  start: 1d
+widgets:
+  255bad92-457d-4dbd-aaa8-716fc0650dc4:
+    x: 0
+    y: 3
+    description: 'The combination of the "COM", "RW", and "NSP" inferences in a single
+      VPN connection raises questions: Policy Violation: Is the use of commercial
+      VPNs allowed in your organization''s security policy? If not, this could indicate
+      a violation. Hidden Activity: Is the non-standard port usage an attempt to mask
+      other activities happening over the VPN tunnel?'
+    height: 4
+    queryString: |-
+      #path=vpn
+      | inferences[0]="COM" OR inferences[0]="RW" OR inferences[0]="NSP"
+      | groupBy([id.orig_h, id.resp_h, inferences[0], orig_bytes, resp_bytes])
+    end: now
+    start: 1d
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Unusual Remote Activity
+    isLive: false
+    type: query
+  34362f8a-902a-4a7c-aaac-344ca9b9ca75:
+    x: 0
+    y: 0
+    description: Monitoring RDP authentications is crucial for identifying unauthorized
+      access and distinguishing between successful and failed login attempts. Security
+      teams should analyze trends and cross-reference user activity for rapid response
+      and mitigation.
+    height: 3
+    queryString: |-
+      #path=rdp
+      | timechart(auth_success, span=1hr)
+    end: now
+    start: 1d
+    width: 6
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: 2000
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: 1000
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: 500
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: 10
+      decimal-places: 1
+      trellisShowBorders: false
+      color-method: static
+      suffix: ''
+      use-colorised-thresholds: false
+      value-format: abbreviated
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+    visualization: single-value
+    title: RDP Authentication Attempts
+    isLive: false
+    type: query
+  4dc7d9fb-56e5-431a-8a13-0d4e85bac777:
+    x: 0
+    y: 7
+    description: |2-
+
+
+
+
+
+
+      Monitoring for "RW" (Road Warrior) and "FW" (Firewall subversion) inferences is crucial for detecting potential unauthorized access, as these patterns may indicate attempts to bypass security controls. Security teams should prioritize correlating these inferences with internal IP ranges and device logs to identify suspicious activities.
+    height: 4
+    queryString: |-
+      #path=vpn
+      | inferences[0]="COM" OR inferences[0]="NSP" OR inferences[0]="SK"
+      | groupBy([id.orig_h, id.resp_h, inferences[0], resp_cc, vpn_type])
+    end: now
+    start: 1d
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Possible Unauthorized Remote Access Attempts
+    isLive: false
+    type: query
+  f72b2a81-9f56-4fde-8c2d-1532b29a9dcb:
+    x: 6
+    y: 3
+    description: |-
+      Unmonitored commercial VPNs with atypical traffic patterns or static keys could be used to bypass security controls for data theft.
+
+      Investigate: Examine VPN sessions with large outgoing transfers, focusing on unusual destinations or protocols.
+    height: 4
+    queryString: |-
+      #path=vpn
+      | inferences[0]="COM" OR inferences[0]="NSP" OR inferences[0]="SK"
+      | groupBy([id.orig_h, id.resp_h, inferences[0], resp_cc, vpn_type])
+    end: now
+    start: 1d
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Suspected Data Exfiltration
+    isLive: false
+    type: query
+  5c0c29e8-ce7b-4125-a495-d103765c0112:
+    x: 6
+    y: 0
+    description: |
+      Monitoring failed RDP logins is essential for detecting unauthorized access attempts. Security teams should analyze patterns of failed entries against user and IP data to identify potential breaches. This focus helps in quickly addressing vulnerabilities in RDP security. Effective monitoring of these incidents is crucial for maintaining system integrity.
+    height: 3
+    queryString: |-
+      #path=rdp
+      | case { auth_success="false" OR action="failure" | unauthorized:=true }
+      | timechart(unauthorized, span=1hr)
+    end: now
+    start: 2d
+    width: 6
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: 2000
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: 1000
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: 500
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: 10
+      decimal-places: 1
+      trellisShowBorders: false
+      color-method: static
+      suffix: ''
+      use-colorised-thresholds: false
+      value-format: abbreviated
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+    visualization: single-value
+    title: Possible Unauthorized Remote Access Attempts
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0

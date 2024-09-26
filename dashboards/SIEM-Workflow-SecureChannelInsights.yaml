@@ -1,0 +1,277 @@
+name: SIEM-Workflow - Secure Channel Insights
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: false
+  start: 1d
+widgets:
+  bd751781-c602-41be-880a-ad06789757c6:
+    x: 0
+    y: 6
+    description: Connections employing TLS versions older than 1.2 are recognized
+      as less secure, presenting a higher risk of being compromised. These outdated
+      protocols may indicate legacy systems with configurations that are not aligned
+      with modern security standards.
+    height: 6
+    queryString: |-
+      #path=ssl
+      | orig_type:=if(cidr(id.orig_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | resp_type:=if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | case {
+          orig_type="Internal" AND resp_type="External" | connection_type:="Outbound";
+          orig_type="External" AND resp_type="Internal" | connection_type:="Inbound";
+          orig_type="Internal" AND resp_type="Internal" | connection_type:= "Internal";
+          orig_type="External" AND resp_type="External" | connection_type:="External" }
+      | case { version="TLSv13" | version_status:="Most Secure (v1.3)";
+               version="TLSv12" | version_status:="Secure (v1.2)";
+               version="DTLSv12" | version_status:="Secure (v1.2)";
+               version="unknown-64282" | version_status:="Unknown";
+               * | version_status:="Old Version < (v1.2)"
+      }
+      | version_status="Old Version < (v1.2)" OR version_status="Unknown"
+      | groupBy([id.orig_h, id.resp_h, orig_type, resp_type, connection_type, server_name, version, version_status])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Connections using Less Secure TLS Versions (< TLS1.2)
+    isLive: false
+    type: query
+  9e6bf18d-1b0f-4a70-8496-dcb442c97168:
+    x: 0
+    y: 18
+    description: "\n\n\n\n\n\nNetwork Evidence for Self Signed Internal Certificates\n\
+      \nSubject\n\nHost\n\nPort\n\nNot Valid After\n\nDays to Expire\nNo Results Found\t\
+      \t\t\t\nA SSL certificate that is about to expire (default window is 30 days)\
+      \ was observed. Expiration of an SSL certificate may result in unexpected behaviour\
+      \ such as refused network connections or unencrypted network traffic."
+    height: 6
+    queryString: |-
+      @event_parsed!="false" |   #path=x509
+       | current_time_epoch := now()
+       | parseTimestamp(format="yyyy-MM-dd'T'HH:mm:ss.SSSSSSz", field="certificate.not_valid_after", as=parsed_not_valid_after)
+       | timeDelta := parsed_not_valid_after - current_time_epoch
+       | timeDelta > 0
+       | Delta_days := timeDelta / (1000 * 60 * 60 * 24)
+       | Delta_days := round(Delta_days)
+       | Delta_days < 16
+       | groupBy([certificate.issuer, certificate.subject, certificate.not_valid_after, Delta_days])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Certificates about to expire
+    isLive: false
+    type: query
+  289ef336-4c2b-4ce1-9be8-833530bf7218:
+    x: 6
+    y: 6
+    description: |+
+      Highlight interactive sessions (KS) and automated interactions (AUTO) to understand the nature of SSH traffic — manual vs. automated.
+
+    height: 6
+    queryString: |-
+      #path=ssh
+      | format( "%s|%s|%s|%s", field=[inferences[0], inferences[1], inferences[2], inferences[3]], as="inferences_str")
+      | case { regex("^KS|AUTO$", field=inferences_str) | UseCase:="Interactive Sessions and Keystrokes"}
+      | UseCase="Interactive Sessions and Keystrokes"
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Interactive Sessions and Keystrokes
+    isLive: false
+    type: query
+  fae3c9b8-83c9-442a-9262-a6421239f689:
+    x: 6
+    y: 24
+    description: Helps to identify potential advanced threat indicators such as Client
+      Authentication Bypass (ABP) and Reverse SSH tunneling activities (RSP, RSI,
+      RSIA, RSL, RSK) for in-depth investigation.
+    height: 6
+    queryString: |-
+      @event_parsed!="false" |   #path=ssh
+      | format( "%s|%s|%s|%s", field=[inferences[0], inferences[1], inferences[2], inferences[3]], as="inferences_name")
+      | case { regex("^ABP|RSP|RSI|RSIA|RSL|RSK$", field=inferences_name) | UseCase:="Advanced Threats"}
+      | UseCase="Advanced Threats"
+      | groupBy([id.orig_h, id.orig_p, id.resp_h, id.resp_p, inferences_name, host_key_alg, server])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Advanced Threat Indicators
+    isLive: false
+    type: query
+  f79c04e0-c9ae-4148-b49a-21d69cab16a3:
+    x: 6
+    y: 0
+    description: SSL/TLS sessions utilizing weak cipher suites (eg. RC4) are easily
+      decrypted. This traffic may indicate the presence of old and/or unpatched resources
+      on the network. It could also be the result of a successful downgrade attack.
+    height: 6
+    queryString: |-
+      #path=ssl
+      | cipher = /RC4|DES|3DES|MD5|NULL|EXPORT/
+      | host_type:=if(cidr(id.orig_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | resp_type:=if(cidr(id.orig_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | case{ (host_type="Internal") AND (resp_type="External") | direction:="Outbound";
+               direction:="Inbound" }
+      | groupBy([id.orig_h, id.resp_h, direction])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Less Secure Ciphers
+    isLive: false
+    type: query
+  f1e111ee-4d07-4c2e-9b77-60b74ca90934:
+    x: 0
+    y: 24
+    description: "\nTracks automated SSH sessions to enhance security and operational\
+      \ efficiency, highlighting potential risks and compliance issues. It identifies\
+      \ anomalies and unauthorized activities, ensuring that automation tools are\
+      \ used securely and efficiently. This tool is crucial for SOC analysts to monitor\
+      \ for security breaches and optimize system management.\n\n\n\n\nNetwork Evidence\
+      \ for Self Signed Internal Certificates\n\nSubject\n\nHost\n\nPort\n\nNot Valid\
+      \ After\n\nDays to Expire\nNo Results Found\t\t\t\t\nA SSL certificate that\
+      \ is about to expire (default window is 30 days) was observed. Expiration of\
+      \ an SSL certificate may result in unexpected behaviour such as refused network\
+      \ connections or unencrypted network traffic."
+    height: 6
+    queryString: |-
+      @event_parsed!="false" |   #path=ssh
+      | format( "%s|%s|%s|%s", field=[inferences[0], inferences[1], inferences[2], inferences[3]], as="inferences_name")
+      | case { regex("^PKA|AUTO|KS|CTS$", field=inferences_name) | UseCase:="Automated SSH Session"}
+      | groupBy([id.orig_h, id.orig_p, id.resp_h, id.resp_p, inferences_name, host_key_alg, server])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Automated SSH Session Indicators
+    isLive: false
+    type: query
+  82382ce0-e7c5-44df-b002-c116fb6f3765:
+    x: 0
+    y: 0
+    description: SSL/TLS sessions utilizing weak keys are vulnerable to cryptographic
+      attacks. This traffic may indicate the presence of old and/or unpatched resources
+      on the network. It could also be the result of a successful downgrade attack.
+    height: 6
+    queryString: |-
+      @event_parsed!=false | #path=ssl | "cert_chain_fps[0]"=* | resp_type:=if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External") | resp_type = "Internal"
+      | join({#path=x509 | fingerprint=* | key_length:=certificate.key_length | key_length < 2048}, key="fingerprint", field="cert_chain_fps[0]", mode="inner")
+      | groupBy([id.orig_h, id.resp_h, id.resp_p, key_length])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Encrypted Traffic Notables
+    isLive: false
+    type: query
+  7b374888-dbb2-4781-8cee-05d14ff86da1:
+    x: 0
+    y: 12
+    description: This dashboard panel identifies self-signed certificates in use within
+      internal networks, highlighting a key security concern due to their lack of
+      third-party validation. Addressing this issue by transitioning to certificates
+      from trusted authorities enhances network security and trustworthiness.
+    height: 6
+    queryString: |-
+      #path=ssl
+      | orig_type:=if(cidr(id.orig_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | resp_type:=if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | case {
+          orig_type="Internal" AND resp_type="External" | connection_type:="Outbound";
+          orig_type="External" AND resp_type="Internal" | connection_type:="Inbound";
+          orig_type="Internal" AND resp_type="Internal" | connection_type:= "Internal";
+          orig_type="External" AND resp_type="External" | connection_type:="External" }
+      //| resp_type="Internal"
+      | text:contains(validation_status, substring="self signed certificate")
+      | groupBy([id.orig_h, id.resp_h, orig_type, resp_type, connection_type, validation_status])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Self Signed Certs
+    isLive: false
+    type: query
+  3985794c-01bc-4954-bc85-928821a71d78:
+    x: 6
+    y: 12
+    description: This use case tracks SSH file transfer activity (inferences SFD,
+      LFD, SFU, LFU). It uncovers potential data exfiltration by attackers or the
+      introduction of malicious files. Focus on file names, sizes, unusual source
+      IPs, and sensitive destination systems.
+    height: 6
+    queryString: |-
+      #path=ssh
+      | format( "%s|%s|%s|%s", field=[inferences[0], inferences[1], inferences[2], inferences[3]], as="inferences_name")
+      | case { regex("^SFD|LFD|SFU|LFU$", field=inferences_name) | UseCase:="File Transfer Volumes"}
+      | UseCase="File Transfer Volumes"
+      | groupBy([id.orig_h, id.resp_h, orig_type, resp_type, inferences_name, UseCase, version])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Possible File Upload
+    isLive: false
+    type: query
+  c3e7110c-d787-4964-8df0-f2ab2c67076d:
+    x: 6
+    y: 18
+    description: Monitors for signs of scanning (SC, SP, SV, SA), banner messages
+      (BAN), and agent forwarding (AFR) for compliance and security risk identification.
+    height: 6
+    queryString: |-
+      #path=ssh
+      | format( "%s|%s|%s|%s", field=[inferences[0], inferences[1], inferences[2], inferences[3]], as="inferences_name")
+      | inferences_name = /SC|SP|SV|SA|AFR|BAN/
+      | groupBy([id.orig_h, id.resp_h, inferences_name, host_key_alg, server])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Potential Security Risks
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0

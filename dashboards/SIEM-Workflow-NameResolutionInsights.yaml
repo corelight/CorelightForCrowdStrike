@@ -1,0 +1,326 @@
+name: SIEM-Workflow - Name Resolution Insights
+updateFrequency: never
+timeSelector:
+  defaultTimeJumpInMs: 30000
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+widgets:
+  ac46e2db-5c10-4ca5-aeda-c07f40c0854a:
+    x: 0
+    y: 0
+    height: 2
+    queryString: |-
+      #path=dns
+      | count(id.resp_h, distinct=true, as="Responding DNS Servers")
+    end: now
+    start: 1h
+    width: 2
+    options:
+      default: {}
+      yAxisTitle: ''
+      value-format: abbreviated
+    visualization: single-value
+    title: Responding DNS Servers
+    isLive: false
+    type: query
+  note-1713975466454-1:
+    x: 8
+    y: 0
+    height: 2
+    text: Unusual DNS query types can indicate misconfigurations, experimental features,
+      or potential security threats like data exfiltration or tunneling. Analysts
+      should scrutinize such queries for anomalies and address identified risks to
+      safeguard network security.
+    width: 4
+    title: ''
+    type: note
+  note-1713975442454-0:
+    x: 2
+    y: 0
+    height: 2
+    text: DNS servers actively responding in the network are key to secure operations,
+      translating domain names to IP addresses and directing traffic. It also logs
+      the number of queries and unique clients interacting with the DNS servers, offering
+      insights into possible rogue DNS servers and detecting patterns that may suggest
+      data exfiltration attempts.
+    width: 4
+    title: ''
+    type: note
+  48587ede-bbef-4440-afba-df5380e45dd4:
+    x: 6
+    y: 0
+    height: 2
+    queryString: |-
+      #path=dns
+      | in(field=qtype_name, values=["AXFR", "IXFR", "ANY", "TXT"])
+      | count(as="Unusual Qtypes")
+      | select(["Unusual Qtypes"])
+    end: now
+    start: 1h
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Unusual Qtypes
+    isLive: false
+    type: query
+  note-1713975505455-5:
+    x: 8
+    y: 12
+    height: 2
+    text: Monitor total DNS-related network traffic in MB/GB. Sudden spikes or unusual
+      patterns could signal configuration errors, compromised devices making excessive
+      queries, or potential data exfiltration attempts.
+    width: 4
+    title: ''
+    type: note
+  685aa4fc-eb75-49e7-8cdb-5ccb8b04cdc9:
+    x: 6
+    y: 14
+    height: 4
+    queryString: |-
+      #path=dns
+      | timeChart(span=1h, function=count(as=count))
+    end: now
+    start: 1h
+    width: 6
+    options:
+      connect-points: false
+      imputation: none
+    visualization: time-chart
+    title: Monitoring Queries Over Time
+    isLive: false
+    type: query
+  note-1713975490455-3:
+    x: 8
+    y: 6
+    height: 2
+    text: Long DNS query response times may indicate network congestion, server performance
+      issues, or potential security threats. Timely analysis is crucial for maintaining
+      optimal network performance and security. Investigate extended response times
+      by examining server configurations, network traffic, and potential external
+      attacks.
+    width: 4
+    title: ''
+    type: note
+  2788821b-82ee-4448-9aca-e22544f97895:
+    x: 6
+    y: 12
+    height: 2
+    queryString: |-
+      #path=conn
+      | service=dns
+      | sum(orig_bytes, as="DNS Query Volume")
+    end: now
+    start: 1h
+    width: 2
+    options:
+      default: {}
+      yAxisTitle: ''
+      value-format: abbreviated
+    visualization: single-value
+    title: DNS Query Volume
+    isLive: false
+    type: query
+  f09288f6-8ee8-44cd-93ff-3f6f5371a783:
+    x: 0
+    y: 2
+    height: 4
+    queryString: |-
+      #path=dns
+      | groupBy(id.resp_h, function=[count(as="# Of Queries"), count(id.orig_h, distinct=true, as="# Of Unique Clients")], limit=50)
+      | geoinfo := ipLocation(field=id.resp_h)
+      | Country := geoinfo.country
+      | Destination := id.resp_h
+      | groupBy([Destination, "# Of Queries", "# Of Unique Clients", Country], function=[], limit=50)
+      | sort("# Of Queries")
+    end: now
+    start: 1h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: DNS Servers actively responding to queries
+    isLive: false
+    type: query
+  291b7435-4c52-4e70-bc2e-6867726c0cc9:
+    x: 6
+    y: 2
+    height: 4
+    queryString: |-
+      #path=dns
+      | in(field=qtype_name, values=["AXFR", "IXFR", "ANY", "TXT"])
+      | groupBy([qtype_name, id.resp_h], function=[collect([id.orig_h, query], limit=1), count(as="count")], limit=50)
+      | rename(field="qtype_name", as="Qtype")
+      | rename(field="id.resp_h", as="Responder")
+      | rename(field="id.orig_h", as="Source")
+      | rename(field="query", as="Query")
+      | sort("count")
+    end: now
+    start: 1h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Unusual Query Types found
+    isLive: false
+    type: query
+  3c3c991b-e51e-4b9e-809c-42ac8144cb1d:
+    x: 0
+    y: 8
+    height: 4
+    queryString: |-
+      #path=dns 
+      | rcode_name="NXDOMAIN"
+      | groupBy([id.orig_h, id.resp_h, query, rejected], function=count(as="count"), limit=50)
+      | case { rejected=true | query_rejected := "Yes"; rejected=false | query_rejected := "No"}
+      | rename(field="id.orig_h", as="Source")
+      | rename(field="id.resp_h", as="Responder")
+      | rename(field="query", as="Query")
+      | rename(field="query_rejected", as="Rejected?")
+      | select(["Source", "Responder", "Query", "Rejected?", "count"])
+      | sort("count")
+    end: now
+    start: 1h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Network Evidence for NXDOMAIN Responses
+    isLive: false
+    type: query
+  2086cbfc-b1e7-4d03-b9a2-e5ee44a71cdd:
+    x: 0
+    y: 6
+    height: 2
+    queryString: |-
+      #path=dns
+      | rcode_name = NXDOMAIN
+      | count(as="NXDOMAIN Responses")
+    end: now
+    start: 1h
+    width: 2
+    options:
+      default: {}
+      yAxisTitle: ''
+      value-format: abbreviated
+    visualization: single-value
+    title: NXDOMAIN responses
+    isLive: false
+    type: query
+  note-1713975505455-4:
+    x: 2
+    y: 12
+    height: 2
+    text: Failed DNS queries may point to misconfigurations, outdated systems, or
+      security threats such as network infiltration or DNS poisoning. Analysts should
+      investigate the sources and patterns of these failures to identify and remediate
+      underlying causes, thereby ensuring network integrity and security.
+    width: 4
+    title: ''
+    type: note
+  6a2c4ab4-4cfc-49e9-a96d-d09c6021df26:
+    x: 0
+    y: 14
+    height: 4
+    queryString: |-
+      #path=dns
+      | in(field=rcode_name, values=["FORMERR", "NOTAUTH", "NOTIMP", "REFUSED", "SERVFAIL"])
+      | groupBy(rcode_name, function=[collect([id.orig_h, id.resp_h, query], limit=1), count(as="count")], limit=50)
+      | rename(field=rcode_name, as="Response Code")
+      | rename(field="id.orig_h", as="Source")
+      | rename(field="id.resp_h", as="Responder")
+      | rename(field="query", as="Query")
+      | sort("count")
+    end: now
+    start: 1h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Network Evidence for Failed DNS Queries
+    isLive: false
+    type: query
+  note-1713975483455-2:
+    x: 2
+    y: 6
+    height: 2
+    text: High rates of DNS NXDOMAIN responses might suggest misconfigured domains,
+      typographical errors in network requests, or malicious activities such as DNS
+      reconnaissance. Close examination is advised to correct configurations or identify
+      security incidents. Review DNS logs for patterns, validate domain configurations,
+      and check endpoint security for signs of malware.
+    width: 4
+    title: ''
+    type: note
+  85fbdee9-9657-4e20-87c7-498e18907a2a:
+    x: 6
+    y: 8
+    height: 4
+    queryString: |-
+      #path=dns
+      | groupBy([query, id.resp_h], function=avg("rtt", as="avg_rtt"), limit=50)
+      | avg_rtt > 16
+      | format("%.2f", field=avg_rtt, as=avg_rtt)
+      | rename(field="query", as="Query")
+      | rename("id.resp_h", as="Responder")
+      | rename("avg_rtt", as="Avg. Response Time (ms)")
+    end: now
+    start: 1h
+    width: 6
+    options:
+      columns: '[{"type":"field","fieldName":"@timestamp","format":"datetime","width":"content"},{"type":"field","fieldName":"@rawstring","format":"logline"}]'
+      newestAtBottom: 'true'
+      showOnlyFirstLine: 'false'
+    visualization: list-view
+    title: Monitoring DNS Query Response Times > 15ms
+    isLive: false
+    type: query
+  c3bd01a2-92e4-49f5-aa0d-fc1fa5bc753c:
+    x: 6
+    y: 6
+    height: 2
+    queryString: |-
+      #path=dns AND rtt > 15
+      | count(as="#DNS Queries With Response Times > 15ms")
+    end: now
+    start: 1h
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Queries RTT > 15ms
+    isLive: false
+    type: query
+  5e9b3981-e506-4ac4-b3a2-6ef0fda47d1d:
+    x: 0
+    y: 12
+    height: 2
+    queryString: |-
+      #path=dns
+      | in(field=rcode_name, values=["FORMERR", "NOTAUTH", "NOTIMP", "REFUSED", "SERVFAIL"])
+      | count(as="Failed DNS Queries")
+    end: now
+    start: 1h
+    width: 2
+    options:
+      default: {}
+      yAxisTitle: ''
+      value-format: abbreviated
+    visualization: single-value
+    title: Failed DNS Queries
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.12.0

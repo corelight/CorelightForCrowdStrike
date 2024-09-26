@@ -1,0 +1,497 @@
+name: SIEM-Workflow - Security Posture
+updateFrequency: never
+timeSelector:
+  defaultTimeJumpInMs: 30000
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+widgets:
+  c76f65ed-c1ff-4205-a26e-e719a679c47b:
+    x: 6
+    y: 16
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path=dns | ("#repo"=?{fed_tenant=*})
+      | qtype_name = "AXFR" OR qtype_name="IXFR" OR qtype_name="ANY" OR qtype_name="TXT"
+      | groupby(qtype_name, function=count(field=qtype_name, as="totalunusualqueries"))
+      | sum(totalunusualqueries)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: Unusual Qtypes
+    isLive: false
+    type: query
+  d9f2c0ac-b279-4d48-a609-30a51134bf36:
+    x: 8
+    y: 10
+    height: 8
+    queryString: |-
+      @event_parsed!="false" | #path=dns | ("#repo"=?{fed_tenant=*})
+      | groupBy(id.resp_h)
+      | worldMap(ip=id.resp_h, magnitude=count(id.resp_h))
+    visualization: world-map
+    end: now
+    start: 1d
+    width: 4
+    title: Most Common Connections
+    isLive: false
+    type: query
+  f4e652f0-1799-492b-9fc8-f553872b3f59:
+    x: 0
+    y: 19
+    height: 4
+    queryString: |
+      #path=vpn AND ("#repo"=?{fed_tenant=*})
+      |ipLocation(id.resp_h)
+      | groupby(id.resp_h.country)
+    end: '2024-04-25T23:13:19.179Z'
+    start: '2024-04-17T23:13:19.179Z'
+    width: 4
+    options:
+      series: {}
+      withXAxisTitle: false
+      labelAngle: 0
+      valuesOnBars: false
+      barChartType: grouped
+      labelLimit: 48
+      inputDataFormat: ''
+      labelAlign: right
+      withYAxisTitle: false
+    visualization: bar-chart
+    title: Top VPN destinations by Country
+    isLive: false
+    type: query
+  220c9791-c17c-4919-a42c-628d8e7c9830:
+    x: 6
+    y: 3
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path=ftp | ("#repo"=?{fed_tenant=*})
+      | join({#path=ssl}, field=[uid], key=[uid], mode=left)
+      | is_encrypted:="No"
+      | select([uid, is_encrypted])
+      | case { is_encrypted="No"  | encrypted := "Not Encrypted";
+               else | encrypted := "Encrypted" }
+      | join({#path=conn | case { id.resp_p=990 OR id.resp_p=22 | known_encrypted_port:="Yes";
+                                  else | known_encrypted_port:="No"}}, field=[uid], key=[uid], mode=left)
+      | groupby(uid)
+      | count()
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+    visualization: single-value
+    title: FTP sessions
+    isLive: false
+    type: query
+  f088a77d-8865-4e70-bbf2-712422863bb3:
+    x: 0
+    y: 18
+    description: 'This data provides insight to remote activity, VPN connections,
+      and RDP connection attempts.  '
+    height: 1
+    text: ''
+    width: 12
+    title: Remote Activity Hygiene
+    type: note
+  6afe8645-b602-4a4a-8760-c25546d6282e:
+    x: 6
+    y: 9
+    description: This data provides insight to unusual DNS activity and where DNS
+      servers are responding to queries.
+    height: 1
+    text: ''
+    width: 6
+    title: DNS Hygiene
+    type: note
+  23fdd839-9ae5-4aa9-a2c8-1d9321fbabe1:
+    x: 0
+    y: 12
+    height: 6
+    queryString: |-
+      @event_parsed!="false" | #path=ssl | ("#repo"=?{fed_tenant=*})
+      | src_type := if(cidr(id.orig_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | dest_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | case {src_type="Internal" AND dest_type="External" | connection_type := "Internal to External";
+              src_type="External" AND dest_type="Internal" | connection_type := "External to Internal";
+              src_type="Internal" AND dest_type="Internal" | connection_type := "Internal to Internal";
+              src_type="External" AND dest_type="External" | connection_type := "External to External";  }
+      | case { version="TLSv13" | version_status:="Most Secure";
+              version="TLSv12" or "DTLSv12" | version_status:="Secure";
+              else | version_status:="Unknown"  }
+      | groupBy([version_status])
+    visualization: bar-chart
+    end: now
+    start: 1d
+    width: 6
+    title: Internal vs External Certificates Use
+    isLive: false
+    type: query
+  c352c748-dcd9-452d-870f-007c8c66876e:
+    x: 2
+    y: 1
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path=x509 certificate.key_length < 2048 | ("#repo"=?{fed_tenant=*})
+      | groupby(certificate.key_length, function=count(as="weak_keys"))
+      | sum(weak_keys)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: Certs /w Low Keys
+    isLive: false
+    type: query
+  b0bc7e1d-4280-4b23-b4bc-9060ea8b9bf2:
+    x: 6
+    y: 1
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path=etc_viz | ("#repo"=?{fed_tenant=*})
+      | NOT (viz_stat = "Ee!" OR viz_stat = "Ee!!" OR viz_stat = "Ee" OR viz_stat = "E" OR viz_stat = "e" OR viz_stat = "!")
+      | groupby(uid)
+      | count()
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+    visualization: single-value
+    title: Unencrypted Connections
+    isLive: false
+    type: query
+  061d9b50-b38a-439b-bc31-e8f8fdb31770:
+    x: 9
+    y: 3
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path=smb | ("#repo"=?{fed_tenant=*})
+      | in(field="smb_cmd", values=["Negotiate Protocol Request", "Session Setup AndX Request"])
+      | groupby(uid)
+      | count()
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+    visualization: single-value
+    title: SMB v1 Connections
+    isLive: false
+    type: query
+  30d0a180-9e45-4879-b3bd-77cc2ffaf213:
+    x: 0
+    y: 7
+    height: 5
+    queryString: |-
+      #path=ssl AND ("#repo"=?{fed_tenant=*})
+      | version_status :=
+        if(regex("^TLSv13$", field=version), then="Most Secure", else=
+        if(regex("^TLSv12$", field=version), then="Secure", else=
+        if(regex("^TLSv11$", field=version), then="Old Version", else=
+        if(regex("^TLSv10$", field=version), then="Old Version", else=
+        if(regex("^DTLSv12", field=version), then="Secure", else="unknown")))))
+      | groupby(field="version_status", function=count())
+    end: '2024-04-25T17:12:02.75Z'
+    start: '2024-04-17T17:12:02.75Z'
+    width: 6
+    options:
+      series:
+        Most Secure:
+          color: '#29993b'
+        Old Version:
+          color: '#bf5f5f'
+        Secure:
+          color: '#40c486'
+        unknown:
+          color: '#878787'
+      legendLabelOverflow: full
+      legend: true
+      enableTrellis: false
+      maxLegendRows: 4
+      maxSeriesCount: 50
+      innerRadius: 41
+      legendPosition: right
+      legendTitle: TLS Version Statuses
+    visualization: pie-chart
+    title: TLS Versions
+    isLive: false
+    type: query
+  bafbb309-32a6-4cc5-9723-d4ac9e659442:
+    x: 6
+    y: 14
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path = "dns" | ("#repo"=?{fed_tenant=*})
+      rcode_name="SERVFAIL" OR rcode_name = "REFUSED" OR rcode_name="FORMERR" OR rcode_name="NOTIMP" OR rcode_name="NOTAUTH"
+      | groupby(rcode_name, function=count(field=rcode_name, as="totalfailed"))
+      | sum(totalfailed)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: Failed DNS Queries
+    isLive: false
+    type: query
+  8b3e89a5-661d-487b-92a6-0c4ecae29b21:
+    x: 0
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path="x509" | ("#repo"=?{fed_tenant=*})
+      | join({#path=ssl validation_status="self signed certificate"},
+      field=fingerprint, key= "cert_chain_fps[0]", include=[id.resp_h, cert_chain_fps[0], uid])
+      | host_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
+      | host_type = "Internal"
+      | groupBy([fingerprint, cert_chain_fps[0]], function= tail(1))
+      | select([id.resp_h, fingerprint, cert_chain_fps[0], uid])
+      | count()
+    end: now
+    start: 1d
+    width: 2
+    y: 1
+    interactions:
+    - conditions: null
+      name: 'Interaction #1'
+      titleTemplate: null
+      useWidgetTimeWindow: true
+      dashboardReference:
+        name: SIEM-Workflow - Secure Channel Insights
+        packageSpecifier: null
+        repoOrViewName: null
+      arguments: {}
+      openInNewTab: false
+      type: dashboardlink
+    options:
+      default: {}
+    visualization: single-value
+    title: Self Signed Certs
+    isLive: false
+    type: query
+  09cdace8-9640-41f3-b54a-731a965b3252:
+    x: 8
+    y: 19
+    height: 4
+    queryString: |-
+      @event_parsed!="false" | #path=rdp | ("#repo"=?{fed_tenant=*})
+      | groupby(field=[rdp.auth_successful, @timestamp])
+      | auth_stats := if(regex("^true", field=rdp.auth_successful), then="Successful", else="Failed")
+      | groupBy([auth_stats, @timestamp])
+      | timeChart(span=1h, auth_stats)
+    end: now
+    start: 1d
+    width: 4
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: RDP Authentication Attempts
+    isLive: false
+    type: query
+  9bd3e327-05fb-4dbb-8bf5-c85bf08c723d:
+    x: 6
+    y: 5
+    height: 4
+    queryString: |-
+      #path=conn AND ("#repo"=?{fed_tenant=*})
+      | !in(service, values=["ssl","https", "tls",  "dns", "ssl,http", "http,ssl", "spicy_ipsec_ike_udp", "spicy_tailscale", "spicy_stun" ])
+      | timechart(service)
+    end: '2024-04-25T19:50:12.14Z'
+    start: '2024-04-24T19:50:12.14Z'
+    width: 6
+    options:
+      series:
+        http:
+          color: '#00ab49'
+      lastBucketBehavior: include
+      legend: false
+      connect-points: false
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: Unencrypted Protocols
+    isLive: false
+    type: query
+  note-1720509218495-0:
+    x: 0
+    y: 0
+    description: 'This data provides insight into SSL certificates and versions being
+      used internally and externally. '
+    height: 1
+    text: ''
+    width: 6
+    title: Encrypted Traffic Hygiene
+    type: note
+  ee732104-7dd9-4b18-82f1-4d64557cc2ae:
+    x: 9
+    y: 1
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path=conn | ("#repo"=?{fed_tenant=*})
+      | id.resp_p=23
+      | groupby(uid)
+      | count()
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+    visualization: single-value
+    title: Telnet sessions
+    isLive: false
+    type: query
+  708d2f80-6094-4f95-951a-ed626e8f0b65:
+    x: 4
+    y: 1
+    height: 2
+    queryString: |-
+      @event_parsed!="false" |   #path=x509 | ("#repo"=?{fed_tenant=*})
+      | groupby(certificate.not_valid_after)
+      | current_time_epoch := now()
+      | parseTimestamp(format="yyyy-MM-dd'T'HH:mm:ss.SSSSSSz", field="certificate.not_valid_after", as=parsed_not_valid_after)
+      | timeDelta := parsed_not_valid_after - current_time_epoch
+      | timeDelta > 0
+      | Delta_days := timeDelta / (1000 * 60 * 60 * 24)
+      | Delta_days := round(Delta_days)
+      | Delta_days < 16
+      | select([current_time_epoch, certificate.not_valid_after, parsed_not_valid_after, Delta_days])
+      | count()
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: Expiring Certs.
+    isLive: false
+    type: query
+  827e6895-9b09-4510-a2c1-89d047d86a71:
+    x: 0
+    y: 3
+    height: 4
+    queryString: |-
+      #path=ssl AND ("#repo"=?{fed_tenant=*})
+      |timeChart(span=1h, function=count())
+    end: '2024-04-25T15:10:11.321Z'
+    start: '2024-04-24T15:10:11.321Z'
+    width: 6
+    options:
+      series:
+        _count:
+          color: '#00ab49'
+      gradient: false
+      interpolation: linear
+      legend: false
+      showDataPoints: false
+      connect-points: false
+      stacking: none
+      yAxisScale: linear
+      plotType: area
+      maxSeriesCount: 50
+      imputation: none
+      showOthers: true
+      lastBucketBehavior: include
+      regression: true
+      regressionType: linear
+    visualization: time-chart
+    title: Encrypted Traffic Over Time
+    isLive: false
+    type: query
+  b5a87b6e-7f19-481a-9544-3e442fc11310:
+    x: 6
+    y: 0
+    description: 'This data provides insight into unencrypted connections and unencrypted
+      protocols. '
+    height: 1
+    text: ''
+    width: 6
+    title: Unencrypted Traffic Hygiene
+    type: note
+  ce8451c2-6457-4231-9b03-c622ff79cd69:
+    x: 6
+    y: 12
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path = "dns" | ("#repo"=?{fed_tenant=*})
+      | groupBy([id.resp_h], function= tail(1))
+      | host_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="internal", else="external")
+      | host_type = "internal"
+      | id.resp_p =53 OR id.resp_p =5353
+      | select([id.orig_h, id.resp_h, id.resp_p])
+      | count()
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: Internal DNS Servers
+    isLive: false
+    type: query
+  8869fc52-7741-44b7-984d-0bc65b93bab7:
+    x: 6
+    y: 10
+    height: 2
+    queryString: |-
+      @event_parsed!="false" | #path=dns | ("#repo"=?{fed_tenant=*})
+      | rcode_name="NXDOMAIN"
+      | groupby(rcode_name, function=count(field=rcode_name, as="totalnxdomain"))
+      | sum(totalnxdomain)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: NXDOMAIN Responses
+    isLive: false
+    type: query
+  6d3049d9-b7f0-40ca-8007-ccc4f28260ce:
+    x: 4
+    y: 19
+    height: 4
+    queryString: |-
+      @event_parsed!="false"
+      /* End of Prefix */
+      | @event_parsed!="false" | #path=vpn | ("#repo"=?{fed_tenant=*})
+      | groupBy([id.resp_h], function= tail(1))
+      | host_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="internal", else="external")
+      | host_type = "external"
+      | timechart(span=1h, id.resp_h)
+    end: now
+    start: 1d
+    width: 4
+    options:
+      interpolation: linear
+      legend: false
+      connect-points: false
+      stacking: none
+      yAxisScale: linear
+      extrapolate: true
+      plotType: line
+      maxSeriesCount: 10
+      regression: true
+      imputation: none
+      showOthers: false
+      lastBucketBehavior: include
+    visualization: time-chart
+    title: Outbound VPN Connections
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.15.0
+parameters:
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'
