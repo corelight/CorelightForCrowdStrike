@@ -1,0 +1,189 @@
+name: Data - Device Inventory
+description: Corelight/Zeek Known* logs
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 30d
+widgets:
+  7995196d-7b5e-41b0-aab1-27626d4b5e21:
+    x: 4
+    y: 0
+    height: 7
+    queryString: |-
+      #path=known_devices
+      ("_system_name"=?{system_name=*}) AND ("host_ip"=?{entity_target=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupBy([host_ip], function=[min(@timestamp, as=first_time), max(@timestamp, as=last_time), count(as=_count)])
+      // collect(vendor_mac, separator=", ", limit=5)
+      | first_time_seen:=formatTime("%Y-%m-%dT%H:%M:%S", field=first_time)
+      | last_time_seen:=formatTime("%Y-%m-%dT%H:%M:%S", field=last_time)
+      | table([host_ip, first_time_seen, last_time_seen, _count])
+      | sort(_count, order=desc)
+    visualization: table-view
+    end: now
+    start: 30d
+    width: 8
+    title: Device activity over time
+    isLive: true
+    type: query
+  9678be39-b449-4580-8757-f37048cc1087:
+    x: 0
+    y: 21
+    height: 6
+    queryString: |-
+      (#path=known_devices) ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | day_ts := splitString(field=ts, by="T", index=0)
+      | join({#path=software* | day_ts := splitString(field=ts, by="T", index=0)}, field=[host_ip], key=[host], mode=inner,
+      include=[day_ts, host, name, software_type, version.major, version.minor, unparsed_version])
+      | sankey(source=vendor_mac, target=name, weight=count(host, distinct=true))
+    visualization: sankey
+    end: now
+    start: 30d
+    width: 9
+    title: vendor_mac to software name s
+    isLive: true
+    type: query
+  90e40cf8-2b81-4733-97d9-0846f96f293f:
+    x: 9
+    y: 21
+    height: 6
+    queryString: |-
+      #path=known_devices
+      ("_system_name"=?{system_name=*}) AND ("host_ip"=?{entity_target=*}) AND ("#repo"=?{fed_tenant=*})
+      | top(num_conns)
+    visualization: table-view
+    end: now
+    start: 30d
+    width: 3
+    title: Number of connections
+    isLive: true
+    type: query
+  33ef4206-0fec-461a-af6d-6fd0cfea466b:
+    x: 0
+    y: 27
+    height: 7
+    queryString: |-
+      #path=known_devices
+      ("_system_name"=?{system_name=*}) AND ("host_ip"=?{entity_target=*}) AND ("#repo"=?{fed_tenant=*})
+      | duration_thousandths := duration * 1000
+      | duration_rounded := round(duration_thousandths) / 1000
+      | top(duration_rounded)
+    visualization: table-view
+    end: now
+    start: 30d
+    width: 3
+    title: Durations
+    isLive: true
+    type: query
+  30d31a7e-6829-4d90-a086-479873834dda:
+    x: 0
+    y: 7
+    height: 7
+    queryString: |-
+      (#path=known_devices) ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | day_ts := splitString(field=ts, by="T", index=0)
+      | join({#path=software* | day_ts := splitString(field=ts, by="T", index=0)}, field=[host_ip, day_ts], key=[host, day_ts], mode=inner,
+      include=[day_ts, host_ip, host, name, software_type, version.major, version.minor, unparsed_version])
+      | table([day_ts, host, name, software_type, version.major, version.minor, unparsed_version])
+    visualization: table-view
+    end: now
+    start: 30d
+    width: 12
+    title: Software details
+    isLive: true
+    type: query
+  12467068-faaa-474d-8b95-3537cb8d9466:
+    x: 0
+    y: 0
+    height: 7
+    queryString: |
+      #path=known_devices
+      ("_system_name"=?{system_name=*}) AND ("host_ip"=?{entity_target=*}) AND ("#repo"=?{fed_tenant=*})
+      | count("host_ip", distinct=true)
+    end: now
+    start: 30d
+    width: 4
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Number of known devices
+    isLive: true
+    type: query
+  642ca651-89af-4e2e-9c96-33c5873cc329:
+    x: 6
+    y: 14
+    height: 7
+    queryString: |-
+      (#path=known_devices) ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | day_ts := splitString(field=ts, by="T", index=0)
+      | join({#path=software* | day_ts := splitString(field=ts, by="T", index=0)}, field=[host_ip, day_ts], key=[host, day_ts], mode=inner,
+      include=[day_ts, host_ip, host, name, software_type, version.major, version.minor, unparsed_version])
+      | table([day_ts, host, name, software_type, version.major, version.minor, unparsed_version])
+      | top(name)
+    visualization: pie-chart
+    end: now
+    start: 30d
+    width: 6
+    title: Top Software names
+    isLive: true
+    type: query
+  54d4f0c3-bff4-4c53-9b0f-5c2b932c04c6:
+    x: 0
+    y: 14
+    height: 7
+    queryString: |-
+      #path=known_devices
+      ("_system_name"=?{system_name=*}) AND ("host_ip"=?{entity_target=*}) AND ("#repo"=?{fed_tenant=*})
+      | default(field=vendor_mac, value="unknown")
+      | top(vendor_mac)
+    visualization: pie-chart
+    end: now
+    start: 30d
+    width: 6
+    title: Top vendors
+    isLive: true
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.7.0
+parameters:
+  additional_filter:
+    isMultiParam: false
+    label: Additional Filter
+    order: 50
+    type: text
+    defaultValue: '*'
+  system_name:
+    isMultiParam: false
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

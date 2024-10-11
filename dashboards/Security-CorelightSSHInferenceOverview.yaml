@@ -1,0 +1,185 @@
+name: Security - Corelight SSH Inference Overview
+description: SSH Inferences - requires Encrypted Traffic SSH Inferences package enabled
+timeSelector:
+  defaultTimeJumpInMs: 30000
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+filters:
+  JqsembDakUuCXZJaw6S6OVYrja1136c5:
+    queryPrefix: hassh != ""
+    title: Exclude HC
+  TWiRNkLyweZAm0hIATEsDDA5BWuQHMc6:
+    queryPrefix: hassh = "*"
+    title: Include HC
+widgets:
+  5843cb6c-a01e-45a1-800f-46016a22432f:
+    x: 6
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=ssh) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{inferences=*}) AND ("#repo"=?{fed_tenant=*})
+      | inferences[0]=*
+      | split(inferences)
+      | timechart(limit=50, span=auto, series=inferences, function=count())
+    start: 12h
+    width: 6
+    options:
+      legendPosition: bottom
+      interpolation: ''
+      xAxisTitle: ''
+      legend: true
+      horizontalPlotLineLabel: ''
+      yAxisScale: linear
+      plotType: area
+      yAxisUnit: ''
+      series: {}
+      yAxisTitle: ''
+      stacking: normal
+    visualization: time-chart
+    title: Inferences Over Time
+    type: query
+  a4ee2caf-d07f-47e2-94d8-d2f98cd7dd2b:
+    x: 0
+    y: 15
+    height: 7
+    queryString: |-
+      (#path=ssh) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{inferences=*}) AND ("#repo"=?{fed_tenant=*})
+      | inferences[0]="*"
+      | concatArray(inferences, separator=", ", as=Inference_values)
+    start: 24h
+    width: 12
+    options:
+      columns: '[{"type":"field","fieldName":"@timestamp","width":210},{"type":"field","fieldName":"id.orig_h","width":154},{"type":"field","fieldName":"id.resp_h","width":154},{"type":"field","fieldName":"Inference_values","width":198},{"type":"field","fieldName":"@rawstring","width":4000}]'
+      newestAtBottom: 'true'
+      showOnlyFirstLine: 'false'
+    visualization: list-view
+    title: SSH Inference Log Data
+    type: query
+  b82c8bd2-4352-4eda-89c7-2645bedeeb2c:
+    x: 6
+    y: 5
+    height: 5
+    queryString: "(#path=ssh) AND (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*})\
+      \ AND (?{inferences=*}) AND (\"#repo\"=?{fed_tenant=*})\n| groupby(host_key) "
+    visualization: pie-chart
+    start: 12h
+    width: 6
+    title: SSH Host Keys
+    type: query
+  c0e2293d-84de-48d4-89ee-98cf95a3085f:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |
+      (#path=ssh) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | concatArray(inferences, separator=", ", as=Inference_values)
+      | groupby(Inference_values)
+    start: 12h
+    width: 6
+    options:
+      series: {}
+    visualization: pie-chart
+    title: Inference Type (Not Filtered by Inferences)
+    type: query
+  6f04a090-bf90-4b7a-9f94-6de0ed535456:
+    x: 5
+    y: 10
+    height: 5
+    queryString: |
+      (#path=ssh) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{inferences=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby([auth_success])
+    start: 12h
+    width: 3
+    options:
+      innerRadius: 0
+    visualization: pie-chart
+    title: SSH Auth Success
+    type: query
+  f2a5e882-91cc-4045-a930-4316836fb54d:
+    x: 0
+    y: 10
+    height: 5
+    queryString: |
+      (#path=ssh) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{inferences=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby([id.orig_h, auth_attempts, id.resp_h, auth_success])
+      | source := rename(id.orig_h)
+      | destination := rename(id.resp_h)
+      | table([source, destination, auth_attempts, auth_success])
+    visualization: table-view
+    start: 12h
+    width: 5
+    title: 'SSH Authentication '
+    type: query
+  d84f186f-6f5e-4259-8541-dbdefa6ae37a:
+    x: 0
+    y: 5
+    height: 5
+    queryString: "(#path=ssh) AND (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*})\
+      \ AND (?{inferences=*}) AND (\"#repo\"=?{fed_tenant=*})\n| groupby([hassh, client, hasshServer])\n| HASSH_Client\
+      \ := rename(hassh)\n| SSH_Client := rename(client)\n| HASSH_Server := rename(hasshServer)\n\
+      | table([HASSH_Client,SSH_Client,HASSH_Server]) "
+    visualization: table-view
+    start: 12h
+    width: 6
+    title: HASSH Fingerprint Details
+    type: query
+  5aac6fb1-218a-4989-a09a-55e9ef0e6507:
+    x: 8
+    y: 10
+    height: 5
+    queryString: |-
+      (#path=ssh) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{inferences=*}) AND ("#repo"=?{fed_tenant=*})
+      | timechart(span=auto, series=auth_success, function=count())
+    start: 12h
+    width: 4
+    options:
+      legendPosition: bottom
+      interpolation: ''
+      xAxisTitle: ''
+      legend: true
+      horizontalPlotLineLabel: ''
+      yAxisScale: linear
+      plotType: area
+      maxSeriesCount: 50
+      yAxisUnit: ''
+      series: {}
+      yAxisTitle: ''
+      stacking: normal
+    visualization: time-chart
+    title: SSH Auth Success Over Time
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional filter (K/V pair)
+    order: 51
+    type: text
+  inferences:
+    label: inferences
+    query: '#path=ssh | split(inferences) | groupby(inferences, function=[tail(1),
+      count()])'
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 50
+    valueField: inferences
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

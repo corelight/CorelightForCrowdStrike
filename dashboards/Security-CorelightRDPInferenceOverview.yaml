@@ -1,0 +1,142 @@
+name: Security - Corelight RDP Inference Overview
+description: SSH Inferences, please see note widget.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+filters:
+  JqsembDakUuCXZJaw6S6OVYrja1136c5:
+    queryPrefix: hassh != ""
+    title: Exclude HC
+  TWiRNkLyweZAm0hIATEsDDA5BWuQHMc6:
+    queryPrefix: hassh = "*"
+    title: Include HC
+widgets:
+  5843cb6c-a01e-45a1-800f-46016a22432f:
+    x: 6
+    y: 0
+    height: 5
+    queryString: |-
+      #path=rdp ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | split(inferences)
+      | timechart(span=auto, series=inferences, function=count())
+    start: 12h
+    width: 6
+    options:
+      legendPosition: bottom
+      yAxisUnit: ''
+      interpolation: ''
+      xAxisTitle: ''
+      legend: true
+      horizontalPlotLineLabel: ''
+      yAxisScale: linear
+      plotType: area
+      yAxisTitle: ''
+      stacking: normal
+    visualization: time-chart
+    title: Inferences Over Time
+    type: query
+  03ea5154-bcac-49a1-bf73-928902071f42:
+    x: 4
+    y: 5
+    height: 4
+    queryString: |-
+      #path=rdp ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | "auth_success" != true | count()
+    visualization: simple-gauge
+    start: 24h
+    width: 4
+    title: Failed Connections
+    type: query
+  0138ce0e-6702-4a1f-8c12-12a6ca3fd029:
+    x: 8
+    y: 5
+    height: 4
+    queryString: |
+      #path=rdp ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | "Connecting User" := cookie
+      | groupBy([auth_success, "Connecting User"])
+      | table([@timestamp, "Connecting User", auth_success, _count])
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Connecting Users
+    type: query
+  c0e2293d-84de-48d4-89ee-98cf95a3085f:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      #path=rdp ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | inferences[0]="*"
+      | concatArray(inferences, separator=", ", as=Inference_values)
+      | groupby(Inference_values)
+    visualization: pie-chart
+    start: 12h
+    width: 6
+    title: Inference Type
+    type: query
+  10f6c940-6510-4f61-81be-e2a30028e18a:
+    x: 0
+    y: 5
+    height: 4
+    queryString: |-
+      #path=rdp ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | "auth_success" = true | count()
+    visualization: simple-gauge
+    start: 24h
+    width: 4
+    title: Successful Connections
+    type: query
+  4a4ff7c0-ca52-4ea4-a39d-d28d6cfedabd:
+    x: 0
+    y: 9
+    height: 5
+    queryString: |-
+      #path=rdp ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | rename("cookie",as="connecting_user")
+      | rename("id.orig_h",as="origin_ip")
+      | inferences[0]="*"
+      | concatArray(inferences, separator=", ", as=Inference_values)
+      | groupby([@timestamp, connecting_user, _sytem_name, origin_ip, id.resp_h, id.resp_p, auth_success,Inference_values, @rawstring])
+    visualization: table-view
+    start: 12h
+    width: 12
+    title: RDP Connection Detail
+    type: query
+  e57a3bc5-2a25-482d-afcd-005b12d212b5:
+    x: 0
+    y: 14
+    height: 5
+    queryString: |-
+      #path=rdp ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby(security_protocol)
+    visualization: pie-chart
+    start: 4h
+    width: 6
+    title: Security Protocol Used
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter
+    order: 51
+    type: text
+  system_name:
+    label: System Name
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 50
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

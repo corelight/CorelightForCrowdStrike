@@ -1,0 +1,226 @@
+name: Data - Corelight Conn
+description: Corelight/Zeek conn log data including reduced logs.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  32d5061c-376a-4efe-848a-8632bcaee60a:
+    x: 3
+    y: 15
+    description: All UPPER or lower is a sign of asymmetric packet ingest.
+    height: 4
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+      | top(history, limit=20)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: Monitor Health Asymmetry (All UPPER or lower is bad)
+    type: query
+  e005d723-8f77-4c52-9b1f-8bf80d3f8cfc:
+    x: 6
+    y: 15
+    description: 'Connections showing remote to remote, possible misconfigured local
+      nets. '
+    height: 4
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+      | local_orig=false and local_resp=false
+      | top([id.orig_h, id.resp_h, id.resp_p, service])
+    visualization: table-view
+    start: 24h
+    width: 6
+    title: Remote to Remote Connections
+    type: query
+  b487d310-4ca4-4e44-80d1-e1817fcaf8f4:
+    x: 0
+    y: 15
+    description: IP address did not respond to a connection request.
+    height: 4
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+      | local_resp=true
+      | conn_state = "S0"
+      | top([id.resp_h, id.resp_p, service], limit=30)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: Possible Down Services
+    type: query
+  cd5e083c-fd4b-4597-8981-e9864a358d2c:
+    x: 0
+    y: 19
+    description: 'Requires the Long Connection package to be loaded. '
+    height: 5
+    queryString: |-
+      (#path=notice)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | note=LongConnection::found
+      | groupby(uid, function=[tail(1), count()])
+      | seconds := sub
+      | top([id.orig_h, id.resp_h, id.resp_p, service, seconds, msg], limit=20)
+      | sort(seconds)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Longest Lived Connections, (May have already closed)
+    type: query
+  00d33725-cbe5-4f2d-9c1e-a0fd283f2148:
+    x: 9
+    y: 6
+    description: S0 = Connection attempt seen, no reply.
+    height: 4
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+      | conn_state = "S0"
+      | top([id.orig_h, id.resp_p, service])
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: Hosts Generating S0 (possible scan) Traffic
+    type: query
+  c795bf5b-8091-4e13-81c8-f13dc008d3ba:
+    x: 0
+    y: 0
+    description: Local hosts with incoming connections to various services.
+    height: 6
+    queryString: |
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+      | local_resp=true
+      | (proto=tcp OR (proto=udp AND orig_pkts>0 AND resp_pkts>0))
+      // Limit the connection to a few connection states that indicate an established connection.
+      | conn_state != "S0"
+      | groupby([id.resp_h, id.resp_p, service])
+      | top(service, limit=20)
+    visualization: pie-chart
+    start: 24h
+    width: 6
+    title: Local Hosts Seen Offering Services
+    type: query
+  dc595f49-59a4-4907-9356-2ae0678f7361:
+    x: 4
+    y: 6
+    description: Top inbound flows origination from outside the network.
+    height: 4
+    queryString: "(#path=conn or #path=conn_red)\n(\"_system_name\"=?{system_name=*})\
+      \ AND (?{additional_filter=*}) AND (?{service=*}) AND (\"#repo\"=?{fed_tenant=*})\n  | local_orig=false and\
+      \ local_resp=true\n  | (proto=tcp OR (proto=udp AND orig_pkts>0 AND resp_pkts>0))\n\
+      // Limit the connection to a few connection states that indicate an established\
+      \ connection.\n| conn_state != \"S0\"\n| iplocation(id.orig_h)\n| groupby([id.orig_h,\
+      \ id.orig_h.country, service],\n            function=[sum(orig_bytes, as=orig_bytes_sum),\n\
+      \                      count(as=number_of_conns)])\n| eval(Megabytes=((orig_bytes_sum/1024/1024)))\n\
+      | format(\"%.2f\", field=Megabytes, as=Megabytes)\n| table([id.orig_h, id.orig_h.country,\
+      \ service, number_of_conns, Megabytes, id.orig_h.country], sortby=Megabytes)\n\
+      | sort(Megabytes, limit=20) "
+    visualization: table-view
+    start: 24h
+    width: 5
+    title: Top Inbound Data Flows by Originator
+    type: query
+  c8d38299-325a-4b4c-bb7f-e76a3a58d413:
+    x: 0
+    y: 10
+    description: Total data between hosts, inbound and outbound.
+    height: 5
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+        | (proto=tcp OR (proto=udp AND orig_pkts>0 AND resp_pkts>0))
+      // Limit the connection to a few connection states that indicate an established connection.
+        | conn_state != "S0"
+        | iplocation(id.resp_h)
+        | Resp_Country := id.resp_h.country
+        | groupby([id.orig_h, id.resp_h, id.resp_p, proto, Resp_Country],
+                  function=[sum(resp_bytes, as=resp_bytes_sum),
+                            sum(orig_bytes, as=orig_bytes_sum),
+                            count(as=number_of_conns)])
+        | eval(Gigabytes=(((orig_bytes_sum+resp_bytes_sum)/1024)/1024)/1000) | format("%.2f", field=Gigabytes, as=Gigabytes)
+        | sort(Gigabytes, limit=20)
+        | rdns(id.resp_h)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Largest transfers between host/port pairs
+    type: query
+  d1fa305a-d8b3-4f09-866f-d6c4ae498abc:
+    x: 0
+    y: 6
+    description: Top outbound flows by bytes.
+    height: 4
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+        | (proto=tcp OR (proto=udp AND orig_pkts>0 AND resp_pkts>0))
+        | local_orig=true and local_resp=false
+      // Limit the connection to a few connection states that indicate an established connection.
+      | conn_state != "S0"
+      | groupby([id.orig_h, service],
+                  function=[sum(orig_bytes, as=orig_bytes_sum),
+                            count(as=number_of_conns)])
+      | eval(Gigabytes=(((orig_bytes_sum/1024)/1024)/1000))
+      | format("%.2f", field=Gigabytes, as=Gigabytes)
+      | table([id.orig_h, service, number_of_conns, Gigabytes], sortby=Gigabytes)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Outbound Data Flows by Originator
+    type: query
+  c15aeb29-9d27-4c7c-8a95-2fda6a3cb708:
+    x: 6
+    y: 0
+    description: Connections to local UDP services including internal to internal.
+    height: 6
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND (?{service=*}) AND ("#repo"=?{fed_tenant=*})
+      | (proto=tcp OR (proto=udp AND orig_pkts>0 AND resp_pkts>0))
+      // Limit the connection to a few connection states that indicate an established connection.
+      | conn_state != "S0"
+      | local_resp=true
+      | groupby(id.resp_p)
+      | sort(id.resp_p, reverse=false, limit=15)
+    visualization: pie-chart
+    start: 24h
+    width: 6
+    title: Top Responder Ports
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter (K/V Pair)
+    order: 50
+    type: text
+  service:
+    label: Service
+    query: '(#path=conn or #path=conn_red) | groupby(service,  function=[tail(1),
+      count()])'
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 70
+    valueField: service
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 10
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

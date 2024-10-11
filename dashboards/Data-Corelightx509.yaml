@@ -1,0 +1,71 @@
+name: Data - Corelight x509
+description: Corelight/Zeek x509 log data.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  b73340f1-5ede-4d9e-930e-164e77d5e456:
+    x: 0
+    y: 5
+    description: 'Sorted by the soonest expiration date. '
+    height: 5
+    queryString: |-
+      (#path=x509) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby(["certificate.not_valid_after", "certificate.subject"])
+      | "date expired" := rename(certificate.not_valid_after)
+      | sort("date expired", limit=50, order=asce)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: 'Certificate Expiration '
+    type: query
+  c67041b9-f8e6-4f85-8178-57ce67f280c0:
+    x: 6
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=x509) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby("certificate.subject")
+      | sort(limit=20, order=asce)
+    visualization: table-view
+    start: 24h
+    width: 6
+    title: Rare Subjects
+    type: query
+  fcc40a8f-7f51-41e2-be82-cecb32ce91fe:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=x509) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top("certificate.subject", limit=20)
+    visualization: table-view
+    start: 24h
+    width: 6
+    title: Top Subjects
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional filter (K/V pair)
+    order: 50
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: false
+    type: query
+    defaultValue: '*'
+    order: 5
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

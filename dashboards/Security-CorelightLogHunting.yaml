@@ -1,0 +1,96 @@
+name: Security - Corelight Log Hunting
+description: Corelight log hunter, use filters to zero in on your target.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  17d56b3f-fe43-4372-bba3-f08d75f88a3f:
+    x: 0
+    y: 0
+    description: A view of the number of logs based on the filters applied
+    height: 7
+    queryString: |-
+      ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      |("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      AND (?{additional_filter=*})
+      | top(#path)
+    start: 24h
+    width: 5
+    options:
+      innerRadius: 23
+      series: {}
+    visualization: pie-chart
+    title: Filtered Corelight data by log type
+    type: query
+  2d38934a-a9cf-47b3-baac-8640233e3aa9:
+    x: 0
+    y: 7
+    height: 8
+    queryString: |
+      ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      |("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*}) AND (?{additional_filter=*})
+      | rename("#path",as="log_type")
+      | rename("id.orig_h", as="source")
+      | rename("id.resp_h", as="destination")
+      | rename("id.resp_p", as="dest port")
+      | select([@timestamp, "log_type", "source", "destination", "dest port", @rawstring])
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Log Data
+    type: query
+  88cb7e27-1710-47c4-b716-d80a037cff10:
+    x: 5
+    y: 0
+    description: A view of the number of logs based on the filters applied (no KV
+      filter)
+    height: 7
+    queryString: |-
+      ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      |("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*})
+      | top(#path)
+      | sort()
+    start: 24h
+    width: 7
+    options:
+      labelAngle: 14
+      valuesOnBars: true
+      legend: false
+      labelAlign: right
+      categoryPadding: 0.01
+      seriesPadding: 0.03
+      sortOrder: descending
+      paddingBottom: 153
+    visualization: bar-chart
+    title: Filtered Corelight data by log (no KV Filter)
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: additional_filter (K/V pair)
+    order: 50
+    type: text
+  filter:
+    defaultValue: '*'
+    label: src, dest, uid, fuid, community_id
+    order: 2
+    type: text
+  system_name:
+    label: System Name
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

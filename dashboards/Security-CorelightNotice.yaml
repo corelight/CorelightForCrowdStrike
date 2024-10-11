@@ -1,0 +1,184 @@
+name: Security - Corelight Notice
+description: Corelight/Zeek Intel log data.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: true
+  start: 1d
+widgets:
+  42f24def-e563-4560-aa01-843b505d40da:
+    x: 0
+    y: 8
+    height: 6
+    queryString: |2-
+            (_path=notice or #path=notice) AND ("_system_name"=?{system_name=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*})
+            | count("note", distinct=true, as="count_notes")
+            | select("count_notes")
+            | format("%s", field="count_notes", as="count_notes")
+    visualization: simple-gauge
+    start: 24h
+    width: 4
+    title: Number of categories
+    type: query
+  df3035d2-752f-4ed3-9437-17ea68d0b140:
+    x: 0
+    y: 0
+    height: 8
+    queryString: |-
+      #path=notice AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "p"=?{filter=*} OR "note"=?{filter=*}) AND (?{additional_filter=*})
+            | timechart()
+    start: 24h
+    width: 12
+    options:
+      legendPosition: bottom
+      interpolation: ''
+      xAxisTitle: ''
+      legend: true
+      horizontalPlotLineLabel: ''
+      yAxisScale: linear
+      plotType: area
+      yAxisUnit: ''
+      series: {}
+      yAxisTitle: ''
+      stacking: none
+    visualization: time-chart
+    title: Notices Over Time
+    type: query
+  7660f850-9431-4d64-9be7-611aafc79ee2:
+    x: 4
+    y: 8
+    height: 6
+    queryString: |2-
+            (_path=notice or #path=notice) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*}) AND (?{additional_filter=*})
+            |format("%s", field=note, as=note)
+            | top(note, limit=20)
+            | sort(order=desc)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Notices
+    type: query
+  f48798c2-c2c2-4cea-8839-c9e810a32c7c:
+    x: 8
+    y: 21
+    height: 8
+    queryString: |-
+      #path=notice AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "p"=?{filter=*} OR "note"=?{filter=*}) AND (?{additional_filter=*})
+            | top(severity.name, limit=10)
+    start: 24h
+    width: 4
+    options:
+      series: {}
+    visualization: pie-chart
+    title: Severity Breakdown
+    type: query
+  cc299f0c-829e-4bcb-909f-eda917b67a91:
+    x: 4
+    y: 14
+    height: 7
+    queryString: |2-
+            (_path=notice or #path=notice) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*}) AND (?{additional_filter=*})
+            |format("%s", field=id.orig_h, as="Source")
+            |format("%s", field=id.resp_h, as="Destination")
+            |format("%s", field=severity.level, as="Severity")
+            |format("%s", field=note, as=Note)
+            | groupby([Source, Destination, Severity, Note]) | sort(_count)
+    visualization: table-view
+    start: 24h
+    width: 8
+    title: Top Entities
+    type: query
+  e4ded854-40a0-41bc-8bb7-b9333c82cc1a:
+    x: 0
+    y: 29
+    height: 8
+    queryString: |2-
+            #path=notice AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "p"=?{filter=*} OR "note"=?{filter=*}) AND (?{additional_filter=*})
+    start: 24h
+    width: 12
+    options:
+      columns: '[{"type":"field","fieldName":"@timestamp","width":210},{"type":"field","fieldName":"@rawstring"}]'
+      newestAtBottom: 'true'
+      showOnlyFirstLine: 'false'
+    visualization: list-view
+    title: Notice Log Data
+    type: query
+  cb7473e4-34e0-4de7-8ddf-ea2f0b853968:
+    x: 8
+    y: 8
+    height: 6
+    queryString: |2-
+            #path=notice AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "p"=?{filter=*} OR "note"=?{filter=*}) AND (?{additional_filter=*})
+            | top(note, limit=10)
+    visualization: pie-chart
+    start: 24h
+    width: 4
+    title: Notice breakdown
+    type: query
+  f4cc09b0-eeaf-4419-8495-567324f7a63f:
+    x: 0
+    y: 21
+    height: 8
+    queryString: |-
+      _path=notice or #path=notice AND ("#repo"=?{fed_tenant=*})
+            | groupBy(["note", "severity.level"],
+                       function=[count("id.orig_h", distinct=true, as="number_source_ips"),
+                                 count("id.resp_h", distinct=true, as="number_destination_ips")])
+            | eval(total_entities = number_source_ips + number_destination_ips)
+            | table([note, severity.level, number_source_ips, number_destination_ips, total_entities], sortby=total_entities, reverse=true, limit=50)
+    visualization: table-view
+    start: 24h
+    width: 8
+    title: Notices entity counts
+    type: query
+  56d90393-de20-4a94-912c-0b53a3f16ad0:
+    x: 0
+    y: 14
+    height: 7
+    queryString: |2-
+            (_path=notice or #path=notice) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*})
+            | [count("id.orig_h", distinct=true, as="number_source_ips"), count("id.resp_h", distinct=true, as="number_destination_ips")]
+            | eval(total_entities = number_source_ips + number_destination_ips)
+            | select("total_entities")
+            | format("%s", field="total_entities", as="total_entities")
+    visualization: simple-gauge
+    start: 24h
+    width: 4
+    title: Number of total entities
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter (K/V pair)
+    order: 20
+    type: text
+  filter:
+    defaultValue: '*'
+    label: Filter (IP, Port, Indicator, or Type)
+    order: 10
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 5
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

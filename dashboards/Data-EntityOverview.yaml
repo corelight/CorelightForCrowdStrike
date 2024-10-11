@@ -1,0 +1,284 @@
+name: Data - Entity Overview
+updateFrequency: never
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 24h
+widgets:
+  967b46b2-3cd5-4bf7-bf63-be9a05bb8507:
+    x: 8
+    y: 3
+    description: |
+      Overview of the information within #path=known_
+    height: 8
+    queryString: (#path=known_* host_ip=?entity_target) or (#path=conn id.orig_h=?entity_target) AND ("#repo"=?{fed_tenant=*})
+      | concatArray(protocols, separator=", ", as=Protocols) | collect(fields=[hostname,
+      Protocols, port, subject, user, service, app[0]])
+    visualization: table-view
+    end: now
+    start: 24h
+    width: 4
+    title: Known Logs Overview
+    isLive: false
+    type: query
+  45336a1b-96ca-4cf0-94c9-d4ac14527470:
+    x: 0
+    y: 15
+    description: Use this window to search for any specific notices or suricata alerts
+      that have cropped up.
+    height: 7
+    queryString: ?uid_search
+    end: now
+    start: 24h
+    width: 10
+    options:
+      columns: '[{"type":"field","fieldName":"@timestamp","format":"timestamp","width":180},{"type":"field","fieldName":"#path","format":"text","width":96},{"type":"field","fieldName":"id.orig_h","format":"text","width":115},{"type":"field","fieldName":"id.orig_p","format":"text","width":84},{"type":"field","fieldName":"id.resp_h","format":"text","width":115},{"type":"field","fieldName":"id.resp_p","format":"text","width":100},{"type":"field","fieldName":"@rawstring","format":"logline","width":578}]'
+      newestAtBottom: 'true'
+      showOnlyFirstLine: 'false'
+    visualization: list-view
+    title: UID Search
+    isLive: false
+    type: query
+  5bea971f-60aa-4841-937a-41c39cd3362d:
+    x: 0
+    y: 30
+    description: |+
+      Timechart of number of connections per protocol and service where the given IP acts as the originator of the connection.
+
+    height: 7
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      | ("id.orig_h"=?{entity_target=*})
+      | ("#repo"=?{fed_tenant=*})
+      | service_parts := splitString(field=service, by=",")
+      | split(field=service_parts)
+      | dummy_sep := "_"
+      | concat([proto, dummy_sep, service_parts], as="proto_service")
+      | timechart(series=proto_service, function=count(field="uid", distinct=true, as="num_coons"))
+    end: now
+    start: 1h
+    width: 6
+    options:
+      connect-points: false
+      imputation: none
+    visualization: time-chart
+    title: 'Client activity - #Connections per protocol and service'
+    isLive: false
+    type: query
+  9e505a18-4d5e-42f9-b81f-47baf5e21935:
+    x: 0
+    y: 0
+    description: Provides a list of IOC IP's with whichthis entity has communicated.
+    height: 3
+    queryString: |-
+      #path=conn ?entity_target AND ("#repo"=?{fed_tenant=*})
+      | ioc:lookup(field=[id.orig_h, id.resp_h], type="ip_address", strict=true, confidenceThreshold=?threshold)
+      | split("ioc")
+      | "ioc.malicious_confidence" match  {
+          unverified => icon := "\u2139  " ;
+          informational => icon := "\u2139  " ;
+          low => icon := "\u2B07  " ;
+          medium => icon := "\u26A0  " ;
+          high => icon := "\u2757  " ;
+          critical => icon := "\u2757\u2757 " ;
+          * => icon := "   " ;
+      }
+      | concat(["icon", "ioc.malicious_confidence"], as="ioc.malicious_confidence")
+      | now := now()
+      | ioc_age := now - ioc.last_updated
+      | formatDuration(ioc_age, precision=2, as="ioc.age")
+      | groupBy([id.orig_h, id.resp_h, "ioc.malicious_confidence", "ioc.published_date", "ioc.age", "ioc.labels"])
+      | formatTime(field="ioc.published_date", as="ioc.published_date", format="%Y-%m-%d %H:%M:%S")
+    visualization: table-view
+    end: now
+    start: 24h
+    width: 12
+    title: IOC Hits
+    isLive: false
+    type: query
+  01d3bc74-395d-407b-83b6-7afbaf214c41:
+    x: 6
+    y: 22
+    description: |
+      Timechart of missed bytes for entity
+    height: 8
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      | ("id.orig_h"=?{entity_target=*})
+      | ("#repo"=?{fed_tenant=*})
+      | timechart(series=id.orig_h, function=sum(field="missed_bytes", as="_missed_bytes"))
+    end: now
+    start: 30d
+    width: 6
+    options:
+      connect-points: false
+      imputation: none
+    visualization: time-chart
+    title: 'Sum of missed bytes for entity '
+    isLive: false
+    type: query
+  23bd7a42-5f1b-4c7d-bb41-e85be672fb66:
+    x: 0
+    y: 7
+    description: Provides a list of notice alerts with a severity level of Warn or
+      higher.
+    height: 4
+    queryString: |-
+      #path=notice ?entity_target severity.level <5 AND ("#repo"=?{fed_tenant=*})
+      | groupBy([note, msg, uid, severity.level, severity.name], function=[]) | sort(field=[severity.level], order=[asc])
+    visualization: table-view
+    end: now
+    start: 24h
+    width: 8
+    title: Notice Alerts
+    isLive: false
+    type: query
+  124b4c6b-5f9c-4f5e-936a-457143bcebe8:
+    x: 0
+    y: 22
+    description: |
+      Time chart showing bytes sent and received over time.
+    height: 8
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      | ("id.orig_h"=?{entity_target=*})
+      | ("#repo"=?{fed_tenant=*})
+      | timechart(series=id.orig_h, limit=5, function=[sum(field="orig_bytes", as="_orig_bytes"), sum(field="resp_bytes", as=_resp_bytes)])
+    end: now
+    start: 2d
+    width: 6
+    options:
+      connect-points: false
+      imputation: none
+      stacking: normal
+      yAxisScale: linear
+    visualization: time-chart
+    title: Bytes Sent and Recieved
+    isLive: false
+    type: query
+  7d1c7e15-634f-4e25-a995-45a3d9c68872:
+    x: 6
+    y: 11
+    description: Displays all suricata alerts with CVE values in them, and graphs
+      the CVE's over time.  A variety of different CVE's or a spike on one specific
+      CVE can be a strong indicator of attack.
+    height: 4
+    queryString: '#path=suricata_corelight ?entity_target AND ("#repo"=?{fed_tenant=*}) alert.signature=/(?<cve>CVE-[0-9]+-[0-9]+)/
+      alert.signature!=/ET INFO|ET POLICY|ETPRO POLICY|ETPRO INFO/ | timechart(cve,
+      limit=10)'
+    end: now
+    start: 7d
+    width: 6
+    options:
+      connect-points: false
+      imputation: none
+      stacking: normal
+      yAxisScale: linear
+    visualization: time-chart
+    title: Suricata CVE Alerts over time
+    isLive: false
+    type: query
+  4f43e0ab-bfd3-427f-99f0-7ae6054bde8f:
+    x: 0
+    y: 3
+    description: Provides a list of suricata alerts that this entity has triggered
+      as either source or destination.
+    height: 4
+    queryString: |-
+      #path=suricata_corelight ?entity_target AND ("#repo"=?{fed_tenant=*}) alert.signature!=/ET INFO|ET POLICY|ETPRO POLICY|ETPRO INFO/
+      | groupBy([id.orig_h, id.resp_h, alert.signature, uid, alert.severity], function=[]) | sort(order=asc)
+    visualization: table-view
+    end: now
+    start: 24h
+    width: 8
+    title: Suricata Alerts
+    isLive: false
+    type: query
+  8586f1d4-7f4c-4747-8483-40a4de23f2a0:
+    x: 3
+    y: 11
+    description: A list of file mime types and counts this entity has interacted with.
+    height: 4
+    queryString: '#path=files ?entity_target AND ("#repo"=?{fed_tenant=*}) | groupBy(mime_type) | sort(order=asc)'
+    visualization: table-view
+    end: now
+    start: 24h
+    width: 3
+    title: File Mime Types
+    isLive: false
+    type: query
+  7344bd65-ee46-4596-8210-502041da538d:
+    x: 6
+    y: 30
+    description: |+
+      Timechart of number of connections per service where the given IP acts as the responder of the connection.
+
+    height: 7
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      | ("id.resp_h"=?{entity_target=*})
+      | ("#repo"=?{fed_tenant=*})
+      | service_parts := splitString(field=service, by=",")
+      | split(field=service_parts)
+      | dummy_sep := "_"
+      | concat([proto, dummy_sep, service_parts], as="proto_service")
+      | timechart(series=proto_service, function=count(field="uid", distinct=true, as="num_conns"))
+    end: now
+    start: 1h
+    width: 6
+    options:
+      connect-points: false
+      imputation: none
+    visualization: time-chart
+    title: 'Server activity - #Connections per protocol and service'
+    isLive: false
+    type: query
+  c11b6924-c06d-414f-9c6d-e479156066a9:
+    x: 0
+    y: 11
+    description: |
+      Pie chart of connections weighted by destination port.
+    height: 4
+    queryString: '#path=conn id.orig_h=?entity_target id.resp_p < 32768 AND ("#repo"=?{fed_tenant=*})| groupBy(id.resp_p)'
+    visualization: pie-chart
+    end: now
+    start: 24h
+    width: 3
+    title: Connections from Entity by Destination Port
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.7.0
+parameters:
+  entity_target:
+    isMultiParam: false
+    label: entity_target
+    order: 50
+    type: text
+    defaultValue: '*'
+  threshold:
+    isMultiParam: false
+    label: threshold
+    order: 50
+    values:
+    - Informational
+    - Medium
+    - High
+    - Unverified
+    - Low
+    - Critical
+    type: list
+    defaultValue: Medium
+  uid_search:
+    isMultiParam: false
+    label: uid_search
+    order: 50
+    type: text
+    defaultValue: uid=NULL
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

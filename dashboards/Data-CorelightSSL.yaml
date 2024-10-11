@@ -1,0 +1,116 @@
+name: Data - Corelight SSL
+description: Corelight/Zeek SSL log data including reduced.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  d33c5c47-c222-40e0-a71c-73fe79dc71bb:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=x509) AND (("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*}))
+      | top(certificate.subject, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 5
+    title: Top Subjects
+    type: query
+  064dcb11-e03d-47d5-b58b-bbc83e478316:
+    x: 0
+    y: 10
+    description: TLS Versions over Time
+    height: 4
+    queryString: |-
+      (#path=ssl or #path=ssl_red) AND (("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*}))
+      | timechart(version, unit="1/min")
+    start: 24h
+    width: 12
+    options:
+      legendPosition: right
+      yAxisUnit: ''
+      interpolation: ''
+      xAxisTitle: ''
+      legend: true
+      horizontalPlotLineLabel: ''
+      yAxisScale: logarithmic
+      plotType: area
+      yAxisTitle: ''
+      stacking: none
+    visualization: time-chart
+    title: TLS Versions over Time
+    type: query
+  52b8e113-6e35-4555-9acc-b614dfa49cd4:
+    x: 0
+    y: 5
+    height: 5
+    queryString: |-
+      (#path=ssl or #path=ssl_red) AND (("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*}))
+      | top(validation_status, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: Validation Status
+    type: query
+  411ddc32-32a8-441f-ac0e-8776d39a05ff:
+    x: 5
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=ssl or #path=ssl_red) AND (("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*}))
+      | top(cipher, limit=20)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Ciphers
+    type: query
+  8e9f6c6c-e494-4471-a918-df2cba1106e7:
+    x: 3
+    y: 5
+    height: 5
+    queryString: |
+      (#path=ssl or #path=ssl_red) AND (("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*}))
+      | top([server_name, subject, validation_status, version], limit=30)
+    visualization: table-view
+    start: 24h
+    width: 9
+    title: Certificate Summary
+    type: query
+  ac61b9c6-da6c-41bc-91b3-5f00c756f1b6:
+    x: 9
+    y: 0
+    description: Top TLS Versions
+    height: 5
+    queryString: |-
+      (#path=ssl or #path=ssl_red) AND (("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*}))
+      | top(version, limit=20)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: Top TLS Versions
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter (K/V pair)
+    order: 50
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 10
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

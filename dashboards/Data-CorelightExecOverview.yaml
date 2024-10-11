@@ -1,0 +1,232 @@
+name: Data - Corelight Exec Overview
+description: Executive overview from various logs.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  13d0d26f-9692-4e8b-85d9-f37fb2ab4f7f:
+    x: 8
+    y: 17
+    description: Shows top usernames in use, by protocol
+    height: 4
+    queryString: |
+      ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | case {
+        (#path=rdp) and cookie=* | _username:=cookie;
+        (#path=ftp) and user=* | _username:=user;
+        (#path=irc) and user=* | _username:=user;
+        (#path=socks) and user=* | _username:=user;
+        (#path=http or #path=http_red) and username=* | _username:=username;
+        (#path=ntlm) and username=* | _username:=username;
+        (#path=smb_command) and username=* | _username:=username;
+      } | top([_username, #path]) | select([_username, #path, _count])
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Usernames
+    type: query
+  60c14391-8059-4761-bb61-fa12ec6c6e73:
+    x: 8
+    y: 7
+    description: Top services/application protocols in use.
+    height: 5
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | default(field=service, value="unknown")
+      | top(service)
+    visualization: pie-chart
+    start: 24h
+    width: 4
+    title: Top Services
+    type: query
+  031109a0-33ca-44ea-98d5-50892814a721:
+    x: 0
+    y: 21
+    description: Lists the top 25 upload destinations by IP, with their name from
+      most recent DNS resolution.
+    height: 5
+    queryString: |-
+      //If you're using a Corelight Sensor you can use orig_cc and resp_cc for country, instead of iplocation
+      (#path=conn or #path=conn_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | iplocation(field=id.resp_h)
+      | top([id.resp_h, id.resp_h.country], sum=orig_bytes, limit=25)
+      | join({(#path=dns or #path=dns_red) | select([query,answers[0]]) }, field=id.resp_h, key=answers[0], include=query)
+      | rename(field=query, as=Name)
+      | rename(field=id.resp_h, as="Dest IP")
+      | rename(field=_sum, as="Bytes")
+      | rename(field=id.resp_h.country, as=Country)
+      | select([Bytes,"Dest IP",Country,Name])
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Top Upload Destinations
+    type: query
+  397ef92a-22c3-4ea3-ab0b-eed2b42afbc6:
+    x: 0
+    y: 7
+    description: Shows top destination countries for outbound connections.
+    height: 5
+    queryString: |-
+      //If you're using a Corelight Sensor you can use orig_cc and resp_cc for country, instead of iplocation
+      (#path=conn or #path=conn_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | iplocation(field=id.resp_h)
+      | groupby(id.resp_h.country)
+      | "dest country" := id.resp_h.country
+      | select(["dest country", _count])
+      | sort(_count)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Destination Countries (Outbound Connections)
+    type: query
+  bdc3e2ad-ddf3-44a9-b5b0-800088327a1c:
+    x: 4
+    y: 12
+    description: Counts the top 25 websites seen in unsecured (HTTP) traffic, by number
+      of connections.
+    height: 9
+    queryString: |-
+      (#path=http or #path=http_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top(host, limit=25)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Most Popular Unencrypted Websites
+    type: query
+  7b97978f-1174-4d43-a38b-9d212a124ec4:
+    x: 4
+    y: 7
+    description: Shows top source countries for inbound connections.
+    height: 5
+    queryString: |-
+      //If you're using a Corelight Sensor you can use orig_cc and resp_cc for country, instead of iplocation
+      (#path=conn or #path=conn_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | iplocation(field=id.orig_h)
+      | groupby(id.orig_h.country)
+      | "src country" := id.orig_h.country
+      | select(["src country", _count])
+      | sort(_count)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Source Countries (Inbound Connections)
+    type: query
+  78ae17b3-08f9-4a27-89e2-42d0c092beca:
+    x: 8
+    y: 12
+    description: Top applications, requires the Corelight Application Identification
+      core package to be enabled in v25 or later sensor.
+    height: 5
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | concatArray(app, separator=", ", as=App_values)
+      | groupby(App_values, limit=10)
+    visualization: pie-chart
+    start: 24h
+    width: 4
+    title: Top Applications
+    type: query
+  6408ce25-f38f-4313-beb4-f14bd7d215d9:
+    x: 0
+    y: 0
+    description: Shows destinations data is flowing to, by volume of data.
+    height: 7
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | worldmap(ip=id.resp_h, magnitude=sum(orig_bytes))
+    start: 7d
+    width: 6
+    options:
+      magnitudeMode: none
+      zLevel: 0
+      projection: mercator
+      rotZ: 0
+      opacity: 40
+      rotY: 0
+      rotX: 0
+      maxOpacity: 40
+      clon: 0
+      autoRotate: false
+      clat: 0
+      maxSize: 7
+    visualization: world-map
+    title: Uploads Map
+    type: query
+  b0c3e4be-0d2d-4e92-b724-55c98e9b4b1e:
+    x: 0
+    y: 12
+    description: Counts the top 25 websites seen in secured (SSL/TLS) traffic, by
+      number of connections.
+    height: 9
+    queryString: |-
+      (#path=ssl or #path=ssl_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | server_name=*
+      | top(server_name, limit=25)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Most Popular Encrypted Websites
+    type: query
+  2eb9ae35-10a8-4961-bc99-ced5ee01c799:
+    x: 6
+    y: 0
+    description: Shows trends of bandwidth usage, by application protocol.
+    height: 7
+    queryString: |-
+      (#path=conn or #path=conn_red)
+      ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | total_bytes:=orig_bytes+resp_bytes
+      | default(field=service, value="unknown")
+      | timechart(series=service, function=sum(total_bytes))
+    start: 24h
+    width: 6
+    options:
+      legendPosition: bottom
+      interpolation: stepped
+      legend: true
+      connect-points: false
+      stacking: none
+      yAxisScale: linear
+      plotType: area
+      imputation: none
+    visualization: time-chart
+    title: Data Transferred by Service (Bytes)
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter (K/V Pair)
+    order: 50
+    type: text
+  filter:
+    defaultValue: '*'
+    label: Filter (IP, Port, Protocol, or Note)
+    order: 10
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 5
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

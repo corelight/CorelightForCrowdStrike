@@ -1,0 +1,170 @@
+name: Data - Corelight DNS
+description: Corelight/Zeek DNS log data including reduced logs.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  f31137a9-ce52-4ad0-895a-a01641f2a0d6:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) is_broadcast!=true AND ("_system_name"=?{system_name=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*})) AND ("#repo"=?{fed_tenant=*})
+      | top(qtype_name)
+    visualization: pie-chart
+    start: 24h
+    width: 4
+    title: Top Query Types
+    type: query
+  283fa114-ef1e-42e8-8866-5f831d69090e:
+    x: 0
+    y: 5
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) is_broadcast!=true id.resp_p=53 AND ("_system_name"=?{system_name=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*})) AND ("#repo"=?{fed_tenant=*})
+      | top(id.orig_h, limit=20)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Originators by Count
+    type: query
+  224e8be8-7fea-4908-b0b9-bcf6683dca0a:
+    x: 4
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) (rcode_name=NXDOMAIN or rcode=3) qtype_name!=PTR AND ("_system_name"=?{system_name=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*})) AND ("#repo"=?{fed_tenant=*})
+      | top(qtype_name, limit=20)
+    visualization: pie-chart
+    start: 24h
+    width: 4
+    title: No response DNS query by type
+    type: query
+  baa29d4d-7b2d-477a-9cfc-e0fcdb59a29b:
+    x: 0
+    y: 10
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) is_broadcast!=true id.resp_p=53 (rcode_name=NXDOMAIN or rcode=3) qtype_name!=PTR AND ("_system_name"=?{system_name=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*})) AND ("#repo"=?{fed_tenant=*})
+      | top(id.orig_h, limit=20)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Host querying Non-Existent Domains
+    type: query
+  13bba311-9870-4c76-8274-ba5b845e944e:
+    x: 0
+    y: 15
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) AND ("_system_name"=?{system_name=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*})) AND ("#repo"=?{fed_tenant=*})
+      | length(query, as="Query_Length")
+      | sort(Query_Length, limit=30)
+      | table([id.orig_h, Query_Length, query])
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: DNS by Query Length
+    type: query
+  efa413a6-07bd-48e8-a70c-e01a500fb6f8:
+    x: 4
+    y: 5
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) is_broadcast!=true id.resp_p=53 qtype_name!=PTR  AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*}))
+      | top(query)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Queries by Count
+    type: query
+  229b18e5-b744-4fd2-8c0b-5212b5e96786:
+    x: 8
+    y: 5
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) is_broadcast!=true id.resp_p=53 qtype_name=PTR (rcode_name=NOERROR or rcode=0) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*}))
+      | top(query, limit=20)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Successful Reverse Queries by Count
+    type: query
+  e82b38d3-6fb6-4f18-b920-941a8cad81a8:
+    x: 8
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) is_broadcast!=true id.resp_p=53 (rcode_name=NXDOMAIN or rcode=3) qtype_name!=PTR AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*}))
+      | top(query)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Queries by Count to Non-Existent Domains
+    type: query
+  222095ad-1193-4ef0-abc9-105942f58854:
+    x: 4
+    y: 10
+    height: 5
+    queryString: |-
+      (#path=dns or #path=dns_red) is_broadcast!=true id.resp_p=53 qtype_name=PTR (rcode_name=NXDOMAIN or rcode=3) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      ("id.resp_p"=?{port=*} "qtype_name"=?{qtype_name=*} AND (?{additional_filter=*}))
+      | top(query, limit=20)
+    visualization: table-view
+    start: 24h
+    width: 8
+    title: Top Reverse Queries by Count to Non-Existent Domains
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter (K/V pair)
+    order: 70
+    type: text
+  port:
+    label: ' Responder Port (id.resp_p)'
+    order: 50
+    values:
+    - '*'
+    - '137'
+    - '53'
+    - '53555'
+    - '5353'
+    type: list
+    defaultValue: '*'
+  qtype_name:
+    label: Record Type
+    query: '#path=dns | groupby(qtype_name, function=[tail(1), count()])'
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 60
+    valueField: qtype_name
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 10
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

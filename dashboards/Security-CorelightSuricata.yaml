@@ -1,0 +1,253 @@
+name: Security - Corelight Suricata
+description: Corelight Suricata log data
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+filters:
+  oUgsKIjmFexiZkhfBNV10UmKQA09gnkO:
+    queryPrefix: 192.168.31.144 not alert.signature="*Steam*"
+    title: Aidan
+widgets:
+  6b1467be-883d-4f1e-b882-02d813199cff:
+    x: 0
+    y: 10
+    height: 5
+    queryString: |
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      // community_id requres that the community_id package be enabled on the sensor
+      // use this in place of the below if you want CID | groupby([id.orig_h, id.resp_h, alert.severity, alert.category, alert.signature, community_id, uid])
+      | groupby([id.orig_h, id.resp_h, alert.severity, alert.category, alert.signature, uid])
+      | replace("1", with="High", field=alert.severity)
+      | replace("2", with="Medium", field=alert.severity)
+      | replace("3", with="Low", field=alert.severity)
+      | source := rename(id.orig_h)
+      | destination := rename(id.resp_h)
+      | severity := rename(alert.severity)
+      | category := rename(alert.category)
+      | signature := rename(alert.signature)
+      | rdns(destination, server=1.1.1.1, as=respdnsName)
+      | join({#path=conn
+      | suri_ids[0]=*
+      | split(id.orig_h_name.src)
+      | id.orig_h_name.src="DNS_A"
+      | concatArray(id.orig_h_name.vals, separator=", ", as=origDNS)
+      | groupby(uid, function=selectLast(["origDNS"]))}, field=uid, key=uid, include=[origDNS])
+      | select([source, destination, severity, category, signature, uid, origDNS, respdnsName, _count]) | sort(_count)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Suricata Alerts By Devices, Severity, Category
+    type: query
+  593629d5-be69-48a6-9c0e-6243127f900e:
+    x: 0
+    y: 15
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      | count("alert.signature", distinct=true, as="count_alert_signatures")
+      | select("count_alert_signatures")
+      | format("%s", field="count_alert_signatures", as="count_alert_signatures")
+    visualization: simple-gauge
+    start: 24h
+    width: 3
+    title: Number of distinct alert signatures
+    type: query
+  3cd370d6-7388-4354-ae37-c78c7ebe46bc:
+    x: 0
+    y: 20
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      | [count("id.orig_h", distinct=true, as="number_source_ips"), count("id.resp_h", distinct=true, as="number_destination_ips")]
+      | eval(total_entities = number_source_ips + number_destination_ips)
+      | select("total_entities")
+      | format("%s", field="total_entities", as="total_entities")
+    visualization: simple-gauge
+    start: 24h
+    width: 3
+    title: Number of distinct entities
+    type: query
+  74d6ac63-95f7-449f-b494-5f9a1245cff4:
+    x: 3
+    y: 20
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      |replace("1", with="High", field=alert.severity)
+      |replace("2", with="Medium", field=alert.severity)
+      |replace("3", with="Low", field=alert.severity)
+      |format("%s", field=id.orig_h, as="Source")
+      |format("%s", field=id.resp_h, as="Destination")
+      |format("%s", field=alert.severity, as=Severity)
+      |format("%s", field=alert.category, as=Category)
+      |format("%s", field=alert.signature, as=Signature)
+      | groupby([Source, Destination, Severity, Signature, Category]) | sort(_count)
+    visualization: table-view
+    start: 24h
+    width: 9
+    title: Top Entities
+    type: query
+  4ea21b33-08bb-4c95-a76c-b89d99a3b183:
+    x: 9
+    y: 15
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*})
+      | iplocation(field=id.resp_h)
+      | id.resp_h.country=* | top(id.resp_h.country)
+    visualization: pie-chart
+    start: 24h
+    width: 3
+    title: Top Resp Countries
+    type: query
+  6cc56829-404f-465a-a8c5-8acd13926154:
+    x: 3
+    y: 15
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      |format("%s", field=alert.signature, as=signature)
+      | top(signature, limit=20)
+      | sort(order=desc)
+    visualization: table-view
+    start: 24h
+    width: 6
+    title: Suricata alert signatures
+    type: query
+  83003e40-b8ad-43da-b7ad-aa912c85c2f0:
+    x: 0
+    y: 25
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      | groupBy(["alert.signature", "alert.category", "alert.severity"],
+               function=[count("id.orig_h", distinct=true, as="number_source_ips"),
+                        count("id.resp_h", distinct=true, as="number_destination_ips")])
+      | eval(total_entities = number_source_ips + number_destination_ips)
+      |replace("1", with="High", field=alert.severity)
+      |replace("2", with="Medium", field=alert.severity)
+      |replace("3", with="Low", field=alert.severity)
+      |format("%s", field=alert.severity, as=Severity)
+      |format("%s", field=alert.category, as=Category)
+      |format("%s", field=alert.signature, as=Signature)
+      | table([Signature, Category, Severity, number_source_ips, number_destination_ips, total_entities], sortby=total_entities, reverse=true, limit=50)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Alert signatures entity counts
+    type: query
+  17e92394-788d-461a-b57a-b6a9ad00c0d5:
+    x: 0
+    y: 5
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      | top(alert.category, limit=10)
+      | sort()
+    start: 24h
+    width: 12
+    options:
+      series: {}
+      labelAngle: 0
+      valuesOnBars: true
+      legend: false
+      labelAlign: center
+      categoryPadding: 0.33
+      seriesPadding: 0
+      sortOrder: ascending
+    visualization: bar-chart
+    title: Suricata Alerts By Category
+    type: query
+  d44e9699-c3d1-436a-986e-6c3beb3e5339:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
+      | timechart(alert.category)
+    start: 24h
+    width: 12
+    options:
+      legendPosition: bottom
+      interpolation: ''
+      xAxisTitle: ''
+      legend: true
+      horizontalPlotLineLabel: ''
+      yAxisScale: linear
+      plotType: area
+      imputation: none
+      yAxisUnit: ''
+      series: {}
+      yAxisTitle: ''
+      stacking: none
+    visualization: time-chart
+    title: Suricata Alert Volume Over Time
+    type: query
+  786b8c72-e1e9-4d40-8809-758b8fff1b44:
+    x: 0
+    y: 30
+    height: 5
+    queryString: |2-
+        (_path=suricata_corelight or #path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+            | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "p"=?{filter=*} OR "note"=?{filter=*})
+    start: 24h
+    width: 12
+    options:
+      columns: '[{"type":"field","fieldName":"@timestamp","width":180},{"type":"field","fieldName":"@rawstring"}]'
+      newestAtBottom: 'true'
+      showOnlyFirstLine: 'false'
+    visualization: list-view
+    title: Suricata Log data
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  alert-sig:
+    label: Alert Signature
+    query: alert.signature=* | groupby(alert.signature, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 3
+    valueField: alert.signature
+  alert_severity:
+    label: Alert Severity
+    query: alert.severity=* | groupby(alert.severity, function=[tail(1), count()])
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 2
+    valueField: alert.severity
+  filter:
+    defaultValue: '*'
+    label: Filter (IP, Port, Protocol, or Note
+    order: 10
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: false
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

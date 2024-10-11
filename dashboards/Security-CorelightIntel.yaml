@@ -1,0 +1,109 @@
+name: Security - Corelight Intel
+description: Corelight/Zeek Intel log data.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: true
+  start: 1d
+widgets:
+  17e92394-788d-461a-b57a-b6a9ad00c0d5:
+    x: 7
+    y: 0
+    description: Indicators from the intel log
+    height: 5
+    queryString: |-
+      #path=intel AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND (?{additional_filter=*})
+      | top(seen.indicator_type, limit=10)
+    visualization: pie-chart
+    start: 24h
+    width: 5
+    title: Indicators
+    type: query
+  1c6b9a19-7863-4290-adec-a68ff136668d:
+    x: 0
+    y: 9
+    height: 4
+    queryString: |-
+      #path=intel AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND (?{additional_filter=*})
+    start: 24h
+    width: 12
+    options:
+      columns: '[{"type":"field","fieldName":"@timestamp","width":210},{"type":"field","fieldName":"id.orig_h","width":143},{"type":"field","fieldName":"id.resp_h","width":143},{"type":"field","fieldName":"id.resp_p","width":99},{"type":"field","fieldName":"@rawstring","width":4000}]'
+      newestAtBottom: 'true'
+      showOnlyFirstLine: 'false'
+    visualization: list-view
+    title: Intel Log Data
+    type: query
+  219afb67-097d-4b69-a954-7a58801befab:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      #path=intel AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | timechart()
+    start: 24h
+    width: 7
+    options:
+      legendPosition: bottom
+      yAxisUnit: ''
+      interpolation: ''
+      xAxisTitle: ''
+      legend: true
+      horizontalPlotLineLabel: ''
+      yAxisScale: linear
+      plotType: area
+      yAxisTitle: ''
+      stacking: none
+    visualization: time-chart
+    title: Intel Logs Over Time
+    type: query
+  5ff4b3f0-1e3c-471c-b4c2-adbe6a394f01:
+    x: 0
+    y: 5
+    height: 4
+    queryString: |-
+      #path=intel AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR "seen.indicator_type"=?{filter=*} OR "seen.indicator"=?{filter=*}) AND (?{additional_filter=*})
+      | top([id.orig_h, id.resp_h, id.resp_p, seen.indicator_type, seen.indicator, seen.where])
+      | source := rename(id.orig_h)
+      | destination := rename(id.resp_h)
+      | port := rename(id.resp_p)
+      | indicator := rename(seen.indicator)
+      | where := rename(seen.where)
+      | "indicator type" := seen.indicator_type
+      | table([source, destination, port, "indicator type", indicator, where])
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Intel Details
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter (K/V pair)
+    order: 20
+    type: text
+  filter:
+    defaultValue: '*'
+    label: Filter (IP, Port, Indicator, or Type)
+    order: 10
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 5
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

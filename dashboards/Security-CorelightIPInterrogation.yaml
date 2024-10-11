@@ -1,0 +1,130 @@
+name: Security - Corelight IP Interrogation
+description: Corelight/Zeek files log data including reduced log.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  386b9584-79d7-4c1b-9892-1e7de62dbd39:
+    x: 6
+    y: 0
+    height: 4
+    queryString: |-
+      (#path=conn or #path=conn_red) AND ("_system_name"=?{system_name=*}) AND (id.orig_h=?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | replace(true, with="Internal", field=local_resp)
+      | replace("false", with="External", field=local_resp)
+      | groupby(local_resp)
+    visualization: pie-chart
+    start: 24h
+    width: 6
+    title: Internal vs External
+    type: query
+  688c3dc5-9c8f-4dd4-a8fb-a9ed8da8ec1f:
+    x: 0
+    y: 9
+    height: 5
+    queryString: |-
+      (#path=http or #path=http_red) AND ("_system_name"=?{system_name=*}) AND (id.orig_h=?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | format("%s", field=id.orig_h, as=src)
+      | format("%s", field=id.resp_h, as=dest)
+      | groupby([dest, src, method, uri]) | sort(uri, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Top Destination IP, Method, & URI
+    type: query
+  a77364af-464d-4850-898d-56e22df3ef21:
+    x: 3
+    y: 14
+    height: 6
+    queryString: |
+      (#path=http or #path=http_red) AND ("_system_name"=?{system_name=*}) AND (id.orig_h=?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | sort(asc)
+      | groupby(user_agent, limit=10)
+    visualization: pie-chart
+    start: 24h
+    width: 6
+    title: Rare User Agents
+    type: query
+  9ac59228-7821-465a-8b42-f0aad2dc6772:
+    x: 9
+    y: 14
+    height: 6
+    queryString: |
+      (#path=conn or #path=conn_red) AND ("_system_name"=?{system_name=*}) AND (id.orig_h=?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | id.resp_p="80" OR id.resp_p="443" OR id.resp_p="8080"
+      | groupBy(id.resp_p)
+    visualization: pie-chart
+    start: 24h
+    width: 3
+    title: Web Ports Breakdown
+    type: query
+  dd09419e-78fb-4667-8dbb-7c14e6e50630:
+    x: 0
+    y: 14
+    height: 6
+    queryString: |-
+      ("_system_name"=?{system_name=*}) AND (id.orig_h=?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby([#path])
+    start: 24h
+    width: 3
+    options:
+      series: {}
+    visualization: pie-chart
+    title: Corelight supporting data sources for source
+    type: query
+  30c37611-749f-40d1-b70e-085f1d9adff0:
+    x: 0
+    y: 4
+    height: 5
+    queryString: |-
+      (#path=conn or #path=conn_red) AND ("_system_name"=?{system_name=*}) AND (id.orig_h=?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | format("%s", field=id.orig_h, as=source)
+      | format("%s", field=id.resp_h, as=destination)
+      | format("%s", field=resp_cc, as=country)
+      | format("%s", field=resp_bytes, as=bytes)
+      | rdns(id.resp_h, server="8.8.8.8", as="Destination Hostname")
+      | groupby([source, destination, service, uid, country, "Destination Hostname", bytes])
+      | sort(bytes, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Top Connections/Services by Bytes Transferred
+    type: query
+  d693ac88-8ff0-4314-af48-f315ab05fbf6:
+    x: 0
+    y: 0
+    height: 4
+    queryString: "(#path=conn or #path=conn_red) AND (\"_system_name\"=?{system_name=*})\
+      \ AND (id.orig_h=?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| id.resp_p!=\"80\" OR id.resp_p!=\"\
+      443\" OR id.resp_p!=\"8080\"\n| groupBy(id.resp_p, limit=10) "
+    start: 24h
+    width: 6
+    options:
+      series: {}
+    visualization: bar-chart
+    title: Top Non-Web Protocol Usage
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    label: Originating IP (Required)
+    order: 50
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 10
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

@@ -1,0 +1,435 @@
+name: Data - Corelight Traffic Health Indicators
+updateFrequency: never
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 7d
+widgets:
+  a8be54a5-802a-4cbc-902a-3f2d50ae52a8:
+    x: 4
+    y: 12
+    description: Shows the percentage of TCP connections to port 443 for which Zeek
+      did not determine SSL as a service.
+    height: 5
+    queryString: "#path=corelight_metrics_zeek_doctor\tcheck.tcp_no_ssl_on_443.percent=*\n\
+      (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| avg(check.tcp_no_ssl_on_443.percent)"
+    end: now
+    start: 7d
+    width: 4
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: '% Port 443 w/o SSL/TLS'
+    isLive: true
+    type: query
+  a434050f-ab66-4356-919d-730d0dc9bd90:
+    x: 0
+    y: 12
+    description: Shows the percentage of connections where originator and responder
+      are local with respect to the current bro.site.local_nets setting. This value
+      is also dependent on the Corelight Sensor’s placement.
+    height: 5
+    queryString: "#path=corelight_metrics_zeek_doctor\tcheck.local_to_local.percent=*\n\
+      (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| groupby([_system_name],\n\
+      \            function=[max(check.local_to_local.percent, as=max)])\n| format(\"\
+      %.4f\", field=max, as=max)"
+    visualization: table-view
+    end: now
+    start: 7d
+    width: 4
+    title: '% Internal Traffic'
+    isLive: true
+    type: query
+  294b2bb0-5068-4f76-9e07-2ecb47de06be:
+    x: 9
+    y: 21
+    description: Shows the percentage of TCP connections representing Internet backscatter.
+      For example, TCP connections with only a reset or syn-ack packet that may be
+      a result of IP spoofing in outside networks.
+    height: 4
+    queryString: "#path=corelight_metrics_zeek_doctor\tcheck.tcp_backscatter.percent=*\n\
+      (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| avg(check.tcp_backscatter.percent)"
+    end: now
+    start: 7d
+    width: 3
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: '% TCP Backscatter'
+    isLive: true
+    type: query
+  note-1667511159217-0:
+    x: 0
+    y: 0
+    height: 6
+    text: "| Field            | ✅   | 🟨   | 🟧   | 🟥   | Description |\n|------------------|-----|-----|-----|-----|--------------------------------------------------------------------------------------------------|\n\
+      | **tcp_half_duplex** | ≤20 | >20 | >50 | >70 | Percentage of TCP connections\
+      \ for which Zeek only observed packets from one endpoint.   A high value might\
+      \ indicate issues with the mirroring setup or BPF filter being used|\n| **dns_half**\
+      \         | ≤20 | >20 | >50 | >70 | Percentage of connections with service dns\
+      \ for which only packets from the originator (client) were observed |\n| **dns_half_resp**\
+      \    | ≤20 | >20 | >50 | >70 | Percentage of connections with service dns for\
+      \ which only packets from the responder (server) were observed |\n| **ext_2_ext**\
+      \        | ≤20 | >20 | >50 | >70 | Percentage of connections where the originator\
+      \ and responder are remote with respect to the bro.site.local_nets setting |\n\
+      | **missed_bytes**     | ≤10 | >10 | >25 | >50 |  Percentage of TCP connections\
+      \ with gaps (g/G flag in history)  |\n| **bursty**           | ≤10 | >10 | >25\
+      \ | >50 | Percentage averaging more than 100mbps data transfer rate.  Only considers\
+      \ connections lasting longer than 100 milliseconds |\n| **wrong_byte_count**\
+      \ | 0-1 | >1  | >10 | >20 | Percentage of TCP connections which, according to\
+      \ sequence numbers, significantly more data was expected than actually seen\
+      \ on the IP layer | \n| **scan**             | ≤20 | >20 | >50 | >70 | Percentage\
+      \ of TCP connections representing scanning attempts.  For example, TCP connections\
+      \ consisting of syn only or a syn and reset packet only |\n| **capture_loss**\
+      \     | 0-1 | >1  | >10 | >20 | Percentage of connections with loss |"
+    width: 12
+    title: Indicator Descriptions
+    type: note
+  8391983c-f0cd-44c1-8ba1-2d06c46e13ea:
+    x: 8
+    y: 12
+    description: Shows the percentage of connections which are "bursty", averaging
+      more than 100mbps data transfer rate. Only considers connections lasting longer
+      than 100 milliseconds. Installations with large amounts of bursty connections
+      should consider enabling Shunting to reduce sensor load.
+    height: 5
+    queryString: "#path=corelight_metrics_zeek_doctor\tcheck.bursty.percent=*\n(\"\
+      _system_name\"=?{system_name=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| avg(check.bursty.percent)"
+    end: now
+    start: 7d
+    width: 4
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: '% Bursty Connections'
+    isLive: true
+    type: query
+  d1ed731f-4586-43e4-8050-386ab2f28372:
+    x: 3
+    y: 21
+    description: Shows the percentage of TCP connections for which Zeek did not observe
+      a regular Three-Way-Handshake. This excludes scan and backscatter connections.
+    height: 4
+    queryString: "#path=corelight_metrics_zeek_doctor\tcheck.tcp_no_three_way_handshake.percent=*\n\
+      (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| avg(check.tcp_no_three_way_handshake.percent)"
+    end: now
+    start: 7d
+    width: 3
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: '% TCP w/o SYNACK'
+    isLive: true
+    type: query
+  b78dc9d0-2f29-46ec-9790-567e1eb32ac3:
+    x: 8
+    y: 17
+    description: The average capture loss percentage for the time interval.
+    height: 4
+    queryString: |-
+      #path=corelight_overall_capture_loss
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | avg(percent_lost)
+    end: now
+    start: 7d
+    width: 4
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Average % Loss
+    isLive: true
+    type: query
+  14a66124-84f2-445b-aac9-f9142e3beb88:
+    x: 4
+    y: 17
+    description: The total number of missing packets ("gaps") during the time interval.
+      A gap is detected when an acknowledgment is observed but the data packet was
+      not observed.
+    height: 4
+    queryString: |-
+      #path=corelight_overall_capture_loss
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | sum(gaps)
+    end: now
+    start: 7d
+    width: 4
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Total Gaps
+    isLive: true
+    type: query
+  e31087e3-bf09-45c0-8231-830aa59aba6c:
+    x: 0
+    y: 6
+    description: Shows the percentage of connections with service=dns for which only
+      packets from the originator (client) were observed.
+    height: 6
+    queryString: "#path=corelight_metrics_zeek_doctor\tcheck.dns_half_duplex_orig.percent=*\n\
+      (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n\n|  groupby([_system_name],\n\
+      \        function=[max(check.tcp_half_duplex.percent, as=tcp_half_duplex), max(check.dns_half_duplex_orig.percent,\
+      \ as=dns_half_orig), max(check.dns_half_duplex_resp.percent, as=dns_half_resp),\
+      \ max(check.tcp_missed_bytes.percent, as=missed_bytes), max(check.remote_to_remote.percent,\
+      \ as=ext_2_ext), max(check.bursty.percent, as=bursty), max(check.tcp_byte_counts_wrong.percent,\
+      \ as=wrong_byte_count), max(check.tcp_scan.percent, as=scan), max(corelight_overall_capture_loss,\
+      \ as=capture_loss)])\n\n| diff := dns_half_orig - dns_half_resp\n| case {\n\
+      \    diff > 0 | dns_half := dns_half_orig;\n    * | dns_half := dns_half_resp\n\
+      }\n\n| case {\n    tcp_half_duplex > 70 | tcp_half_duplex := \"🟥\";\n    tcp_half_duplex\
+      \ > 50 | tcp_half_duplex := \"🟧\";\n    tcp_half_duplex > 20 | tcp_half_duplex\
+      \ := \"🟨\";\n    * | tcp_half_duplex := \"✅\"\n}\n| case {\n    dns_half >\
+      \ 70 | dns_half := \"🟥\";\n    dns_half > 50 | dns_half := \"🟧\";\n    dns_half\
+      \ > 20 | dns_half := \"🟨\";\n    * | dns_half := \"✅\"\n}\n| case {\n    dns_half_resp\
+      \ > 70 | dns_half_resp := \"🟥\";\n    dns_half_resp > 50 | dns_half_resp :=\
+      \ \"🟧\";\n    dns_half_resp > 20 | dns_half_resp := \"🟨\";\n    * | dns_half_resp\
+      \ := \"✅\"\n}\n| case {\n    ext_2_ext > 70 | ext_2_ext := \"🟥\";\n    ext_2_ext\
+      \ > 50 | ext_2_ext := \"🟧\";\n    ext_2_ext > 20 | ext_2_ext := \"🟨\";\n \
+      \   * | ext_2_ext := \"✅\"\n}\n| case {\n    missed_bytes > 50 | missed_bytes\
+      \ := \"🟥\";\n    missed_bytes > 25 | missed_bytes := \"🟧\";\n    missed_bytes\
+      \ > 10 | missed_bytes := \"🟨\";\n    * | missed_bytes := \"✅\"\n}\n\n// bursty\
+      \ is not included in the select statement\n| case {\n    bursty > 50 | bursty\
+      \ := \"🟥\";\n    bursty > 25 | bursty := \"🟧\";\n    bursty > 10 | bursty\
+      \ := \"🟨\";\n    * | bursty := \"✅\"\n}\n| case {\n    wrong_byte_count > 20\
+      \ | wrong_byte_count := \"🟥\";\n    wrong_byte_count > 10 | wrong_byte_count\
+      \ := \"🟧\";\n    wrong_byte_count > 1 | wrong_byte_count := \"🟨\";\n    *\
+      \ | wrong_byte_count := \"✅\"\n}\n| case {\n    scan > 70 | scan := \"🟥\";\n\
+      \    scan > 50 | scan := \"🟧\";\n    scan > 20 | scan := \"🟨\";\n    * | scan\
+      \ := \"✅\"\n}\n| case {\n    capture_loss > 20 | capture_loss := \"🟥\";\n \
+      \   capture_loss > 10 | capture_loss := \"🟧\";\n    capture_loss > 1 | capture_loss\
+      \ := \"🟨\";\n    * | capture_loss := \"✅\"\n}\n\n| select([_system_name, tcp_half_duplex,\
+      \ dns_half, dns_half_resp, missed_bytes, ext_2_ext, wrong_byte_count, bursty,\
+      \ scan, capture_loss])"
+    visualization: table-view
+    end: now
+    start: 7d
+    width: 12
+    title: Health Indicators Across Sensors
+    isLive: true
+    type: query
+  8135846c-1e16-4f1b-a85e-6045069479a9:
+    x: 0
+    y: 21
+    height: 4
+    queryString: |-
+      #path=corelight_metrics_zeek_doctor check.tcp_scan.percent > 0 AND ("#repo"=?{fed_tenant=*})
+      |  groupby([_system_name],
+                  function= [max(check.tcp_scan.percent, as=scans)])
+      | format("%,.2f", field=scans, as=scans)
+    visualization: table-view
+    end: now
+    start: 24h
+    width: 3
+    title: '% TCP Scans by Sensor'
+    isLive: true
+    type: query
+  5cbeef95-f543-4e48-9d87-8b42f2426324:
+    x: 6
+    y: 21
+    description: Shows the percentage of TCP connections with retransmissions (t/T
+      flag in history). A very high value might indicate packet duplication happening
+      in the mirroring setup and Zeek observing the same packet more than once.
+    height: 4
+    queryString: "#path=corelight_metrics_zeek_doctor\tcheck.tcp_retransmissions.percent=*\n\
+      (\"_system_name\"=?{system_name=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| avg(check.tcp_retransmissions.percent)"
+    end: now
+    start: 7d
+    width: 3
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: '% TCP Retransmissions'
+    isLive: true
+    type: query
+  2448bb4e-efb2-4b5b-92b7-8e7006998e64:
+    x: 0
+    y: 17
+    description: The total number of ACK packets observed in the time interval.
+    height: 4
+    queryString: |-
+      #path=corelight_overall_capture_loss
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | sum(acks)
+    end: now
+    start: 7d
+    width: 4
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+        v: null
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+        v: null
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: raw
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Total Acks
+    isLive: true
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.12.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter
+    order: 50
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[])
+    timeInterval: 7d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 10
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

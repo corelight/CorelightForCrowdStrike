@@ -1,0 +1,224 @@
+name: Data - Known Entities
+description: Corelight/Zeek Known* logs
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: true
+  start: 1d
+widgets:
+  4f0b0bbf-6286-4eeb-b825-6412ffe898c6:
+    x: 6
+    y: 6
+    height: 5
+    queryString: |-
+      #path=known_names or #path=known-names
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupBy("hostname", function=count("host_ip", distinct=true, as="#Host IPs"))
+      | sort("#Host IPs", limit=20)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: 'Top 20 hostnames (by #IPs)'
+    type: query
+  b3ddd65a-fec1-465c-8c6c-867cceed4532:
+    x: 4
+    y: 0
+    height: 4
+    queryString: |-
+      #path=known*
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | ("host_ip"=?{additional_filter=*} )
+      | timechart(#path)
+    start: 24h
+    width: 8
+    options:
+      imputation: none
+    visualization: time-chart
+    title: Logs timechart
+    type: query
+  dc5032fc-526d-4753-825a-1eb1615dcd89:
+    x: 0
+    y: 16
+    height: 5
+    queryString: |-
+      #path=known_users or #path=known-users
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupBy([user, host_ip, remote_ip, protocol])
+      | groupBy(user, function=series([host_ip, remote_ip, protocol], memlimit=1KB))
+      | select([user, host_ip, remote_ip, protocol])
+    visualization: table-view
+    start: 24h
+    width: 6
+    title: User IPs & Protocols
+    type: query
+  5d5b0cfc-a51f-470c-ac1b-b6383972571c:
+    x: 0
+    y: 11
+    height: 5
+    queryString: |-
+      #path=known_names or #path=known-names
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupBy("hostname", function=count("host_ip", distinct=true, as="#Host IPs"))
+      | sort("#Host IPs", limit=20, order=asc)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: Least Common Hostnames
+    type: query
+  2ec5c199-b8d8-4b71-bb03-43eed9e79349:
+    x: 9
+    y: 6
+    height: 5
+    queryString: |-
+      #path=known_services or #path=known-services
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top("service[0]", limit=20)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: 'Top 20 services (by #Hostnames)'
+    type: query
+  cddc5435-860f-41f6-b329-129a5616dd9b:
+    x: 3
+    y: 6
+    height: 5
+    queryString: |-
+      #path=known_users or #path=known-users
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupBy("user", function=count("host_ip", distinct=true, as="#IPs"))
+      | sort("#IPs", limit=20)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: 'Top 20 users (by #IPs)'
+    type: query
+  4138bd63-67e3-4b09-880c-767d0bdfe8c9:
+    x: 0
+    y: 0
+    height: 4
+    queryString: |-
+      #path=known*
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top(#path)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Logs
+    type: query
+  ea83d616-af86-41ac-b3ec-b6cecaa7b42a:
+    x: 0
+    y: 4
+    height: 2
+    queryString: |
+      #path=known_hosts or #path=known-hosts
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count("host_ip", distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 3
+    title: Number of host IPs
+    type: query
+  4fa3cf58-7573-465a-9dd8-130ef28b820c:
+    x: 3
+    y: 4
+    height: 2
+    queryString: |-
+      #path=known_users or #path=known-users
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count("user", distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 3
+    title: Number of users
+    type: query
+  74f1690f-2111-4d59-9750-1392b37ed61c:
+    x: 6
+    y: 4
+    height: 2
+    queryString: |-
+      #path=known_names or #path=known-names
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count("hostname", distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 3
+    title: Number of hostnames
+    type: query
+  1e37e78a-a804-4ba5-b09d-10e9eb6b8f27:
+    x: 0
+    y: 6
+    height: 5
+    queryString: |-
+      #path=known_hosts or #path=known-hosts
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top("host_ip", limit=20)
+    visualization: table-view
+    start: 24h
+    width: 3
+    title: Top 20 host IPs
+    type: query
+  5c599409-d286-4d26-a905-abe81bcbc348:
+    x: 3
+    y: 11
+    height: 5
+    queryString: |-
+      #path=known_users or #path=known-users
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top(field=["host_ip","user","remote_ip"], limit=20)
+      | sankey(source=user, target=host_ip, weight=count(remote_ip, distinct=true))
+    visualization: sankey
+    start: 24h
+    width: 9
+    title: Users to IPs
+    type: query
+  3b5a9342-4a70-49e6-9bdd-8afbf1123aca:
+    x: 9
+    y: 4
+    height: 2
+    queryString: |-
+      #path=known_services or #path=known-services
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count("service[0]", distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 3
+    title: Number of services
+    type: query
+  af9de7bb-a8b8-468c-90d2-af4587ff64c0:
+    x: 6
+    y: 16
+    height: 5
+    queryString: |-
+      #path=known_names or #path=known-names
+      ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupBy([hostname, host_ip])
+      | groupBy(hostname, function=series(host_ip, memlimit=1KB))
+      | select([hostname, host_ip])
+    visualization: table-view
+    start: 24h
+    width: 6
+    title: Hostname/IPs
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter
+    order: 50
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

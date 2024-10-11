@@ -1,0 +1,331 @@
+name: Data - Corelight Health Report - Sensor Status
+description: Sensor Status Dashboard
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 30m
+widgets:
+  5da1807a-3911-4dc9-b11a-7a3e28388ee6:
+    x: 6
+    y: 0
+    height: 2
+    queryString: |-
+      sample(percentage=?sampling_percentage)
+      | #path="corelight_*"
+      | ("#repo"=?{fed_tenant=*})
+      | count("#path", distinct=True, as="#telemetry_logs")
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Number of telemetry logs
+    type: query
+  f6edea98-a186-40c8-ad80-0d7552048392:
+    x: 8
+    y: 0
+    height: 2
+    queryString: |-
+      sample(percentage=?sampling_percentage)
+      | #path=conn OR #path=conn_red
+      | ("#repo"=?{fed_tenant=*})
+      | local_orig=true OR local_resp=true
+      | delim := ","
+      | case { local_orig=true    | local_orig_ip := id.orig_h;
+               local_orig=false   | local_orig_ip := "-"; }
+      | case { local_resp=true    | local_resp_ip := id.resp_h;
+               local_resp=false   | local_resp_ip := "-"; }
+      | concat([local_orig_ip, delim, local_resp_ip], as="combined_ips")
+      | ips := splitString(field=combined_ips, by=",")
+      | split(ips)
+      | ips != "-"
+      | count("ips", distinct=true, as="#Local IPs")
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Number of local IPs
+    type: query
+  c648c311-fc0a-45f6-8997-c3e42bacbb89:
+    x: 6
+    y: 14
+    height: 10
+    queryString: |-
+      #path != "corelight_*" AND #path != "*_red" AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      | groupBy("#path")
+      | sort()
+      | table(["#path"])
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Top network logs
+    type: query
+  5d43b305-3b43-4bb0-bc4b-636dbd09a997:
+    x: 0
+    y: 14
+    height: 10
+    queryString: |-
+      #path=conn OR #path=conn_red AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      |top("history", limit=100, as="#connections")
+      | "#connections" := "#connections" * (100 /?sampling_percentage)
+    visualization: table-view
+    start: 30m
+    width: 3
+    title: Top connection history
+    type: query
+  ea24e918-e193-4b4e-8708-3a9cb42c2a65:
+    x: 0
+    y: 2
+    height: 5
+    queryString: |-
+      sample(percentage=?sampling_percentage)
+      | ("#repo"=?{fed_tenant=*})
+      | unit := ?bucketSize
+      | case { unit = "1s" | "Event rate unit" := "EPS";
+               unit = "1m" | "Event rate unit" := "Events per minute";
+               unit = "1h" | "Event rate unit" := "Events per hour";
+               unit = "1d" | "Event rate unit" := "Events per day";
+      }
+      | bucket(field="_system_name", span=?bucketSize, function=[count(as="num_events"), collect(["Event rate unit"])])
+      | groupBy("_system_name", function=[collect(["Event rate unit"]), avg("num_events", as="avg_events"), sum("num_events", as="total_events")])
+      | avg_events := avg_events * (100 /?sampling_percentage)
+      | total_events := total_events * (100 /?sampling_percentage)
+      | rename("_system_name", as="Sensor Name")
+      | rename("total_events", as="Total Events")
+      | format("%,.3f", field="avg_events", as="Average Event Rate")
+      | format("%,.0f", field="Total Events", as="Total Events")
+      | table(["Sensor Name", "Event rate unit", "Average Event Rate", "Total Events"])
+      | sort("Sensor Name", order="asc")
+    visualization: table-view
+    start: 30m
+    width: 4
+    title: Average event rates per sensor
+    type: query
+  cfe89779-b030-4db6-bcc4-b75aefaf56e2:
+    x: 0
+    y: 7
+    height: 4
+    queryString: |-
+      #path=conn or #path=conn_red AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      | case { missed_bytes = 0 | dropped_packets := 0;
+               missed_bytes > 0 | dropped_packets := 1
+             }
+      | groupBy("_system_name", function=[count(as="num_connections"), sum(dropped_packets, as="num_conns_drop_pckts")])
+      | ratio_conns_drop_pckts := num_conns_drop_pckts / num_connections
+      | "#Connections" := num_connections * (100 /?sampling_percentage)
+      | rename("_system_name", as="Sensor Name")
+      | format("%,.6f", field="ratio_conns_drop_pckts", as="Ratio of connections with packet loss")
+      | table(["Sensor Name", "#Connections", "Ratio of connections with packet loss"])
+      | sort("Sensor Name", order="asc")
+    visualization: table-view
+    start: 30m
+    width: 4
+    title: Connections per sensor
+    type: query
+  d623a352-a72f-49f3-aa4e-9c13899ec513:
+    x: 2
+    y: 0
+    height: 2
+    queryString: |-
+      sample(percentage=?sampling_percentage)
+      | #path != "corelight_*" AND #path != "*_red"
+      | ("#repo"=?{fed_tenant=*})
+      | count("#path", distinct=True, as="#network_logs")
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Number of network logs
+    type: query
+  256db879-8afb-4b4d-a022-b6bdb56e2f5a:
+    x: 4
+    y: 7
+    height: 7
+    queryString: |-
+      _system_name=?systemName AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      | timeChart("#path", limit=50, span=?bucketSize)
+      | _count := _count * (100 /?sampling_percentage)
+    start: 24h
+    width: 8
+    options:
+      series: {}
+    visualization: time-chart
+    title: Log Type Breakdown
+    type: query
+  ee1d7c2b-bb64-4f92-a7f2-0332a0fe35af:
+    x: 0
+    y: 0
+    height: 2
+    queryString: |-
+      groupBy("_system_name", function=[])
+      | count("_system_name", as="#sensors")
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Number of sensors
+    type: query
+  b35ccc8a-5927-4c2d-b9b0-83b0355ea0cb:
+    x: 4
+    y: 0
+    height: 2
+    queryString: |-
+      sample(percentage=?sampling_percentage)
+      | #path="*_red"
+      | ("#repo"=?{fed_tenant=*})
+      | count("#path", distinct=True, as="#reduced_logs")
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Number of reduced logs
+    type: query
+  1739cbb7-fbe5-4115-907d-04eda9c9bcbd:
+    x: 3
+    y: 14
+    height: 10
+    queryString: |
+      #path=conn OR #path=conn_red AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      |top("conn_state", limit=100, as="#connections")
+      | "#connections" := "#connections" * (100 /?sampling_percentage)
+    visualization: table-view
+    start: 30m
+    width: 3
+    title: Top connection state
+    type: query
+  3f83ca20-87e6-400f-9f0e-701e42bec53b:
+    x: 4
+    y: 2
+    height: 5
+    queryString: |-
+      sample(percentage=?sampling_percentage)
+      | ("#repo"=?{fed_tenant=*})
+      | timeChart("_system_name", span=?bucketSize)
+      | _count := _count * (100 /?sampling_percentage)
+    start: 1h
+    width: 8
+    options:
+      series: {}
+    visualization: time-chart
+    title: All Sensors
+    type: query
+  b65c1e0e-f500-4814-bd6a-4d9b3b3ed302:
+    x: 0
+    y: 11
+    height: 3
+    queryString: |-
+      #path=conn or #path=conn_red AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      | direction := "-"
+      | case { local_orig = true AND local_resp = true | direction := "Internal to Internal";
+               local_orig = true AND local_resp = false | direction := "Internal to External";
+               local_orig = false AND local_resp = true | direction := "External to Internal";
+               local_orig = false AND local_resp = false | direction := "External to External";
+             }
+      | groupBy("direction", function=[count(as="num_connections"), count("id.orig_h", as="#Orig IPs", distinct=true), count("id.resp_h", as="#Resp IPs", distinct=true)])
+      | "#Connections" := num_connections * (100 /?sampling_percentage)
+      | table(["direction", "#Connections", "#Orig IPs", "#Resp IPs"])
+      | sort("#Connections")
+    visualization: table-view
+    start: 30m
+    width: 4
+    title: Connections by direction
+    type: query
+  0cb83aba-247b-4542-bf1f-28daf6ec6b15:
+    x: 10
+    y: 0
+    height: 2
+    queryString: |-
+      sample(percentage=?sampling_percentage)
+      | #path=conn OR #path=conn_red
+      | ("#repo"=?{fed_tenant=*})
+      | local_orig=false OR local_resp=false
+      | delim := ","
+      | case { local_orig=true    | remote_orig_ip := "-";
+               local_orig=false   | remote_orig_ip := id.orig_h; }
+      | case { local_resp=true    | remote_resp_ip := "-";
+               local_resp=false   | remote_resp_ip := id.resp_h; }
+      | concat([remote_orig_ip, delim, remote_resp_ip], as="combined_ips")
+      | ips := splitString(field=combined_ips, by=",")
+      | split(ips)
+      | ips != "-"
+      | count("ips", distinct=true, as="#Remote IPs")
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Number of remote IPs
+    type: query
+  9efe09b0-cf9d-4e24-9713-868de76c5d80:
+    x: 10
+    y: 14
+    height: 10
+    queryString: |-
+      #path = "corelight_*" AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      | groupBy("#path")
+      | sort()
+      | table(["#path"])
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Top telemetry logs
+    type: query
+  9ceadd92-adb4-4f3f-9805-fa2a6bc2a433:
+    x: 8
+    y: 14
+    height: 10
+    queryString: |-
+      #path = "*_red" AND ("#repo"=?{fed_tenant=*})
+      | sample(percentage=?sampling_percentage)
+      | groupBy("#path")
+      | sort()
+      | table(["#path"])
+    visualization: table-view
+    start: 30m
+    width: 2
+    title: Top reduced logs
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  bucketSize:
+    label: Event Rate Aggregation Granularity (1s, 1m, 1h)
+    order: 50
+    values:
+    - 1s
+    - 1m
+    - 1h
+    - 1d
+    type: list
+    defaultValue: 1s
+  sampling_percentage:
+    label: Sampling Percentage
+    order: 50
+    values:
+    - '10'
+    - '20'
+    - '30'
+    - '40'
+    - '50'
+    - '60'
+    - '70'
+    - '80'
+    - '90'
+    - '100'
+    type: list
+    defaultValue: '10'
+  systemName:
+    label: Sensor Name
+    query: top(_system_name)
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

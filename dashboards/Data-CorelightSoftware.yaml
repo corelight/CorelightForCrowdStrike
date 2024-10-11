@@ -1,0 +1,93 @@
+name: Data - Corelight Software
+description: Corelight/Zeek software log data.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  0c363056-fc54-4046-b083-40f70f2364b0:
+    x: 6
+    y: 0
+    height: 5
+    queryString: |-
+      (#path=known_services or #path=known-services) and software[0]="*" AND ("#repo"=?{fed_tenant=*})
+      | concatArray(software, separator=", ", as=software)
+      | concatArray(service, separator=", ", as=service)
+      | top([_system_name, protocol, service, software], limit=50)
+    visualization: table-view
+    start: 1d
+    width: 6
+    title: Top Software by Connection
+    type: query
+  15bb71bd-e729-4bb7-98db-58aa9bb6dc01:
+    x: 0
+    y: 5
+    height: 5
+    queryString: "#path=software\n(\"_system_name\"=?{system_name=*}) AND (\"software_type\"\
+      =?{software_type=*}) AND (?{additional_filter=*}) AND (\"#repo\"=?{fed_tenant=*})\n| top([name, host, unparsed_version],\
+      \ limit=30)\n| Source := host\n| Version := unparsed_version\n| Software :=\
+      \ name\n| table([Software, Source, Version, _count])\n| sort(_count) "
+    visualization: table-view
+    start: 24h
+    width: 8
+    title: Top Software Versions
+    type: query
+  6dc7cb12-71e0-497d-8790-c96889711093:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      #path=software
+      ("_system_name"=?{system_name=*}) AND ("software_type"=?{software_type=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top(name, limit=10)
+    visualization: pie-chart
+    start: 24h
+    width: 6
+    title: Top Software
+    type: query
+  7f0d6460-6e81-4ec1-bd52-3fb7e6d82617:
+    x: 8
+    y: 5
+    height: 5
+    queryString: |-
+      #path=software
+      ("_system_name"=?{system_name=*}) AND ("software_type"=?{software_type=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | top(software_type, limit=30)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Software Types
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: 'Additional Filter '
+    order: 50
+    type: text
+  software_type:
+    label: Software Type
+    query: '#path=software | groupby(software_type, function=[tail(1), count()])'
+    timeInterval: 24h
+    useDashboardTimeIfSet: false
+    type: query
+    defaultValue: '*'
+    order: 2
+    valueField: software_type
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

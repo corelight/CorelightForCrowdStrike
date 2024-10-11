@@ -1,0 +1,216 @@
+name: Data - Corelight Files
+description: Corelight/Zeek files log data including reduced log.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  688c3dc5-9c8f-4dd4-a8fb-a9ed8da8ec1f:
+    x: 8
+    y: 9
+    height: 5
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | mime_type=application/x-dosexec md5=*
+      | top(md5)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Most Common Exe by MD5
+    type: query
+  612395fd-966b-4c6b-b4cd-225707b3466e:
+    x: 0
+    y: 9
+    description: Bytes sent from inside source over time in 15m intervals
+    height: 5
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND ("mime_type"=?{mime_type=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | local_orig=true mime_type!=application/pkix-cert
+      | timechart(function=sum(total_bytes, as=bytes_sent), unit="15/min")
+    start: 24h
+    width: 8
+    options:
+      series: {}
+      gradient: true
+      connect-points: false
+      stacking: normal
+      yAxisScale: linear
+      imputation: none
+    visualization: time-chart
+    title: File Flow - Bytes Sent
+    type: query
+  54e12dc9-61b7-4837-84d8-8f72e576d286:
+    x: 0
+    y: 24
+    height: 5
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND ("mime_type"=?{mime_type=*}) AND (?{additional_filter=*}) md5=* AND ("#repo"=?{fed_tenant=*})
+      | groupby([tx_hosts[0], rx_hosts[0], filename, mime_type, conn_uids[0], md5, sha1, sha256])
+      | table([tx_hosts[0], rx_hosts[0], filename, mime_type, conn_uids[0], md5, sha1, sha256, _count])
+      | sort(_count)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Files Filtered by Mime Type
+    type: query
+  91c9a41e-ba8e-45ae-87e7-aa096ccaa873:
+    x: 0
+    y: 19
+    height: 5
+    queryString: |-
+      (#path=conn or #path=conn_red) ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | join({#path=files or #path=files_red
+      | mime_type=application/x-dosexec md5=*
+      | rdns(tx_hosts[0], server=1.1.1.1, as=respdnsName)}, field=uid, key=conn_uids[0], include=[tx_hosts[0], rx_hosts[0], filename, mime_type, conn_uids[0], md5, sha1, sha256, respdnsName])
+      | groupby([tx_hosts[0], rx_hosts[0], resp_cc, filename, mime_type, conn_uids[0], respdnsName, md5, sha1, sha256])
+      | table([tx_hosts[0], rx_hosts[0], resp_cc, filename, mime_type, conn_uids[0], respdnsName, md5, sha1, sha256, _count])
+      | sort(_count)
+    visualization: table-view
+    start: 24h
+    width: 12
+    title: Executable Files
+    type: query
+  50fdd77b-5e97-43ce-b529-5f7592b49ca4:
+    x: 6
+    y: 14
+    description: Files received from inside source over time in 15m intervals
+    height: 5
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND ("mime_type"=?{mime_type=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | local_orig!=true mime_type!=application/pkix-cert
+      | timechart(function=count(as=files_received), unit="15/min")
+    start: 24h
+    width: 6
+    options:
+      series: {}
+      gradient: true
+      connect-points: false
+      stacking: normal
+      yAxisScale: linear
+      imputation: none
+    visualization: time-chart
+    title: Files Received
+    type: query
+  7b88b905-289c-41f4-ac99-ed2c148fd61b:
+    x: 0
+    y: 14
+    description: Files sent from inside source over time in 15m intervals
+    height: 5
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND ("mime_type"=?{mime_type=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | local_orig=true mime_type!=application/pkix-cert
+      | timechart(function=count(as=files_sent), unit="15/min")
+    start: 24h
+    width: 6
+    options:
+      series: {}
+      gradient: true
+      connect-points: false
+      stacking: normal
+      yAxisScale: linear
+      imputation: none
+    visualization: time-chart
+    title: Files Sent
+    type: query
+  14f7ab45-b333-4d0b-809a-53b2e7306308:
+    x: 0
+    y: 29
+    description: Executable files using the PE analyzer without .exe extension.
+    height: 4
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) md5=* AND ("#repo"=?{fed_tenant=*})
+      | mime_type=application/x-dosexec and filename!="*.exe"
+      | split(analyzers)
+      | analyzers=PE
+    start: 24h
+    width: 12
+    options:
+      columns: '[{"type":"field","fieldName":"@timestamp","format":"timestamp","width":210},{"type":"field","fieldName":"mime_type","format":"text","width":231},{"type":"field","fieldName":"fuid","format":"text","width":198},{"type":"field","fieldName":"@rawstring","format":"logline"}]'
+      newestAtBottom: 'false'
+      showOnlyFirstLine: 'true'
+    visualization: list-view
+    title: Possible PE Files
+    type: query
+  d693ac88-8ff0-4314-af48-f315ab05fbf6:
+    x: 0
+    y: 0
+    description: Top 20 Mime Types by File Count
+    height: 4
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | mime_type!=*x-x509-user-cert AND mime_type!=*x-x509-ca-cert
+      | top(mime_type, limit=20) | sort()
+    start: 24h
+    width: 12
+    options:
+      series: {}
+    visualization: bar-chart
+    title: Top 20 Mime Types by File Count (excluding x509 certs)
+    type: query
+  386b9584-79d7-4c1b-9892-1e7de62dbd39:
+    x: 0
+    y: 4
+    height: 5
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND ("mime_type"=?{mime_type=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | mime_type!=application/pkix-cert
+      | top(source) | sort()
+    visualization: pie-chart
+    start: 24h
+    width: 4
+    title: Top File Protocols by File Count
+    type: query
+  9e34d844-c89a-435f-9db7-b0246ce159bc:
+    x: 4
+    y: 4
+    description: Bytes received from outside source over time in 15m intervals
+    height: 5
+    queryString: |-
+      (#path=files or #path=files_red) ("_system_name"=?{system_name=*}) AND ("mime_type"=?{mime_type=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | local_orig!=true mime_type!=application/pkix-cert
+      | timechart(function=sum(seen_bytes, as=bytes_received), unit="15/min")
+    start: 24h
+    width: 8
+    options:
+      series: {}
+      connect-points: false
+      stacking: normal
+      yAxisScale: linear
+      imputation: none
+    visualization: time-chart
+    title: File Flow - Bytes Received
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional Filter
+    order: 60
+    type: text
+  mime_type:
+    label: Mime Type
+    query: '#path=files or #path=files_red | groupby(mime_type, function=[tail(1),
+      count()])'
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 50
+    valueField: mime_type
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 50
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'

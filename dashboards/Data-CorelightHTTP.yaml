@@ -1,0 +1,171 @@
+name: Data - Corelight HTTP
+description: Corelight/Zeek HTTP log data including reduced log.
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 15m
+widgets:
+  32320b7c-0b25-4e52-bf9d-cde2a53b8273:
+    x: 8
+    y: 0
+    height: 2
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | avg("response_body_len")
+      | round(_avg)
+    visualization: simple-gauge
+    start: 24h
+    width: 2
+    title: Average Body Length
+    type: query
+  c62d595b-a0fb-4eac-b073-3fa14aa6d6c6:
+    x: 8
+    y: 7
+    height: 5
+    queryString: |
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby([host, status_code])
+      | sort(_count, order=asce, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Rare Host Headers
+    type: query
+  f73bfc04-2f46-4c5c-8c7b-b27493f5573d:
+    x: 2
+    y: 0
+    height: 2
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count(user_agent, distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 2
+    title: Distinct User Agents
+    type: query
+  a45ee2f7-6eba-492e-babc-c3e03da40617:
+    x: 6
+    y: 0
+    height: 2
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count(uid, distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 2
+    title: Distinct Connections
+    type: query
+  42c8265a-9196-4101-b8a7-94225372cbae:
+    x: 0
+    y: 2
+    height: 5
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby(host)
+      | sort(_count, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Host Headers by Count
+    type: query
+  22e9d0b4-ce96-4466-b454-5d46855dc38f:
+    x: 0
+    y: 0
+    height: 2
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count(referrer, distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 2
+    title: Distinct Referrers
+    type: query
+  67450089-3e23-4153-b4c4-631906f8db20:
+    x: 8
+    y: 2
+    height: 5
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby(id.orig_h)
+      | sort(_count, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 4
+    title: Top Originators
+    type: query
+  ba99b29a-394a-40da-ab98-9363c5e4ae5d:
+    x: 4
+    y: 0
+    height: 2
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | count(host, distinct=true)
+    visualization: simple-gauge
+    start: 24h
+    width: 2
+    title: Distinct Hosts
+    type: query
+  69a17a96-cc25-4059-9bbb-bb314570cdda:
+    x: 10
+    y: 0
+    height: 2
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | length(user_agent, as="http_user_agent")
+      | avg("http_user_agent")
+      | round(_avg)
+    visualization: simple-gauge
+    start: 24h
+    width: 2
+    title: Average User Agent Length
+    type: query
+  300372a7-46c0-487d-8e28-9485a45b01f0:
+    x: 4
+    y: 2
+    height: 5
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby(status_msg)
+      | sort(_count, limit=10)
+    visualization: pie-chart
+    start: 24h
+    width: 4
+    title: HTTP Status Code Breakdown
+    type: query
+  3ddc3566-4056-4f45-8e26-a03b0a6f7fba:
+    x: 0
+    y: 7
+    height: 5
+    queryString: |-
+      (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
+      | groupby(user_agent)
+      | sort(_count, order=asce, limit=10)
+    visualization: table-view
+    start: 24h
+    width: 8
+    title: Rare User Agents
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.2.0
+parameters:
+  additional_filter:
+    defaultValue: '*'
+    label: Additional filter
+    order: 70
+    type: text
+  system_name:
+    label: Corelight Sensor
+    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    order: 1
+    valueField: _system_name
+  fed_tenant:
+    label: Tenant
+    fileName: 'members.csv'
+    defaultValue: '*'
+    type: file
+    order: 1
+    valueField: 'members'
