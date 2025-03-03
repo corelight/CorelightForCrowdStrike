@@ -1,0 +1,555 @@
+sections:
+  section-1739272791395-0:
+    description: Click on the three dots to view details of Aggregated SID(s).
+    collapsed: false
+    widgetIds:
+    - note-1739268580722-0
+    - 6aab2ddd-4035-4a6e-8c21-0ded8d9c6fb7
+    order: 0
+    title: Alert Aggregations Data
+name: Security-CorelightAlertAggregations
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+labels:
+- Corelight
+widgets:
+  34e8d01e-c797-4e5a-88d8-dc77cd612977:
+    x: 4
+    y: 1
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id =*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | is_dest_internal_ip:=if(cidr(destination.ip, subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
+      | is_dest_internal_ip="true"
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category])
+      | impact_score>3
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | count(as=Impacted_Int_Hosts)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: Impacted Internal Hosts
+    isLive: false
+    type: query
+  6aab2ddd-4035-4a6e-8c21-0ded8d9c6fb7:
+    x: 0
+    height: 4
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id=*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category, technique_name])
+      | impact_score > 3 and impact_score!="" and category!="" and technique_name!=""
+      | groupBy([event.id], function=[collect([sid], separator=", "),collect([Vendor.alert.signature]),collect([technique_name]),collect([impact_score]),collect([category]) ], limit=1000000)
+      | groupBy([sid],function=[collect([technique_name]),collect([category]),collect([Vendor.alert.signature]),collect([impact_score]),count(field=event.id,distinct=true,as=Connections)], limit=1000000)
+      | impact_score_filter := ?impact_score
+      | category_filter := ?category
+      | case {
+          !text:contains(string=impact_score_filter, substring="*") |
+          text:contains(string=impact_score, substring=impact_score_filter);
+          text:contains(string=impact_score_filter, substring="*") | *
+      }
+      | case {
+          !text:contains(string=category_filter, substring="*") |
+          text:contains(string=category, substring=category_filter);
+          text:contains(string=category_filter, substring="*") | *
+      }
+      | sort(Connections, limit=20000)
+      | rename([[technique_name, "MITRE Technique"], [category, Categories], [Vendor.alert.signature, Signatures], [impact_score, Impact], [sid, "Aggregated SID(s)"]])
+      | drop([category_filter, impact_score_filter])
+    end: now
+    start: 1d
+    width: 12
+    y: 1
+    interactions:
+    - name: Details of Alert Aggregations Data
+      titleTemplate: Details of {{ fields["Aggregated SID(s)"] }}
+      useWidgetTimeWindow: true
+      dashboardReference:
+        name: Security-CorelightAlertAggregationsDetails
+      arguments:
+        agg_id: '["{{ fields[\"Aggregated SID(s)\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      type: dashboardlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Aggregated SID(s):
+          data-type: text
+          width: 170
+        Connections:
+          data-type: number
+      row-numbers-enabled: false
+    visualization: table-view
+    title: ''
+    isLive: false
+    type: query
+  e59a1be1-c1fd-4133-9c66-75b50493d5bc:
+    x: 2
+    y: 1
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | event.id!="" and event.id =*
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category])
+      | impact_score>3
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | count(event.id, distinct=true, as=Count)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Impacted Connections
+    isLive: false
+    type: query
+  4f95f9cc-9526-45de-a906-fa877c06e71a:
+    x: 6
+    y: 3
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id=*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category])
+      | impact_score>3
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | groupBy([event.id], function=[max("@timestamp", as=TimeGenerated), collect([sid], separator=", "), collect([Vendor._path], separator=", "), collect([Vendor.alert.signature], separator=", "), collect([source.ip], separator=", "), collect([destination.ip], separator=", "), collect([Vendor.ts], separator=", "), collect([sensor_name], separator=", ")], limit=1000000)
+      | splitString(by=", ", field=sid, as=split_sid)
+      | array:reduceAll(array="split_sid[]", function=[groupBy(sid, limit=1000000)], var="sid")
+      | count(field=sid,as=Alerts)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Alerts/Signatures
+    isLive: false
+    type: query
+  fbbc2dc9-42fc-4c3b-af18-bce762de1407:
+    x: 2
+    y: 3
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id=*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category, cve_number])
+      | impact_score>3 and cve_number!=""
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | count(field=cve_number, as=Detection_with_CVEs)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Alerts with CVEs
+    isLive: false
+    type: query
+  ad8713e6-7db4-4885-adf8-48edf1d7703e:
+    x: 4
+    y: 3
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id=*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category])
+      | impact_score>3
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | max(field=impact_score, as=Highest_Score)
+      | default(value="N/A", field=[Highest_Score])
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Highest Impact Score
+    isLive: false
+    type: query
+  7576369f-9f09-46a9-8496-29101be2655c:
+    x: 8
+    y: 1
+    height: 4
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id=*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category])
+      | impact_score > 3
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | avg("impact_score", as=Average_Impact_Score)
+      | default(value="0", field=[Average_Impact_Score])
+    end: now
+    start: 1d
+    width: 4
+    options:
+      show-min-max: true
+      range-min: 0
+      trellisShowBorders: true
+      gaugeType: radialNeedle
+      thresholdConfig:
+        defaultColor: '#29a34bff'
+        reversePalette: false
+        thresholds:
+        - color: '#f7bd75ff'
+          value: 4
+        - color: '#F04242FF'
+          value: 7
+      value-format: abbreviated
+      range-max: 10
+    visualization: gauge
+    title: Average Impact Score
+    isLive: false
+    type: query
+  8578dea4-e363-4f96-8c9d-9e0113be1d0f:
+    x: 0
+    y: 1
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id =*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category])
+      | impact_score > 3
+      | groupBy([event.id], function=[collect([Vendor.alert.signature_id], separator=", "), collect([impact_score]), collect([category])], limit=1000000)
+      | impact_score_filter := ?impact_score
+      | category_filter := ?category
+      | case {
+          !text:contains(string=impact_score_filter, substring="*") |
+          text:contains(string=impact_score, substring=impact_score_filter);
+          text:contains(string=impact_score_filter, substring="*") | *
+      }
+      | case {
+          !text:contains(string=category_filter, substring="*") |
+          text:contains(string=category, substring=category_filter);
+          text:contains(string=category_filter, substring="*") | *
+      }
+      | count(field=Vendor.alert.signature_id, distinct=true, as=Count)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Alert Groupings
+    isLive: false
+    type: query
+  note-1739171049974-0:
+    x: 0
+    y: 0
+    description: Enriched & Correlated Suricata alerts across multiple connections
+    height: 1
+    text: ''
+    width: 12
+    title: Alert Aggregations
+    type: note
+  6b243445-c65a-43ba-b5f8-586a5f35b840:
+    x: 6
+    y: 1
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+          | in(field="Vendor._path", values=[suricata_corelight])
+          | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+          | in(field="sensor_name", values=[?system_name])
+          | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
+          | sid := Vendor.alert.signature_id
+          | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+          | parseInt("impact_score", as=impact_score)
+          | impact_score > 3
+          | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id =*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category,technique_number])
+      | impact_score > 3
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | count(field="technique_number",distinct=true,as=Mitre_Techniques)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: MITRE Techniques
+    isLive: false
+    type: query
+  b2874662-0c86-4d71-ba36-016be533a1b6:
+    x: 0
+    y: 3
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+          | in(field="Vendor._path", values=[suricata_corelight])
+          | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+          | in(field="sensor_name", values=[?system_name])
+          | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
+          | sid := Vendor.alert.signature_id
+          | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+          | parseInt("impact_score", as=impact_score)
+          | impact_score > 3
+          | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.id!="" and event.id =*
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score, category,technique_number])
+      | default(value="N/A", field=[category])
+      | impact_score>3
+      | impact_score=?{impact_score=*} and category=?{category=*}
+      | top(["category"],limit=1)
+      | select([category])
+      | rename(field="category", as="")
+    end: now
+    start: 1d
+    width: 2
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Most Seen Category
+    isLive: false
+    type: query
+  note-1739268580722-0:
+    x: 0
+    y: 0
+    height: 1
+    text: '<div style="font-size: 16px; ">NOTE : If you have imported "Security-CorelightAlertAggregationsDetails"
+      dashboard with other name, please refer to this [document](https://docs.google.com/document/d/1QviJAHQHph4uoaxqpfjHQeRDrdK209VfeTc_MNabm28/edit?usp=sharing)
+      for the required changes.</div>'
+    width: 12
+    title: ''
+    type: note
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  category:
+    label: Category
+    query: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[category, impact_score])
+      | category!="" and impact_score > 3
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | groupBy([category], function=[], limit=1000000)
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 3
+    valueField: category
+  entity:
+    label: Entity
+    order: 1
+    type: text
+    defaultValue: '*'
+    width: 1
+  impact_score:
+    label: Impact Score
+    query: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
+      | #Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | impact_score!=""
+      | impact_score > 3
+      | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
+      | groupBy([impact_score], function=[], limit=1000000)
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 2
+    valueField: impact_score
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | groupBy([sensor_name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 0
+    valueField: sensor_name

@@ -1,0 +1,330 @@
+name: Security-CorelightNotices
+description: ''
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+labels:
+- Corelight
+widgets:
+  df3035d2-752f-4ed3-9437-17ea68d0b140:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.reason=?{msg=*} and Vendor.note=?{note=*}
+      | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
+      | timeChart(Vendor._path, function=count())
+    end: now
+    start: 24h
+    width: 4
+    y: 1
+    interactions:
+    - name: Details of Notices Over Time
+      titleTemplate: Details of Notices Data
+      queryString: |-
+        #Vendor = corelight and @event_parsed!="false"
+        | Vendor._path = ?path
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | event.reason=?msg and Vendor.note=?note
+        | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        path: '["{{ fields.Vendor._path }}"]'
+        filter: '["{{ parameters.filter }}"]'
+        note: '["{{ parameters.note }}"]'
+        msg: '["{{ parameters.msg }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      legendPosition: bottom
+      interpolation: ''
+      xAxisTitle: Time
+      legend: true
+      horizontalPlotLineLabel: ''
+      connect-points: false
+      yAxisScale: linear
+      plotType: area
+      maxSeriesCount: 10
+      imputation: none
+      yAxisUnit: ''
+      series: {}
+      yAxisTitle: ''
+      stacking: none
+    visualization: time-chart
+    title: Notices Over Time (Additional Filter or Severity does not apply.)
+    isLive: false
+    type: query
+  f4cc09b0-eeaf-4419-8495-567324f7a63f:
+    x: 0
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
+      | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
+      | format(format="%s/%s", field=[network.transport, Vendor.p], as=pp)
+      | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
+      | groupBy([Vendor.note, severity_display], function=collect([pp], separator=","), limit=1000000)
+      | rename([[Vendor.note, "Notes"], [severity_display, "Severity"], [pp, "Protocol"]])
+    end: now
+    start: 24h
+    width: 12
+    y: 5
+    interactions:
+    - name: Details of Notice Details
+      titleTemplate: Details of {{ fields.Notes }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed!="false"
+        | Vendor._path = notice
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
+        | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
+        | Vendor.note=?notes
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        filter: '["{{ parameters.filter }}"]'
+        note: '["{{ parameters.note }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        msg: '["{{ parameters.msg }}"]'
+        severity: '["{{ parameters.severity }}"]'
+        notes: '["{{ fields.Notes }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Notice Details
+    isLive: false
+    type: query
+  note-1735646016785-0:
+    x: 0
+    y: 0
+    description: Intel and Notice events
+    height: 1
+    text: ''
+    width: 12
+    title: Notices
+    type: note
+  f48798c2-c2c2-4cea-8839-c9e810a32c7c:
+    x: 8
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
+      | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
+      | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
+      | top([severity_display])
+    end: now
+    start: 24h
+    width: 4
+    y: 1
+    interactions:
+    - name: Details of Severities
+      titleTemplate: Details of {{ fields.severity_display }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed!="false"
+        | Vendor._path = notice
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
+        | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
+        | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
+        | severity_display=?chart_severity
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        filter: '["{{ parameters.filter }}"]'
+        note: '["{{ parameters.note }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        msg: '["{{ parameters.msg }}"]'
+        severity: '["{{ parameters.severity }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        chart_severity: '["{{ fields.severity_display }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      legendPosition: right
+      series: {}
+      innerRadius: 0
+      maxSeriesCount: 10
+      withLegendTitle: false
+    visualization: pie-chart
+    title: Severities
+    isLive: false
+    type: query
+  e4ded854-40a0-41bc-8bb7-b9333c82cc1a:
+    x: 0
+    y: 10
+    height: 6
+    queryString: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
+      | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
+      | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
+      | formatTime(format="%F %r", as="Time")
+      | rename([[source.ip, "Source IP"], [severity_display, "Severity"], [@rawstring, "Raw Data"]])
+      | select(["Time", "Source IP", Severity, "Raw Data"])
+      | sort("Time", order=desc, limit=500)
+    end: now
+    start: 24h
+    width: 12
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Log Data
+    isLive: false
+    type: query
+  cb7473e4-34e0-4de7-8ddf-ea2f0b853968:
+    x: 4
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
+      | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
+      | top([Vendor.note])
+    end: now
+    start: 'calendar: now@y'
+    width: 4
+    y: 1
+    interactions:
+    - name: Details of Notices
+      titleTemplate: Details of {{ fields.Vendor.note }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed!="false"
+        | Vendor._path = notice
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
+        | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
+        | Vendor.note=?chart_note
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        filter: '["{{ parameters.filter }}"]'
+        chart_note: '["{{ fields.Vendor.note }}"]'
+        note: '["{{ parameters.note }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        msg: '["{{ parameters.msg }}"]'
+        severity: '["{{ parameters.severity }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      legendPosition: right
+      series: {}
+      legendLabelOverflow: truncate
+      innerRadius: 0
+      maxSeriesCount: 10
+      withLegendTitle: false
+    visualization: pie-chart
+    title: Notices
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  filter:
+    label: Filter (IP, Port, Protocol)
+    order: 3
+    type: text
+    defaultValue: '*'
+    width: 1
+  note:
+    label: Note
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | Vendor.note=*
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | top([Vendor.note], limit=100)
+      | drop([_count])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 5
+    valueField: Vendor.note
+  additional_filter:
+    label: Additional Filter
+    order: 6
+    type: text
+    defaultValue: '*'
+    width: 1
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | groupBy([sensor_name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 1
+    valueField: sensor_name
+  msg:
+    label: Message
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | event.reason=*
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | top([event.reason], limit=100)
+      | drop([_count])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 4
+    valueField: event.reason
+  severity:
+    label: Severity
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
+      | groupBy([severity_display, Vendor.severity.name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    defaultValue: '*'
+    width: 1
+    order: 2
+    valueField: Vendor.severity.name
+    type: query
+    labelField: severity_display
