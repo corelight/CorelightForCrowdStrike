@@ -2,9 +2,7 @@ name: corelight-sensor
 fieldsToBeRemovedBeforeParsing: []
 $schema: https://schemas.humio.com/parser/v0.3.0
 script: |
-  // CrowdStrike Falcon Complete LogScale
-  // Corelight Parser
-  // Copyright: CrowdStrike 2025
+  // Corelight Sensor Parser
 
   // #region PREPARSE
   /************************************************************
