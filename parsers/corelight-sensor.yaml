@@ -1,0 +1,467 @@
+name: corelight-sensor
+fieldsToBeRemovedBeforeParsing: []
+$schema: https://schemas.humio.com/parser/v0.3.0
+script: |
+  // CrowdStrike Falcon Complete LogScale
+  // Corelight Parser
+  // Copyright: CrowdStrike 2025
+
+  // #region PREPARSE
+  /************************************************************
+  ****** Parse timestamp and log headers
+  ****** Extract message field for parsing
+  ****** Parse structured data
+  ************************************************************/
+
+  // Documentation: https://docs.zeek.org/en/master/log-formats.html#zeek-json-format-logs
+
+  | parseJson(prefix="Vendor.", excludeEmpty=true, handleNull=discard)
+  | parseTimestamp("yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]XXX", field=Vendor._write_ts)
+
+  // For later use
+  | rename(field="Vendor._path",as="_path")
+
+  // #endregion
+
+  // #region METADATA
+  /************************************************************
+  ****** Static Metadata Definitions
+  ************************************************************/
+  | Parser.version:="2.0.0"
+  | Cps.version := "1.0.0"
+  | Vendor:="corelight"
+  | event.module := "ids"
+  | ecs.version:="8.17.0"
+  | event.kind:="event"
+  // event.category and event.type handled below
+
+  // #endregion
+
+  // #region NORMALIZATION
+  /************************************************************
+  ****** Parse unstructured data (i.e. message field)
+  ****** Normalize fields to data model
+  ************************************************************/
+
+  // Event Fields
+  | event.action := rename(Vendor.operation)
+  | event.action := rename(Vendor.action)
+  | error.message := rename(Vendor.failure_reason)
+  | format(format="%s.%s", field=["event.module","_path"], as="event.dataset")
+  | event.reason := rename(Vendor.msg)
+  | event.id := rename(Vendor.uid)
+  | event.duration := rename(Vendor.duration)
+  | case {
+      Vendor.success = "true" | event.outcome := "success";
+      Vendor.success = "false" | event.outcome := "failure";
+      Vendor.result = "failed" | event.outcome := "failure";
+      Vendor.result = "unknown" | event.outcome := "unknown";
+      Vendor.result = /success/i | event.outcome := "success";
+      Vendor.result = /failure/i | event.outcome := "failure";
+      Vendor.result = "encrypted" | event.outcome := "success";
+      Vendor.result = "SSL_NOT_ALLOWED_BY_SERVER" | event.outcome := "failure";
+      Vendor.result = "HYBRID_REQUIRED_BY_SERVER" | event.outcome := "failure";
+      Vendor.result = "SSL_CERT_NOT_ON_SERVER" | event.outcome := "failure";
+      Vendor.result = "SSL_WITH_USER_AUTH_REQUIRED_BY_SERVER" | event.outcome := "failure";
+      Vendor.result = "INCONSISTENT_FLAGS" | event.outcome := "failure";
+      Vendor.result = "SSL_REQUIRED_BY_SERVER" | event.outcome := "failure";
+      *;
+  }
+
+  // Log Fields
+  | case {
+      Vendor.level=*
+          | level = /::(?<log.level>.*)/;
+      *
+          | log.level := Vendor.severity.name;
+  }
+
+  // User Fields
+  | user.name := rename(Vendor.user)
+  | user.name := rename(Vendor.username)
+  | user.name := rename(Vendor.cookie)
+  | case {
+      Vendor.client = * | Vendor.client = /(?!SSH)(?<source.user.name>.*?)\/(?<user.domain>.*)/;
+      *;
+  }
+  | case {
+      in(field="user.name", values=["","<problem-decoding>*","<unknown>"]) | drop([user.name]);
+      user.name = /(?<user.domain>.*?)\\(?<user.name>.*)/;
+      user.name = /host\/(?<source.address>.*)/ | drop([user.name]);
+      *;
+      }
+  | user_agent.original := rename(Vendor.user_agent)
+
+  // Source Fields
+  | source.hostname := rename(Vendor.hostname)
+  | source.bytes := coalesce([Vendor.orig_bytes, Vendor.orig_ip_bytes])
+  | source.domain := rename(Vendor.domainname)
+  | lower(source.domain, as="source.domain")
+  | source.ip := rename(Vendor.id.orig_h)
+  | source.ip := rename(Vendor.client_src)
+  | source.ip := rename(Vendor.src)
+  | source.ip := rename(Vendor.dns_client)
+  | source.ip := rename(Vendor.client_addr)
+  | source.ip := rename(Vendor.data_channel.orig_h)
+  | source.mac := rename(Vendor.orig_l2_addr)
+  | source.mac := rename(Vendor.mac)
+  | source.port := rename(Vendor.host_p)
+  | source.port := rename(Vendor.id.orig_p)
+  | source.packets := rename(Vendor.orig_pkts)
+
+  | case {
+      // tx_hosts is an array by default containing multiple source IP's.  Because of this, we'll map the all elements to related.ip.
+      Vendor.tx_hosts[0] = * | @rawstring=/tx_hosts":\[(?<related.ip>.*?)\]/
+          | replace(field="related.ip",regex="\"",with="");
+      *;
+  }
+
+  | case {
+      // Test if the original IP and data channel original IP's are the same. If so, assign id.orig_h as the ip. If not, assign data_channel.orig_h.
+      !Vendor.data_channel.orig_h
+          | source.ip := rename(Vendor.id.orig_h);
+      Vendor.id.orig_h = Vendor.data_channel.orig_h
+          | source.ip := Vendor.id.orig_h;
+      Vendor.id.orig_h != Vendor.data_channel.orig_h
+          | source.ip := Vendor.data_channel.orig_h;
+      *;
+  }
+  | case {
+      // Test if the original port and data channel original ports are the same. If so, assign id.orig_p as the ip. If not, assign data_channel.orig_p.
+      !Vendor.data_channel.orig_p
+          | source.port := rename(Vendor.id.orig_p);
+      Vendor.id.orig_p = Vendor.data_channel.orig_p
+          | source.port := rename(Vendor.id.orig_p);
+      Vendor.id.orig_p != Vendor.data_channel.orig_p
+          | source.port := rename(Vendor.data_channel.orig_p);
+      *;
+  }
+
+  | case {
+      Vendor.msg = * | Vendor.msg = /^(?<source.ip>\d+\.\d+\.\d+\.\d+)\sappears/;
+      *;
+  }
+
+  // Client Fields
+  | client.address := source.address
+  | client.bytes := source.bytes
+  | client.domain := source.domain
+  | client.ip := source.ip
+  | client.mac := source.mac
+  | client.port := source.port
+
+  // Destination Fields
+  | destination.address := rename(Vendor.server_nb_computer_name)
+  | destination.address := rename(Vendor.helo)
+  | destination.address := rename(Vendor.server_a)
+  | destination.address := rename(Vendor.server_name)
+  | lower(destination.address, as="destination.address")
+  | destination.bytes := coalesce([Vendor.resp_bytes, Vendor.resp_ip_bytes])
+  | destination.domain := rename(Vendor.server_tree_name)
+  | lower(destination.domain, as="destination.domain")
+  | destination.ip := rename(Vendor.resolver)
+  | destination.ip := rename(Vendor.resp_h)
+  | destination.ip := rename(Vendor.id.resp_h)
+  | destination.port := rename(Vendor.server_p)
+  | destination.port := rename(Vendor.id.resp_p)
+  | destination.mac := rename(Vendor.resp_l2_addr)
+  | destination.packets := rename(Vendor.resp_pkts)
+  | case {
+      // rx_hosts is an array by default containing multiple destination IP's.  Because of this, we'll map the all elements to related.ip.
+      Vendor.rx_hosts[0] = *
+          | @rawstring=/rx_hosts":\[(?<related.dest_ip>.*?)\]/
+          | replace(field="related.dest_ip",regex="\"",with="")
+          | format("%s,%s", field=["related.ip","related.dest_ip"], as="related.ip")
+          | splitString(field="related.ip",by=",",as="related.ip");
+      *
+          | splitString(field="related.ip",by=",",as="related.ip");
+  }
+
+  | case {
+      // Test if the response IP and data channel response IP's are the same. If so, assign id.resp_h as the ip. If not, assign data_channel.resp_h.
+      !Vendor.data_channel.resp_h
+          | destination.ip := rename(Vendor.id.resp_h);
+      Vendor.id.resp_h = Vendor.data_channel.resp_h
+          | destination.ip := rename(Vendor.id.resp_h);
+      Vendor.id.resp_h != Vendor.data_channel.resp_h
+          | destination.ip := rename(Vendor.data_channel.resp_h);
+      *;
+  }
+
+  | case {
+      // Test if the response port and data channel response ports are the same. If so, assign id.resp_p as the port. If not, assign data_channel.resp_p.
+      !Vendor.data_channel.resp_p
+          | destination.port := rename(Vendor.id.resp_p);
+      Vendor.id.resp_p = Vendor.data_channel.resp_p
+          | destination.port := rename(Vendor.id.resp_p);
+      Vendor.id.resp_p != Vendor.data_channel.resp_p
+          | destination.port := rename(Vendor.data_channel.resp_p);
+      *;
+  }
+
+  // added DLEE 25SEP2024 (rename resp_ep_uid to aid per JL)
+  | case {
+      Vendor.id.orig_ep_source="CrowdStrike" and Vendor.id.orig_ep_status="managed"
+          | agent.id := rename(Vendor.id.orig_ep_uid);
+      Vendor.id.orig_ep_source="CrowdStrike" and Vendor.id.orig_ep_status!="managed"
+          | device.id := rename(Vendor.id.orig_ep_uid);
+      Vendor.id.orig_ep_source!="CrowdStrike"
+          | agent.id := rename(Vendor.id.orig_ep_uid);
+      Vendor.orig_ep_source="CrowdStrike" and Vendor.orig_ep_status="managed"
+          | agent.id := rename(Vendor.orig_ep_uid);
+      Vendor.orig_ep_source="CrowdStrike" and Vendor.orig_ep_status!="managed"
+          | device.id := rename(Vendor.orig_ep_uid);
+      Vendor.orig_ep_source!="CrowdStrike"
+          | agent.id := rename(Vendor.orig_ep_uid);
+      *;
+  }
+
+  // Server Fields
+  | server.address := destination.address
+  | server.bytes := destination.bytes
+  | server.domain := destination.domain
+  | server.ip := destination.ip
+  | server.port := destination.port
+
+  // Observer Fields
+  | observer.hostname := rename(Vendor._system_name)
+
+  // OS Fields
+  | host.os.name := Vendor.os
+
+  // Network Fields
+  | network.transport := rename(Vendor.proto)
+  | network.inner.vlan.id := rename(Vendor.inner_vlan)
+  | network.bytes := source.bytes + destination.bytes
+  | network.protocol := rename(Vendor.source)
+  | network.protocol := rename(Vendor.service)
+  | splitString(field="Vendor.app", by=",", as="network.application")
+  | case{
+      Vendor.local_orig=true Vendor.local_resp=true
+          | network.direction := "internal";
+      Vendor.local_orig=true Vendor.local_resp=false
+          | network.direction := "outbound";
+      Vendor.local_orig=false Vendor.local_resp=true
+          | network.direction := "inbound";
+      Vendor.local_orig=false Vendor.local_resp=false
+          | network.direction := "external";
+      *
+  }
+
+  | case {
+      _path = "ssl"
+          | network.transport := "ssl";
+      _path = "ssh"
+          | network.transport := "ssh";
+      _path = "smb_files"
+          | network.transport := "smb";
+      _path = "dns"
+          | network.transport := "dns";
+      _path = "http"
+          | network.transport := "http";
+      _path = "rdp"
+          | network.transport := "rdp";
+      *
+  }
+  | case {
+      Vendor.community_id = *
+          | network.community_id := rename(Vendor.community_id);
+      *
+          | communityId(as="network.community_id", proto=network.transport, sourceip=source.ip, sourceport=source.port, destinationip=destination.ip, destinationport=destination.port);
+  }
+  // in case there are no src/dst ip's or invalid ip's
+  | case { network.community_id = "" | drop([network.community_id]); * }
+
+  // VLAN Fields
+  | network.vlan.id := rename(Vendor.id.vlan)
+  | network.vlan.id := rename(Vendor.vlan)
+
+  // File Fields
+  | file.size := rename(Vendor.total_bytes)
+
+  // Hash Fields
+  | file.hash.md5 := rename(Vendor.md5)
+  | file.hash.sha256 := rename(Vendor.sha256)
+  | lower(file.hash.sha256, as="file.hash.sha256")
+  | lower(file.hash.md5, as="file.hash.md5")
+
+  // HTTP Fields
+  | http.request.method := rename(Vendor.method)
+  | url.path := rename(Vendor.uri)
+  | url.domain := rename(Vendor.host)
+  | http.response.status_code := rename(Vendor.status_code)
+  | case {
+  // Manually parse out mime response type
+      _path = "dns" AND Vendor.resp_mime_types[1] = * | @rawstring = /resp_mime_types":\[(?<http.response.mime_type>.*?)\]/;
+      _path = "dns" AND Vendor.resp_mime_types[0] = * | http.response.mime_type := rename(Vendor.resp_mime_types[0]);
+      *;
+  }
+  | case {
+  // Manually parse out mime request type
+      _path = "dns" AND Vendor.orig_mime_types[1] = * | @rawstring = /orig_mime_types":\[(?<http.request.mime_type>.*?)\]/;
+      _path = "dns" AND Vendor.orig_mime_types[0] = * | http.request.mime_type := rename(Vendor.orig_mime_types[0]);
+      *;
+  }
+
+
+  // DNS Fields
+  | case {
+  // Manually parse out dns.answers
+  _path = "dns" | @rawstring = /answers":\[(?<dns.answers>.*?)\]/;
+  *;
+  }
+  | dns.question.type := rename(Vendor.qtype_name)
+  | dns.question.name := rename(Vendor.query)
+  | splitString(field="Vendor.answers", by=",", as="dns.answers")
+  | dns.response_code := rename(Vendor.rcode_name)
+
+  // Email Fields
+  | email.sender.address := rename(Vendor.mailfrom)
+  | lower(email.sender.address, as="email.sender.address")
+  | email.subject := rename(Vendor.subject)
+  | case {
+      // Manual parsing for email.to.address
+      _path = "smtp" | @rawstring = /rcptto":\[(?<email.to.address>.*?)\]/;
+      *;
+  }
+  | array:append("email.to.address[]", values=[lower(email.to.address)])
+
+  // Geo Fields
+  | destination.geo.country_iso_code := rename(Vendor.resp_cc)
+  | destination.geo.region_name := rename(Vendor.resp_region)
+  | source.geo.country_iso_code := rename(Vendor.orig_cc)
+  | source.geo.region_name := rename(Vendor.orig_region)
+  | source.geo.city_name := rename(Vendor.orig_city)
+
+  // x509 Fields
+  | file.x509.issuer.distinguished_name := rename(Vendor.certificate.issuer)
+  | file.x509.not_after := rename(Vendor.certificate.not_valid_after)
+  | file.x509.not_before := rename(Vendor.certificate.not_valid_before)
+  | file.x509.public_key_algorithm := rename(Vendor.certificate.key_alg)
+  | file.x509.public_key_exponent := rename(Vendor.certificate.exponent)
+  | file.x509.serial_number := rename(Vendor.certificate.serial)
+  | file.x509.signature_algorithm := rename(Vendor.certificate.sig_alg)
+  | file.x509.subject.distinguished_name := rename(Vendor.certificate.subject)
+
+  //tls Fields
+  | tls.client.ja3 := rename(Vendor.ja3)
+  | tls.server.ja3s := rename(Vendor.ja3s)
+
+  // Event Categorization
+  | case {
+      in(_path, values=["conn", "specific_dns_tunnels", "tunnel"])
+          | array:append("event.category[]", values=["network"])
+          | array:append("event.type[]", values=["connection"]);
+
+      in(_path, values=["corelight*", "etc_viz"])
+          | array:append("event.category[]", values=["process"])
+          | array:append("event.type[]", values=["info"]);
+
+      in(_path, values=["dce_rpc", "dns", "dhcp", "encrypted_dns", "ftp", "irc", "ntp", "dga"])
+          | array:append("event.category[]", values=["network"])
+          | array:append("event.type[]", values=["connection", "protocol", "info"]);
+
+      in(_path, values=["dpd", "rfb"])
+          | array:append("event.category[]", values=["network"])
+          | array:append("event.type[]", values=["connection", "info"]);
+
+      in(_path, values=["files", "pe"])
+          | array:append("event.category[]", values=["file"])
+          | array:append("event.type[]", values=["info"]);
+
+      _path = "http"
+          | array:append("event.category[]", values=["network", "web"])
+          | array:append("event.type[]", values=["connection", "protocol", "info"]);
+
+      in(_path, values=["intel", "suricata_corelight"])
+          | event.kind := "alert"
+          | array:append("event.category[]", values=["threat", "network"])
+          | array:append("event.type[]", values=["indicator"]);
+
+      _path = "kerberos"
+          | array:append("event.category[]", values=["network", "authentication"])
+          | array:append("event.type[]", values=["connection", "protocol", "access"]);
+
+      _path = "mysql"
+          | array:append("event.category[]", values=["network", "database"])
+          | array:append("event.type[]", values=["connection", "protocol"]);
+
+      _path = "notice"
+          | array:append("event.category[]", values=["intrusion_detection"])
+          | array:append("event.type[]", values=["info"]);
+
+      in(_path ,values=["ntlm", "radius"])
+          | array:append("event.category[]", values=["network", "authentication"])
+          | array:append("event.type[]", values=["connection", "info"]);
+
+      _path = "rdp"
+          | array:append("event.category[]", values=["network"])
+          | array:append("event.type[]", values=["connection", "start"]);
+
+      _path = "reporter"
+          | array:append("event.category[]", values=["process"])
+          | array:append("event.type[]", values=["error"]);
+
+      in(_path , values=["sip", "smb_mapping", "snmp", "smtp", "socks", "ssh", "ssl"])
+          | array:append("event.category[]", values=["network"])
+          | array:append("event.type[]", values=["connection", "protocol"]);
+
+      _path = "smb_files"
+          | array:append("event.category[]", values=["network", "file"])
+          | array:append("event.type[]", values=["connection", "protocol"]);
+
+      _path = "software"
+          | array:append("event.category[]", values=["network", "file"])
+          | array:append("event.type[]", values=["info"]);
+
+      in(_path ,values=["vpn", "weird"])
+          | array:append("event.category[]", values=["network"])
+          | array:append("event.type[]", values=["info"]);
+
+      *;
+  }
+
+  | case {
+      event.kind = "alert" |
+          //Flattens "metadata" array to allow for use of fields within modeling
+          replace(regex=".*\"alert.metadata\":\\[(.*)\\],.*", with="$1", field=@rawstring, as=flatten.metadata) |
+          replace(regex=":", with="\"=\"", field=flatten.metadata) |
+          kvParse(field=flatten.metadata, as=Vendor, separator="=") |
+          drop(flatten.metadata) |
+          case {
+              in(Vendor.signature_severity, values=["Informational","Audit"]) |
+                  event.severity := "10";
+              Vendor.signature_severity = "Minor" |
+                  event.severity := "50";
+              Vendor.signature_severity = "Major" |
+                  event.severity := "70";
+              Vendor.signature_severity = "Critical" |
+                  event.severity := "90";
+          } |
+          case {
+              Vendor.mitre_technique_id = "*" |
+                  match(file="epp/lookups/MitreMappings-ecs.csv", field=Vendor.mitre_technique_id, column=threat.technique.id[0], mode=glob, ignoreCase=true, include= ["threat.framework","threat.tactic.id[0]","threat.tactic.name[0]","threat.technique.id[0]","threat.technique.name[0]","threat.technique.reference[0]"]);
+              *;
+          };
+      *
+  }
+  | Vendor._path := rename("_path")
+
+  // #endregion
+
+  // #region POST-NORMALIZATION
+  /************************************************************
+  ****** Post Normalization
+  ****** Custom parser logic needed after normalization
+  ************************************************************/
+
+  // #endregion
+tagFields:
+- Cps.version
+- Vendor
+- ecs.version
+- event.dataset
+- event.kind
+- event.module
+- event.outcome
+- observer.type

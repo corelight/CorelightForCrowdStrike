@@ -1,0 +1,420 @@
+name: Data-CorelightDNS
+description: ''
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+labels:
+- Corelight
+widgets:
+  f31137a9-ce52-4ad0-895a-a01641f2a0d6:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | top(field=dns.question.type)
+    end: now
+    start: 1d
+    width: 4
+    y: 1
+    interactions:
+    - name: Details of Top Query Types
+      titleTemplate: Details of {{ fields.dns.question.type }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
+        \ = dns OR Vendor._path = dns_red\n| coalesce([observer.name, Vendor._system_name],\
+        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\
+        \ AND \"destination.port\"=?port AND \"dns.question.type\"=?qtype_name\n|\
+        \ case {\n    in(field=\"source.ip\", values=[\"0.0.0.0\", \"255.255.255.255\"\
+        ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\", values=[\"\
+        255.255.255.255\", \"0.0.0.0\"]) |\n    is_broadcast := true;\n    * |\n \
+        \   is_broadcast := false;\n}\n| is_broadcast != true\n| default(value=\"\
+        unknown\", field=[dns.question.type])\n| dns.question.type=?dns_question_type "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        dns_question_type: '["{{fields.dns.question.type}}"]'
+        qtype_name: '["{{ parameters.qtype_name }}"]'
+        port: '["{{ parameters.port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      trellisShowBorders: true
+      legendLabelOverflow: full
+      legend: true
+      enableTrellis: false
+      maxSeriesCount: 10
+      innerRadius: 0
+      legendPosition: right
+      legendTitle: Record Type
+    visualization: pie-chart
+    title: Top Query Types
+    isLive: false
+    type: query
+  283fa114-ef1e-42e8-8866-5f831d69090e:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | default(value="unknown", field=[source.ip])
+      | top(source.ip)
+      | rename([["source.ip","Source IP"],[_count,Count]])
+    end: now
+    start: 1d
+    width: 4
+    y: 5
+    interactions:
+    - name: Details of Top Originators by Count
+      titleTemplate: Details of {{ fields["Source IP"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
+        \ = dns OR Vendor._path = dns_red\n| coalesce([observer.name, Vendor._system_name],\
+        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\
+        \ AND \"destination.port\"=?port AND \"dns.question.type\"=?qtype_name\n|\
+        \ case {\n    in(field=\"source.ip\", values=[\"0.0.0.0\", \"255.255.255.255\"\
+        ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\", values=[\"\
+        255.255.255.255\", \"0.0.0.0\"]) |\n    is_broadcast := true;\n    * |\n \
+        \   is_broadcast := false;\n}\n| is_broadcast != true\n| default(value=\"\
+        unknown\", field=[source.ip])\n| source.ip=?Id_Orig_H "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        qtype_name: '["{{ parameters.qtype_name }}"]'
+        port: '["{{ parameters.port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        Id_Orig_H: '["{{ fields[\"Source IP\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Originators by Count
+    isLive: false
+    type: query
+  note-1734412524259-0:
+    x: 0
+    y: 0
+    height: 1
+    text: ''
+    width: 12
+    title: DNS
+    type: note
+  efa413a6-07bd-48e8-a70c-e01a500fb6f8:
+    x: 4
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | default(value="unknown", field=[dns.question.name])
+      | dns.question.type!=PTR
+      | top(dns.question.name)
+      | rename([["dns.question.name","Query"],[_count,Count]])
+    end: now
+    start: 1d
+    width: 4
+    y: 1
+    interactions:
+    - name: Details of Top 10 Queries by Count
+      titleTemplate: Details of {{ fields.Query }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
+        \ = dns OR Vendor._path = dns_red\n| coalesce([observer.name, Vendor._system_name],\
+        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\
+        \ AND \"destination.port\"=?port AND \"dns.question.type\"=?qtype_name\n|\
+        \ case {\n    in(field=\"source.ip\", values=[\"0.0.0.0\", \"255.255.255.255\"\
+        ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\", values=[\"\
+        255.255.255.255\", \"0.0.0.0\"]) |\n    is_broadcast := true;\n    * |\n \
+        \   is_broadcast := false;\n}\n| is_broadcast != true\n| default(value=\"\
+        unknown\", field=[dns.question.name])\n| dns.question.type!=PTR\n| dns.question.name=?Query "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Query: '["{{fields.Query}}"]'
+        qtype_name: '["{{ parameters.qtype_name }}"]'
+        port: '["{{ parameters.port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top 10 Queries by Count
+    isLive: false
+    type: query
+  229b18e5-b744-4fd2-8c0b-5212b5e96786:
+    x: 4
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "destination.port"=?{port=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | dns.question.type=PTR AND dns.response_code = "NOERROR"
+      | default(value="unknown", field=[dns.question.name])
+      | top(dns.question.name)
+      | rename([["dns.question.name","Query"],[_count,Count]])
+    end: now
+    start: 1d
+    width: 4
+    y: 5
+    interactions:
+    - name: Details of Top Successful Reverse Queries by Count
+      titleTemplate: Details of {{ fields.Query }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = dns OR Vendor._path = dns_red
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "destination.port"=?port
+        | case {
+            in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+            is_broadcast := true;
+            in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+            is_broadcast := true;
+            * |
+            is_broadcast := false;
+        }
+        | is_broadcast != true
+        | dns.question.type=PTR AND dns.response_code = "NOERROR"
+        | default(value="unknown", field=[dns.question.name])
+        | dns.question.name = ?Query
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Query: '["{{fields.Query}}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        port: '["{{ parameters.port }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Successful Reverse Queries by Count
+    isLive: false
+    type: query
+  e82b38d3-6fb6-4f18-b920-941a8cad81a8:
+    x: 8
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | default(value="unknown", field=[dns.question.name])
+      | dns.question.type!=PTR AND dns.response_code = "NXDOMAIN"
+      | top(dns.question.name)
+      | rename([["dns.question.name","Query"],[_count,Count]])
+    end: now
+    start: 1d
+    width: 4
+    y: 1
+    interactions:
+    - name: Details of Top 10 Queries by Count to Non-Existent Domains
+      titleTemplate: Details of {{ fields.Query }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = dns OR Vendor._path = dns_red
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "destination.port"=?port AND "dns.question.type"=?qtype_name
+        | case {
+            in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+            is_broadcast := true;
+            in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+            is_broadcast := true;
+            * |
+            is_broadcast := false;
+        }
+        | is_broadcast != true
+        | default(value="unknown", field=[dns.question.name])
+        | dns.question.type!=PTR AND dns.response_code = "NXDOMAIN"
+        | dns.question.name = ?Query
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Query: '["{{fields.Query}}"]'
+        qtype_name: '["{{ parameters.qtype_name }}"]'
+        port: '["{{ parameters.port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top 10 Queries by Count to Non-Existent Domains
+    isLive: false
+    type: query
+  222095ad-1193-4ef0-abc9-105942f58854:
+    x: 8
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "destination.port"=?{port=*}
+      | dns.question.type=PTR AND dns.response_code = "NXDOMAIN"
+      | default(value="unknown", field=[dns.question.name])
+      | top(dns.question.name)
+      | rename([["dns.question.name","Query"],[_count,Count]])
+    end: now
+    start: 1d
+    width: 4
+    y: 5
+    interactions:
+    - name: Details of Top Reverse Queries by Count to Non-Existent Domains
+      titleTemplate: Details of {{ fields.Query }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = dns OR Vendor._path = dns_red
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "destination.port"=?port
+        | dns.question.type=PTR AND dns.response_code = "NXDOMAIN"
+        | default(value="unknown", field=[dns.question.name])
+        | dns.question.name = ?Query
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Query: '["{{ fields.Query }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        port: '["{{ parameters.port }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Reverse Queries by Count to Non-Existent Domains
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  additional_filter:
+    label: Additional Filter
+    order: 5
+    type: text
+    defaultValue: '*'
+    width: 1
+  port:
+    label: Responder Port (id_resp_p)
+    query: |
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | groupBy([destination.port], function=[], limit=1000000)
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 2
+    valueField: destination.port
+  qtype_name:
+    label: Record Type
+    query: |
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = dns OR Vendor._path = dns_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | groupBy([dns.question.type], function=[], limit=1000000)
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 4
+    valueField: dns.question.type
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | groupBy([sensor_name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 1
+    valueField: sensor_name

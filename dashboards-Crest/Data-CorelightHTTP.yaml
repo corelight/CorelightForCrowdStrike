@@ -1,0 +1,1092 @@
+sections:
+  section-1733473980607-1:
+    collapsed: false
+    order: 0
+    title: Top Values
+    widgetIds:
+    - f73bfc04-2f46-4c5c-8c7b-b27493f5573d
+    - c62d595b-a0fb-4eac-b073-3fa14aa6d6c6
+    - ba99b29a-394a-40da-ab98-9363c5e4ae5d
+    - a45ee2f7-6eba-492e-babc-c3e03da40617
+    - 69a17a96-cc25-4059-9bbb-bb314570cdda
+    - 67450089-3e23-4153-b4c4-631906f8db20
+    - 42c8265a-9196-4101-b8a7-94225372cbae
+    - 3ddc3566-4056-4f45-8e26-a03b0a6f7fba
+    - 32320b7c-0b25-4e52-bf9d-cde2a53b8273
+    - 300372a7-46c0-487d-8e28-9485a45b01f0
+    - 22e9d0b4-ce96-4466-b454-5d46855dc38f
+  section-1733474158887-2:
+    collapsed: true
+    order: 1
+    title: Details
+    widgetIds:
+    - note-1733481404732-0
+    - parameter-panel-1733477043037-0
+    - d40a372f-0c8b-4f77-bfbf-e93721b42e54
+    - parameter-panel-1733475218867-4
+    - 5f3f817d-4d4c-4266-8dea-7fec55e3a1b9
+    - a053381f-40a7-43af-8895-d2f6c702b8c3
+  section-1733474159887-3:
+    collapsed: true
+    order: 2
+    title: Directions
+    widgetIds:
+    - 0e1ad75a-9f20-4a44-be96-a7f60641d256
+    - note-1733482610728-1
+    - 160945e2-e40b-4e0a-8a56-16940ef3d5f2
+    - 112a09a7-7637-4c81-89fc-8a1547a7f1f7
+    - a934d86f-f754-40a4-9954-3f7815b214a7
+    - e36616e9-6648-43dc-af74-9b447215bfd5
+    - 4f3db81c-e0dd-451f-b686-e7f9cdc8d4f2
+name: Data-CorelightHTTP
+description: ''
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 1d
+labels:
+- Corelight
+widgets:
+  parameter-panel-1733477043037-0:
+    x: 6
+    y: 1
+    parameterIds:
+    - http_status
+    height: 1
+    width: 6
+    title: ''
+    type: parameterPanel
+  note-1733482610728-1:
+    x: 0
+    y: 0
+    height: 1
+    text: ''
+    width: 12
+    title: Distinct Host Headers
+    type: note
+  c62d595b-a0fb-4eac-b073-3fa14aa6d6c6:
+    x: 6
+    height: 4
+    queryString: |
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | groupby([source.address], function=count(as=Count), limit=1000000)
+      | rename(field="source.address", as="Host Header")
+      | sort(Count, order=asce, limit=10)
+    end: now
+    start: 1d
+    width: 6
+    y: 6
+    interactions:
+    - name: Details of Rare Host Headers
+      titleTemplate: Details of {{ fields["Host Header"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000)\n\
+        | source.address=?source_address "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        source_address: '["{{ fields[\"Host Header\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Host Header:
+          width: 550
+        host_header:
+          width: 571
+        source.address:
+          width: 571
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Rare Host Headers
+    isLive: false
+    type: query
+  a934d86f-f754-40a4-9954-3f7815b214a7:
+    x: 6
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | join(query={#Vendor = corelight and @event_parsed != "false"
+                      | Vendor._path = conn OR Vendor._path = conn_red
+                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+                      | in(field="sensor_name", values=[?system_name])
+                      | ?{additional_filter=*}
+                      | network.direction = outbound OR network.direction = external},
+                      include=[network.direction],
+                      field=event.id,
+                      key=event.id)
+      | top(Vendor.user_agent, as=Count)
+      | rename(field="Vendor.user_agent", as="User Agent")
+    end: now
+    start: 1d
+    width: 6
+    y: 8
+    interactions:
+    - name: Details of Local Hosts - Outbound
+      titleTemplate: Details of {{ fields["User Agent"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
+        | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
+        \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
+        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
+        \             | in(field=\"sensor_name\", values=[?system_name])\n       \
+        \         | ?additional_filter\n                | network.direction = outbound\
+        \ OR network.direction = external},\n                include=[network.direction],\n\
+        \                field=event.id,\n                key=event.id)\n| Vendor.user_agent=?vendor_user_agent "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+        vendor_user_agent: '["{{ fields[\"User Agent\"] }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Count:
+          width: 67
+        User Agent:
+          width: 550
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Local User Agents - Outbound
+    isLive: false
+    type: query
+  f73bfc04-2f46-4c5c-8c7b-b27493f5573d:
+    x: 2
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | count(Vendor.user_agent, distinct=true)
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Detail of Events with User Agents
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[http,http2,http_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "Vendor.user_agent" = ?user_agent
+        | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+        | Vendor.user_agent=*
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: abbreviated
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Distinct User Agents
+    isLive: false
+    type: query
+  parameter-panel-1733475218867-4:
+    x: 0
+    y: 1
+    parameterIds:
+    - http_method
+    height: 1
+    width: 6
+    title: ''
+    type: parameterPanel
+  a45ee2f7-6eba-492e-babc-c3e03da40617:
+    x: 6
+    height: 2
+    queryString: |
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | count(event.id, distinct=true)
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Detail of Events with Distinct Connections
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[http,http2,http_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "Vendor.user_agent" = ?user_agent
+        | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+        | event.id=*
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: abbreviated
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Distinct Connections
+    isLive: false
+    type: query
+  42c8265a-9196-4101-b8a7-94225372cbae:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | top([source.address])
+      | rename(field="source.address", as="Host Header")
+      | rename(field="_count", as="Count")
+    end: now
+    start: 1d
+    width: 4
+    y: 2
+    interactions:
+    - name: Details of Top Host Headers by Count
+      titleTemplate: Details of {{ fields["Host Header"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
+        | source.address = ?source_address"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        source_address: '["{{ fields[\"Host Header\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Host Headers by Count
+    isLive: false
+    type: query
+  22e9d0b4-ce96-4466-b454-5d46855dc38f:
+    x: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | count(Vendor.referrer, distinct=true)
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Detail of Events with Referrers
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[http,http2,http_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "Vendor.user_agent" = ?user_agent
+        | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+        | Vendor.referrer = *
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Distinct Referrers
+    isLive: false
+    type: query
+  d40a372f-0c8b-4f77-bfbf-e93721b42e54:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*} AND http.request.method = ?{http_method=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | top([source.address], as=Count)
+      | rename(field="source.address", as="Host Header")
+    end: now
+    start: 1d
+    width: 6
+    y: 2
+    interactions:
+    - name: Details of Rare Host Headers
+      titleTemplate: Details of {{ fields["Host Header"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent AND http.request.method\
+        \ = ?http_method\n| groupBy([\"event.id\",source.ip,destination.ip], function\
+        \ = tail(1), limit=1000000)\n| source.address=?source_address "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        source_address: '["{{ fields[\"Host Header\"] }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+        http_method: '["{{ parameters.http_method }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Host Header:
+          width: 580
+        host_header:
+          width: 571
+        source.address:
+          width: 571
+      row-numbers-enabled: false
+    visualization: table-view
+    title: ''
+    isLive: false
+    type: query
+  note-1733481404732-0:
+    x: 0
+    y: 0
+    height: 1
+    text: ''
+    width: 6
+    title: Host Breakdown By HTTP Method
+    type: note
+  160945e2-e40b-4e0a-8a56-16940ef3d5f2:
+    x: 0
+    y: 1
+    height: 3
+    queryString: |+
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | join(query={#Vendor = corelight and @event_parsed != "false"
+                      | Vendor._path = conn OR Vendor._path = conn_red
+                      | in(field="observer.name", values=[?system_name])
+                      | ?{additional_filter=*}
+                      | network.direction = internal OR network.direction = inbound},
+                      include=[network.direction],
+                      field=event.id,
+                      key=event.id)
+      | count(field=source.address, distinct=true)
+
+    end: now
+    start: 1d
+    width: 6
+    options:
+      default: {}
+    visualization: single-value
+    title: Inbound
+    isLive: false
+    type: query
+  5f3f817d-4d4c-4266-8dea-7fec55e3a1b9:
+    x: 6
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*} AND http.response.status_code = ?{http_status=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | groupBy([source.address,http.response.status_code,Vendor.status_msg], function=count(as=Count), limit=1000000)
+      | rename(field="source.address", as="Host Header")
+      | rename(field="http.response.status_code", as="Status Code")
+      | rename(field="Vendor.status_msg", as="Status Message")
+      | sort(Count,limit=10)
+    end: now
+    start: 1d
+    width: 6
+    y: 2
+    interactions:
+    - name: Details of Rare Host Headers
+      titleTemplate: Details of {{ fields["Host Header"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent AND http.response.status_code\
+        \ = ?http_status\n| groupBy([\"event.id\",source.ip,destination.ip], function\
+        \ = tail(1), limit=1000000)\n| source.address=?source_address "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        source_address: '["{{ fields[\"Host Header\"] }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        http_status: '["{{ fields[\"Status Code\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        host_header:
+          width: 571
+        source.address:
+          width: 571
+      row-numbers-enabled: false
+    visualization: table-view
+    title: ''
+    isLive: false
+    type: query
+  112a09a7-7637-4c81-89fc-8a1547a7f1f7:
+    x: 6
+    y: 1
+    height: 3
+    queryString: |+
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | join(query={#Vendor = corelight and @event_parsed != "false"
+                      | Vendor._path = conn OR Vendor._path = conn_red
+                      | in(field="observer.name", values=[?system_name])
+                      | ?{additional_filter=*}
+                      | network.direction = outbound OR network.direction = external},
+                      include=[network.direction],
+                      field=event.id,
+                      key=event.id)
+      | count(field=source.address, distinct=true)
+
+    end: now
+    start: 1d
+    width: 6
+    options:
+      default: {}
+    visualization: single-value
+    title: Outbound
+    isLive: false
+    type: query
+  32320b7c-0b25-4e52-bf9d-cde2a53b8273:
+    x: 8
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | avg("Vendor.response_body_len")
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Detail of All HTTP Events
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[http,http2,http_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "Vendor.user_agent" = ?user_agent
+        | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      default: {}
+      yAxisTitle: ''
+      value-format: abbreviated
+    visualization: single-value
+    title: Average Body Length
+    isLive: false
+    type: query
+  a053381f-40a7-43af-8895-d2f6c702b8c3:
+    x: 6
+    y: 0
+    height: 1
+    text: ''
+    width: 6
+    title: Host Breakdown By HTTP Status
+    type: note
+  ba99b29a-394a-40da-ab98-9363c5e4ae5d:
+    x: 4
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | count(source.address, distinct=true)
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Detail of Events with Distinct Hosts
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[http,http2,http_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "Vendor.user_agent" = ?user_agent
+        | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+        | source.address=*
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      decimal-places: 2
+      color-method: static
+      use-colorised-thresholds: false
+      value-format: abbreviated
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Distinct Hosts
+    isLive: false
+    type: query
+  69a17a96-cc25-4059-9bbb-bb314570cdda:
+    x: 10
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | length(Vendor.user_agent, as="http_user_agent")
+      | avg("http_user_agent")
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Detail of All HTTP Events
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[http,http2,http_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter AND "Vendor.user_agent" = ?user_agent
+        | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Average User Agent Length
+    isLive: false
+    type: query
+  4f3db81c-e0dd-451f-b686-e7f9cdc8d4f2:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | join(query={#Vendor = corelight and @event_parsed != "false"
+                      | Vendor._path = conn OR Vendor._path = conn_red
+                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+                      | in(field="sensor_name", values=[?system_name])
+                      | ?{additional_filter=*}
+                      | network.direction = internal OR network.direction = inbound},
+                      include=[network.direction],
+                      field=event.id,
+                      key=event.id)
+      | top(Vendor.user_agent, as=Count)
+      | rename(field="Vendor.user_agent", as="User Agent")
+    end: now
+    start: 1d
+    width: 6
+    y: 8
+    interactions:
+    - name: Details of Local Hosts - Inbound
+      titleTemplate: Details of {{ fields["User Agent"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
+        | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
+        \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
+        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
+        \             | in(field=\"sensor_name\", values=[?system_name])\n       \
+        \         | ?additional_filter\n                | network.direction = inbound\
+        \ OR network.direction = internal},\n                include=[network.direction],\n\
+        \                field=event.id,\n                key=event.id)\n| Vendor.user_agent=?vendor_user_agent "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+        vendor_user_agent: '["{{ fields[\"User Agent\"] }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Count:
+          width: 67
+        User Agent:
+          width: 660
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Local User Agents - Inbound
+    isLive: false
+    type: query
+  300372a7-46c0-487d-8e28-9485a45b01f0:
+    x: 4
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | top(Vendor.status_msg)
+    end: now
+    start: 1d
+    width: 4
+    y: 2
+    interactions:
+    - name: Details of HTTP Status Code Breakdown
+      titleTemplate: Details of {{ fields.Vendor.status_msg }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
+        | Vendor.status_msg = ?status_msg"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        status_msg: '["{{ fields.Vendor.status_msg }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      maxSeriesCount: 10
+      innerRadius: 0
+      legendPosition: right
+      legendTitle: Status Message
+    visualization: pie-chart
+    title: HTTP Status Code Breakdown
+    isLive: false
+    type: query
+  3ddc3566-4056-4f45-8e26-a03b0a6f7fba:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | groupby([Vendor.user_agent], function=count(as=Count), limit=1000000)
+      | rename(field="Vendor.user_agent", as="Http User Agent")
+      | sort(Count, order=asce, limit=10)
+    end: now
+    start: 1d
+    width: 6
+    y: 6
+    interactions:
+    - name: Details of Rare User Agents
+      titleTemplate: Details of {{ fields["Http User Agent"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
+        | Vendor.user_agent=?http_user_agent "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        http_user_agent: '["{{ fields[\"Http User Agent\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Http User Agent:
+          width: 550
+        http_user_agent:
+          width: 578
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Rare User Agents
+    isLive: false
+    type: query
+  67450089-3e23-4153-b4c4-631906f8db20:
+    x: 8
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = conn OR Vendor._path = conn_red
+      | network.protocol=http
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | top([source.ip])
+      | rename(field="source.ip", as="Source IP")
+      | rename(field="_count", as="Count")
+    end: now
+    start: 1d
+    width: 4
+    y: 2
+    interactions:
+    - name: Details of Top Originators
+      titleTemplate: Details of {{ fields["Source IP"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
+        \ = conn OR Vendor._path = conn_red\n| network.protocol=http\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | source.ip = ?Id_Orig_H "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Id_Orig_H: '["{{ fields[\"Source IP\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: ellipsis
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Originators
+    isLive: false
+    type: query
+  0e1ad75a-9f20-4a44-be96-a7f60641d256:
+    x: 6
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | join(query={#Vendor = corelight and @event_parsed != "false"
+                      | Vendor._path = conn OR Vendor._path = conn_red
+                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+                      | in(field="sensor_name", values=[?system_name])
+                      | ?{additional_filter=*}
+                      | network.direction = outbound OR network.direction = external},
+                      include=[network.direction],
+                      field=event.id,
+                      key=event.id)
+      | top(source.address, as=Count)
+      | rename(field="source.address", as="Host Header")
+    end: now
+    start: 1d
+    width: 6
+    y: 4
+    interactions:
+    - name: Details of Local Hosts - Outbound
+      titleTemplate: Details of {{ fields["Host Header"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
+        | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
+        \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
+        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
+        \             | in(field=\"sensor_name\", values=[?system_name])         \
+        \       \n                | ?additional_filter\n                | network.direction\
+        \ = outbound OR network.direction = external},\n                include=[network.direction],\n\
+        \                field=event.id,\n                key=event.id)\n| source.address=?host_header "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        host_header: '["{{ fields[\"Host Header\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Count:
+          width: 67
+        Host Header:
+          width: 550
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Local Hosts - Outbound
+    isLive: false
+    type: query
+  e36616e9-6648-43dc-af74-9b447215bfd5:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | join(query={#Vendor = corelight and @event_parsed != "false"
+                      | Vendor._path = conn OR Vendor._path = conn_red
+                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+                      | in(field="sensor_name", values=[?system_name])
+                      | ?{additional_filter=*}
+                      | network.direction = internal OR network.direction = inbound},
+                      include=[network.direction],
+                      field=event.id,
+                      key=event.id)
+      | top(source.address, as=Count)
+      | rename(field="source.address", as="Host Header")
+    end: now
+    start: 1d
+    width: 6
+    y: 4
+    interactions:
+    - name: Details of Local Hosts - Inbound
+      titleTemplate: Details of {{ fields["Host Header"] }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
+        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
+        event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
+        | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
+        \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
+        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
+        \             | in(field=\"sensor_name\", values=[?system_name])\n       \
+        \         | ?additional_filter\n                | network.direction = inbound\
+        \ OR network.direction = internal},\n                include=[network.direction],\n\
+        \                field=event.id,\n                key=event.id)\n| source.address=?host_header "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        host_header: '["{{ fields[\"Host Header\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        user_agent: '["{{ parameters.user_agent }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Count:
+          width: 67
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Local Hosts - Inbound
+    isLive: false
+    type: query
+  note-1734413299454-0:
+    x: 0
+    y: 0
+    height: 1
+    text: ''
+    width: 12
+    title: HTTP
+    type: note
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  user_agent:
+    label: User Agent (Top 100)
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | top([Vendor.user_agent],limit=100)
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 2
+    valueField: Vendor.user_agent
+  http_method:
+    label: HTTP Method
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | groupBy([http.request.method])
+      | drop(_count)
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 2
+    order: 1
+    valueField: http.request.method
+  additional_filter:
+    label: Additional filter
+    order: 3
+    type: text
+    defaultValue: '*'
+    width: 1
+  http_status:
+    label: HTTP Status
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http,http2,http_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
+      | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
+      | groupBy([http.response.status_code])
+      | drop(_count)
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 2
+    order: 1
+    valueField: http.response.status_code
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=observer.name)
+      | groupBy([observer.name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 1
+    valueField: observer.name

@@ -1,0 +1,436 @@
+sections:
+  section-1735196956945-0:
+    collapsed: false
+    order: 0
+    title: Top Values
+    widgetIds:
+    - 239e48d0-2df2-4994-bacb-9c6019d9ccab
+    - 0a1e28dc-4af5-421c-96db-1c821914bbac
+    - 31d99fc8-1b7e-47c6-8ee9-1f5f6bd628fd
+    - bf2f7441-7bb0-4d58-8be6-5561bdbf9e6e
+    - d693ac88-8ff0-4314-af48-f315ab05fbf6
+  section-1735197035929-1:
+    collapsed: true
+    order: 1
+    title: Hosts
+    widgetIds:
+    - 132ea8fb-1a20-45d6-bd4c-0ee55383d33f
+    - 318dd32d-580a-4cae-86f8-ad13d3fdd293
+    - c2137612-7933-4207-bfb3-bd424951b003
+    - fc0e473d-8418-489c-9d98-83474e8fd765
+name: Data-CorelightFiles
+description: ''
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: true
+  start: 1d
+labels:
+- Corelight
+widgets:
+  bf2f7441-7bb0-4d58-8be6-5561bdbf9e6e:
+    x: 6
+    description: 'Executables hidden by filename (Corelight threat hunting use case
+      #7)'
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*}
+      | Vendor.mime_type = "application/x-dosexec" AND Vendor.filename != *exe*
+      | top([Vendor.mime_type, Vendor.filename], limit=15)
+      | rename([[Vendor.mime_type, "Mime Type"], [Vendor.filename, "Filename"], [_count, "Count"]])
+    end: now
+    start: 24h
+    width: 6
+    y: 0
+    interactions:
+    - conditions:
+      - argument: ''
+        fieldName: Filename
+        operator: present
+      name: Details of Corelight Mime Type to Filename Check
+      titleTemplate: Details of {{ fields.Filename }}
+      queryString: |-
+        #Vendor=corelight AND @event_parsed!="false"
+        | Vendor._path=files OR Vendor._path=files_red
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | ?additional_filter
+        | Vendor.mime_type = "application/x-dosexec" AND Vendor.filename != *exe*
+        | Vendor.filename = ?filename
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        filename: '["{{ fields.Filename }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Corelight Mime Type to Filename Check
+    isLive: false
+    type: query
+  note-1733303272602-0:
+    x: 0
+    y: 0
+    description: File analysis is only available for data extracted by Corelight Sensors
+      (open source Zeek sensors not supported)
+    height: 1
+    text: ''
+    width: 12
+    title: Files
+    type: note
+  239e48d0-2df2-4994-bacb-9c6019d9ccab:
+    x: 8
+    y: 5
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | is_src_internal_ip := if(Vendor.local_orig==true, then=true, else=false)
+      | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
+      | case {
+          is_src_internal_ip=true and is_dest_internal_ip=false |
+          direction := "sent";
+          is_dest_internal_ip=true and is_src_internal_ip=false |
+          direction := "received";
+          is_src_internal_ip=true and is_dest_internal_ip=true |
+          direction := "internal";
+          * |
+          direction := "unknown"
+      }
+      | timeChart(direction, function=sum("Vendor.seen_bytes", as=Bytes), limit=10)
+    end: now
+    start: 'calendar: now@y'
+    width: 4
+    options:
+      series: {}
+      xAxisTitle: ''
+      connect-points: false
+      stacking: none
+      yAxisScale: linear
+      plotType: line
+      maxSeriesCount: 10
+      regression: false
+      imputation: none
+    visualization: time-chart
+    title: File Flow - Bytes
+    isLive: false
+    type: query
+  318dd32d-580a-4cae-86f8-ad13d3fdd293:
+    x: 0
+    y: 5
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | top([destination.ip])
+      | rename([[destination.ip, "Destination Host"], [_count, "Destination File Count"]])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: 'Top Receiving (rx_host) Hosts - # Files'
+    isLive: false
+    type: query
+  0a1e28dc-4af5-421c-96db-1c821914bbac:
+    x: 4
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true and Vendor.mime_type != "application/pkix-cert"
+      | top([Vendor.source], limit=10)
+    end: now
+    start: 24h
+    width: 4
+    y: 5
+    interactions:
+    - name: Details of Top File Protocols by File Count
+      titleTemplate: Details of {{ fields.Vendor.source }}
+      queryString: "#Vendor=corelight AND @event_parsed!=\"false\"\n| Vendor._path=files\
+        \ OR Vendor._path=files_red\n| coalesce([observer.name, Vendor._system_name],\
+        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        | Vendor.mime_type=?mime_type\n| case { \n    in(field=\"source.ip\",values=[\"\
+        0.0.0.0\",\"255.255.255.255\"])\n    | is_broadcast := true;\n    in(field=\"\
+        destination.ip\",values=[\"255.255.255.255\",\"0.0.0.0\"])\n    | is_broadcast\
+        \ := true;\n    *\n    | is_broadcast := false\n}\n| is_broadcast!=true AND\
+        \ Vendor.mime_type!=\"application/pkix-cert\" \n| Vendor.source=?Vendor_source "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Vendor_source: '["{{fields.Vendor.source}}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        mime_type: '["{{ parameters.mime_type }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      maxSeriesCount: 10
+      innerRadius: 0
+      legendPosition: right
+      legendTitle: Protocol
+    visualization: pie-chart
+    title: Top File Protocols by File Count
+    isLive: false
+    type: query
+  c2137612-7933-4207-bfb3-bd424951b003:
+    x: 6
+    y: 0
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | top([source.ip], sum=Vendor.seen_bytes, as="Source Bytes")
+      | rename([[source.ip, "Source Host"]])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Source Bytes:
+          data-type: bytes
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Transmitting (tx_host) Hosts - Bytes
+    isLive: false
+    type: query
+  132ea8fb-1a20-45d6-bd4c-0ee55383d33f:
+    x: 6
+    y: 5
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | top([destination.ip], sum=Vendor.seen_bytes, as="Destination Bytes")
+      | rename([[destination.ip, "Destination Host"]])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Destination Bytes:
+          data-type: bytes
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Receiving (rx_host) Hosts - Bytes
+    isLive: false
+    type: query
+  31d99fc8-1b7e-47c6-8ee9-1f5f6bd628fd:
+    x: 0
+    y: 5
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | is_src_internal_ip := if(Vendor.local_orig==true, then=true, else=false)
+      | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
+      | case {
+          is_src_internal_ip=true and is_dest_internal_ip=false |
+          direction := "sent";
+          is_dest_internal_ip=true and is_src_internal_ip=false |
+          direction := "received";
+          is_src_internal_ip=true and is_dest_internal_ip=true |
+          direction := "internal";
+          * |
+          direction := "unknown"
+      }
+      | timeChart(direction, function=count(as="# Files"), limit=10)
+    end: now
+    start: 'calendar: now@y'
+    width: 4
+    options:
+      series: {}
+      interpolation: linear
+      showDataPoints: false
+      connect-points: false
+      stacking: none
+      yAxisScale: linear
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: 'File Flow - # of Files'
+    isLive: false
+    type: query
+  d693ac88-8ff0-4314-af48-f315ab05fbf6:
+    x: 0
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | Vendor.mime_type != "application/pkix-cert"
+      | top(Vendor.mime_type, limit=20)
+    end: now
+    start: 24h
+    width: 6
+    y: 0
+    interactions:
+    - name: Details of Top 20 Mime Types by File Count
+      titleTemplate: Details of {{ fields.Vendor.mime_type }}
+      queryString: "#Vendor=corelight AND @event_parsed!=\"false\"\n| Vendor._path=files\
+        \ OR Vendor._path=files_red\n| coalesce([observer.name, Vendor._system_name],\
+        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        | Vendor.mime_type=?mime_type\n| case { \n    in(field=\"source.ip\",values=[\"\
+        0.0.0.0\",\"255.255.255.255\"])\n    | is_broadcast := true;\n    in(field=\"\
+        destination.ip\",values=[\"255.255.255.255\",\"0.0.0.0\"])\n    | is_broadcast\
+        \ := true;\n    *\n    | is_broadcast := false\n}\n| is_broadcast!=true\n\
+        | Vendor.mime_type != \"application/pkix-cert\"\n| Vendor.mime_type=?Vendor_mime_type"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Vendor_mime_type: '["{{ fields.Vendor.mime_type }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        mime_type: '["{{ parameters.mime_type }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      withXAxisTitle: true
+      valuesOnBars: false
+      xAxisTitle: Mime Type
+      barChartType: grouped
+      legend: false
+      yAxisTitle: Count
+      barChartOrientation: vertical
+      orderBy: _count
+      maxSeriesCount: 20
+    visualization: bar-chart
+    title: Top 20 Mime Types by File Count
+    isLive: false
+    type: query
+  fc0e473d-8418-489c-9d98-83474e8fd765:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
+      | top([source.ip])
+      | rename([[source.ip, "Source Host"], [_count, "Source File Count"]])
+    end: now
+    start: 24h
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: 'Top Transmitting (tx_host) Hosts - # Files'
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  additional_filter:
+    label: Additional Filter
+    order: 60
+    type: text
+    defaultValue: '*'
+    width: 1
+  mime_type:
+    label: Mime Type
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = files OR Vendor._path = files_red
+      | groupBy([event.id], function=tail(1), limit=1000000)
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.mime_type != "application/pkix-cert"
+      | groupBy([Vendor.mime_type], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 50
+    valueField: Vendor.mime_type
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=observer.name)
+      | groupBy([observer.name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 50
+    valueField: observer.name

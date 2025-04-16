@@ -1,0 +1,295 @@
+sections:
+  section-1735278765652-0:
+    collapsed: false
+    order: 0
+    title: Top Values
+    widgetIds:
+    - 7f0d6460-6e81-4ec1-bd52-3fb7e6d82617
+    - 15bb71bd-e729-4bb7-98db-58aa9bb6dc01
+    - 6dc7cb12-71e0-497d-8790-c96889711093
+  section-1735278793665-1:
+    collapsed: true
+    order: 1
+    title: Details
+    widgetIds:
+    - 4644b0ff-3503-4c27-a03f-8c796724499a
+    - parameter-panel-1733386182899-0
+name: Data-CorelightSoftware
+description: ''
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+labels:
+- Corelight
+widgets:
+  4644b0ff-3503-4c27-a03f-8c796724499a:
+    x: 0
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "software"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | coalesce([source.address, Vendor.host_header], as=tx_host)
+      | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*} AND Vendor.name=?{software=*} AND tx_host=?{host=*}
+      | default(value="0", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2])
+      | format(format="%d.%d.%d", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2], as=Version)
+      | formatTime(field="@timestamp", format="%F %T", as="Event Generated Time")
+      | select(["Event Generated Time", observer.name, tx_host, Vendor.name, Version, Vendor.version.addl, Vendor.software_type])
+      | rename([[observer.name, "Sensor Name"], [tx_host, "Source IP"], [Vendor.name, "Software Name"], [Vendor.version.addl, "Additional Version"], [Vendor.software_type, "Software Type"]])
+      | default(value="unknown", field=["Sensor Name", "Source IP", "Software Name", "Additional Version", "Software Type", "Event Generated Time"])
+    end: now
+    start: 24h
+    width: 12
+    y: 1
+    interactions:
+    - name: Details of Source
+      titleTemplate: Details of  {{ fields["Source IP"] }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = "software"
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | coalesce([source.address, Vendor.host_header], as=tx_host)
+        | "Vendor.software_type"= ?software_type and ?additional_filter and Vendor.name = ?software
+        | tx_host=?host
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        host: '["{{ fields[\"Source IP\"] }}"]'
+        software_type: '["{{ parameters.software_type }}"]'
+        software: '["{{ parameters.software }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: ''
+    isLive: false
+    type: query
+  6dc7cb12-71e0-497d-8790-c96889711093:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "software"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*}
+      | top(Vendor.name)
+    end: now
+    start: 'calendar: now@y'
+    width: 12
+    y: 0
+    interactions:
+    - name: Details of Top Software
+      titleTemplate: Details of {{ fields.Vendor.name }}
+      queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
+        software\"\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
+        | in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        | \"Vendor.software_type\"=?software_type\n| Vendor.name=?Vendor_name "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Vendor_name: '["{{fields.Vendor.name}}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        software_type: '["{{ parameters.software_type }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      maxSeriesCount: 10
+      innerRadius: 0
+      legendPosition: right
+      legendTitle: Software Name
+    visualization: pie-chart
+    title: Top Software
+    isLive: false
+    type: query
+  7f0d6460-6e81-4ec1-bd52-3fb7e6d82617:
+    x: 6
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "software"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*}
+      | top(Vendor.software_type)
+      | rename([[Vendor.software_type, "Software Type"], [_count, Count]])
+      | default(value="unknown", field=["Software Type"])
+    end: now
+    start: 'calendar: now@y'
+    width: 6
+    y: 4
+    interactions:
+    - name: Details of Top Software Types
+      titleTemplate: Details of {{ fields["Software Type"] }}
+      queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
+        software\"\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
+        | in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        | \"Vendor.software_type\"=?software_type\n| Vendor.software_type=?Software_Type "
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Software_Type: '["{{ fields[\"Software Type\"] }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        software_type: '["{{ parameters.software_type }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Software Type:
+          width: 179
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Software Types
+    isLive: false
+    type: query
+  parameter-panel-1733386182899-0:
+    x: 0
+    y: 0
+    parameterIds:
+    - host
+    - software
+    height: 1
+    width: 12
+    title: ''
+    type: parameterPanel
+  15bb71bd-e729-4bb7-98db-58aa9bb6dc01:
+    x: 0
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "software"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*}
+      | default(value="0", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2])
+      | format(format="%d.%d.%d", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2], as=Version)
+      | top([Vendor.name, Version])
+      | rename([[Vendor.name, Software], [_count, Count]])
+      | default(value="unknown", field=[Software, Version])
+    end: now
+    start: 'calendar: now@y'
+    width: 6
+    y: 4
+    interactions:
+    - name: Details of Top Software Versions
+      titleTemplate: Details of {{ fields.Software }}
+      queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
+        software\"\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
+        | in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        | \"Vendor.software_type\"=?software_type\n| default(value=\"0\", field=[Vendor.version.major,\
+        \ Vendor.version.minor, Vendor.version.minor2])\n| format(format=\"%d.%d.%d\"\
+        ,field=[Vendor.version.major,Vendor.version.minor,Vendor.version.minor2],as=Version)\
+        \ \n| Version=?Version and Vendor.name=?Software"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        Software: '["{{fields.Software}}"]'
+        Version: '["{{fields.Version}}"]'
+        software_type: '["{{ parameters.software_type }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Software Versions
+    isLive: false
+    type: query
+  note-1733313484251-3:
+    x: 0
+    y: 0
+    description: Software analysis is only available for data extracted by Corelight
+      Sensors (open source Zeek sensors not supported)
+    height: 1
+    text: ''
+    width: 12
+    title: Software
+    type: note
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  host:
+    label: Host
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "software" and Vendor.software_type=?{software_type=*}
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | coalesce([source.address, Vendor.host_header], as=tx_host)
+      | groupBy([tx_host], function=[], limit=1000000)
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 0
+    valueField: tx_host
+  software_type:
+    label: Software Type
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "software"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | groupBy([Vendor.software_type], limit=1000000)
+      | select(Vendor.software_type)
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 2
+    valueField: Vendor.software_type
+  software:
+    label: Software
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "software" and Vendor.software_type=?{software_type=*} and Vendor.name=*
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | groupBy([Vendor.name], function=[], limit=1000000)
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 1
+    valueField: Vendor.name
+  additional_filter:
+    label: 'Additional Filter '
+    order: 3
+    type: text
+    defaultValue: '*'
+    width: 1
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | groupBy([sensor_name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 1
+    valueField: sensor_name

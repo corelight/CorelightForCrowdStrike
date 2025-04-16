@@ -1,0 +1,532 @@
+name: Data-CorelightConn
+description: ''
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+labels:
+- Corelight
+widgets:
+  885bf957-4839-4e2d-8be4-eaef5391df03:
+    x: 9
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | top([destination.ip], limit=15)
+    end: now
+    start: 24h
+    width: 3
+    y: 1
+    interactions:
+    - name: Details of Top Responders
+      titleTemplate: Details of {{ fields.destination.ip }}
+      queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
+        \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
+        |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
+        ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\",values=[\"\
+        255.255.255.255\",\"0.0.0.0\"]) |\n    is_broadcast := true;\n    * |\n  \
+        \  is_broadcast := false\n}\n| is_broadcast!=true\n| destination.ip=?destination_ip"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        destination_ip: '["{{fields.destination.ip}}"]'
+        src_port: '["{{ parameters.src_port }}"]'
+        src_ip: '["{{ parameters.src_ip }}"]'
+        dest_port: '["{{ parameters.dest_port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        service: '["{{ parameters.service }}"]'
+        dest_ip: '["{{ parameters.dest_ip }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      maxLegendRows: 2
+      maxSeriesCount: 15
+      innerRadius: 0
+      legendPosition: bottom
+      legendTitle: Responder IP
+    visualization: pie-chart
+    title: 'Top Responders (destinations) by # of connections'
+    isLive: false
+    type: query
+  e7928d7d-3a56-45c1-9248-cd2496ee33c6:
+    x: 6
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | top([source.ip], limit=15)
+    end: now
+    start: 24h
+    width: 3
+    y: 1
+    interactions:
+    - name: Details of Top Originators
+      titleTemplate: Details of {{ fields.source.ip }}
+      queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
+        \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
+        |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
+        ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\",values=[\"\
+        255.255.255.255\",\"0.0.0.0\"]) |\n    is_broadcast := true;\n    * |\n  \
+        \  is_broadcast := false\n}\n| is_broadcast!=true\n| source.ip=?source_ip"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        src_port: '["{{ parameters.src_port }}"]'
+        src_ip: '["{{ parameters.src_ip }}"]'
+        dest_port: '["{{ parameters.dest_port }}"]'
+        source_ip: '["{{fields.source.ip}}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        service: '["{{ parameters.service }}"]'
+        dest_ip: '["{{ parameters.dest_ip }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      legendLabelOverflow: truncate
+      maxLegendRows: 2
+      maxSeriesCount: 15
+      innerRadius: 0
+      legendPosition: bottom
+      legendTitle: Source IP
+    visualization: pie-chart
+    title: 'Top Originators (sources) by # of connections'
+    isLive: false
+    type: query
+  dc595f49-59a4-4907-9356-2ae0678f7361:
+    x: 6
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | network.direction = "inbound"
+      | groupBy([source.ip, destination.ip, network.direction], function=[collect(network.transport, separator=","), sum("Vendor.orig_bytes", as="bytes")], limit=1000000)
+      | sort(bytes, order=desc, limit=10)
+      | ipLocation(field=source.ip, as="source")
+      | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], ["source.country", "Country"], [bytes, Bytes], [network.transport, Protocol]])
+      | select(["Source IP", "Destination IP", "Country", Bytes, Protocol])
+      | default(value="N/A", field=["Source IP", "Destination IP", "Country", Bytes, Protocol])
+    end: now
+    start: 24h
+    width: 6
+    y: 5
+    interactions:
+    - name: Details of Top Inbound Originator
+      titleTemplate: Details of {{ fields["Source IP"] }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | source.ip = ?src_ip AND destination.ip = ?dest_ip AND source.port = ?src_port AND destination.port = ?dest_port AND network.protocol = ?service AND ?additional_filter
+        | case {
+            in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+            is_broadcast := true;
+            in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+            is_broadcast := true;
+            * |
+            is_broadcast := false;
+        }
+        | is_broadcast != true
+        | network.direction = "inbound"
+        | source.ip = ?ip
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        ip: '["{{ fields[\"Source IP\"] }}"]'
+        src_port: '["{{ parameters.src_port }}"]'
+        src_ip: '["{{ parameters.src_ip }}"]'
+        dest_port: '["{{ parameters.dest_port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        service: '["{{ parameters.service }}"]'
+        dest_ip: '["{{ parameters.dest_ip }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Inbound Data Flows by Originator (id_orig_h) Bytes
+    isLive: false
+    type: query
+  note-1734413957415-0:
+    x: 0
+    y: 0
+    height: 1
+    text: ''
+    width: 12
+    title: Connections
+    type: note
+  6475e6ac-ff68-4ff4-a680-d002e17801a1:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | top([network.protocol], limit=15)
+    end: now
+    start: 24h
+    width: 3
+    y: 1
+    interactions:
+    - name: Details of Top Services
+      titleTemplate: Details of {{ fields.network.protocol }}
+      queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
+        \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
+        |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
+        ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\",values=[\"\
+        255.255.255.255\",\"0.0.0.0\"]) |\n    is_broadcast := true;\n    * |\n  \
+        \  is_broadcast := false\n}\n| is_broadcast!=true\n| network.protocol=?network_protocol"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        src_port: '["{{ parameters.src_port }}"]'
+        src_ip: '["{{ parameters.src_ip }}"]'
+        network_protocol: '["{{fields.network.protocol}}"]'
+        dest_port: '["{{ parameters.dest_port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        service: '["{{ parameters.service }}"]'
+        dest_ip: '["{{ parameters.dest_ip }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      legend: true
+      enableTrellis: false
+      maxLegendRows: 2
+      innerRadius: 0
+      legendPosition: bottom
+      legendTitle: Services
+      maxSeriesCount: 15
+      withLegendTitle: true
+    visualization: pie-chart
+    title: Top Services
+    isLive: false
+    type: query
+  cd5e083c-fd4b-4597-8981-e9864a358d2c:
+    x: 0
+    height: 5
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | groupBy([event.id], function=[avg("event.duration", as="duration"), collect("source.ip", separator=","), collect("destination.ip", separator=","), collect("network.transport", separator=",")], limit=1000000)
+      | sort(duration, order=desc, limit=10)
+      | rename([[event.id, Uid], ["duration", Duration], [source.ip, "Source IP"], [destination.ip, "Destination IP"], [network.transport, "Protocol"]])
+    end: now
+    start: 24h
+    width: 12
+    y: 9
+    interactions:
+    - name: Details of Connections Events
+      titleTemplate: Details of {{ fields.Uid }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | source.ip = ?src_ip AND destination.ip = ?dest_ip AND source.port = ?src_port AND destination.port = ?dest_port AND network.protocol = ?service AND ?additional_filter
+        | case {
+            in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+            is_broadcast := true;
+            in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+            is_broadcast := true;
+            * |
+            is_broadcast := false;
+        }
+        | is_broadcast != true
+        | event.id=?UID
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        src_port: '["{{ parameters.src_port }}"]'
+        src_ip: '["{{ parameters.src_ip }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        service: '["{{ parameters.service }}"]'
+        dest_ip: '["{{ parameters.dest_ip }}"]'
+        UID: '["{{ fields.Uid }}"]'
+        dest_port: '["{{ parameters.dest_port }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Open/Active Long Lived Connections (Requires Long Connections pkg)
+    isLive: false
+    type: query
+  d1fa305a-d8b3-4f09-866f-d6c4ae498abc:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | network.direction = "outbound"
+      | groupBy([source.ip, destination.ip, network.direction], function=[collect(network.transport, separator=","), sum("Vendor.orig_bytes", as="bytes")], limit=1000000)
+      | sort(bytes, order=desc, limit=10)
+      | ipLocation(field=destination.ip, as="destination")
+      | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], ["destination.country", "Country"], [bytes, Bytes], [network.transport, Protocol]])
+      | select(["Source IP", "Destination IP", "Country", Bytes, Protocol])
+      | default(value="N/A", field=["Source IP", "Destination IP", "Country", Bytes, Protocol])
+    end: now
+    start: 24h
+    width: 6
+    y: 5
+    interactions:
+    - name: Details of Top Outbound Originator
+      titleTemplate: Details of {{ fields["Source IP"] }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | source.ip = ?src_ip AND destination.ip = ?dest_ip AND source.port = ?src_port AND destination.port = ?dest_port AND network.protocol = ?service AND ?additional_filter
+        | case {
+            in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+            is_broadcast := true;
+            in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+            is_broadcast := true;
+            * |
+            is_broadcast := false;
+        }
+        | is_broadcast != true
+        | network.direction = "outbound"
+        | source.ip = ?ip
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        ip: '["{{ fields[\"Source IP\"] }}"]'
+        src_port: '["{{ parameters.src_port }}"]'
+        src_ip: '["{{ parameters.src_ip }}"]'
+        dest_port: '["{{ parameters.dest_port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        service: '["{{ parameters.service }}"]'
+        dest_ip: '["{{ parameters.dest_ip }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Bytes:
+          data-type: bytes
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Top Outbound Data Flows by Originator (id_orig_h) Bytes
+    isLive: false
+    type: query
+  c15aeb29-9d27-4c7c-8a95-2fda6a3cb708:
+    x: 3
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
+      | case {
+          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
+          is_broadcast := true;
+          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
+          is_broadcast := true;
+          * |
+          is_broadcast := false;
+      }
+      | is_broadcast != true
+      | top([destination.port], limit=15)
+    end: now
+    start: 24h
+    width: 3
+    y: 1
+    interactions:
+    - name: Details of Top Responder Port
+      titleTemplate: Details of Port {{ fields.destination.port }}
+      queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
+        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
+        \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
+        |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
+        ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\",values=[\"\
+        255.255.255.255\",\"0.0.0.0\"]) |\n    is_broadcast := true;\n    * |\n  \
+        \  is_broadcast := false\n}\n| is_broadcast!=true\n| destination.port=?destination_port"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        src_port: '["{{ parameters.src_port }}"]'
+        src_ip: '["{{ parameters.src_ip }}"]'
+        dest_port: '["{{ parameters.dest_port }}"]'
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        destination_port: '["{{fields.destination.port}}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+        service: '["{{ parameters.service }}"]'
+        dest_ip: '["{{ parameters.dest_ip }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series: {}
+      maxLegendRows: 2
+      maxSeriesCount: 15
+      innerRadius: 0
+      legendPosition: bottom
+      legendTitle: Responder Ports
+    visualization: pie-chart
+    title: Top Responder Ports
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  src_port:
+    label: Originator Port (id_orig_p)
+    order: 4
+    type: text
+    defaultValue: '*'
+    width: 1
+  src_ip:
+    label: Originator IP (id_orig_h)
+    order: 3
+    type: text
+    defaultValue: '*'
+    width: 1
+  dest_port:
+    label: Responder Port (id_resp_p)
+    order: 6
+    type: text
+    defaultValue: '*'
+    width: 1
+  additional_filter:
+    label: Additional Filter
+    order: 8
+    type: text
+    defaultValue: '*'
+    width: 1
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | groupBy([sensor_name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 1
+    valueField: sensor_name
+  service:
+    label: Service
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | groupBy([network.protocol], function=[], limit=1000000)
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 7
+    valueField: network.protocol
+  dest_ip:
+    label: Responder IP (id_resp_h)
+    order: 5
+    type: text
+    defaultValue: '*'
+    width: 1
