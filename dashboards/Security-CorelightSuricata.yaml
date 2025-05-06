@@ -17,7 +17,7 @@ widgets:
     queryString: |
       (#path=suricata_corelight) AND ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
       | ("alert.severity"=?{alert_severity=*}) AND ("alert.signature"=?{alert-sig=*}) AND ("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
-      // community_id requres that the community_id package be enabled on the sensor
+      // community_id requires that the community_id package be enabled on the sensor
       // use this in place of the below if you want CID | groupby([id.orig_h, id.resp_h, alert.severity, alert.category, alert.signature, community_id, uid])
       | groupby([id.orig_h, id.resp_h, alert.severity, alert.category, alert.signature, uid])
       | replace("1", with="High", field=alert.severity)
