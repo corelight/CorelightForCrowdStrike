@@ -85,7 +85,7 @@ widgets:
       | direction=?{direction=*}
       | groupBy([x509.subject.distinguished_name],limit=100000)
       | rename([[_count, Count], [x509.subject.distinguished_name, "SSL Subject"]])
-      | sort(Count, order=asce, limit=10)
+      | sort(Count, order=asc, limit=10)
     end: now
     start: 1d
     width: 6

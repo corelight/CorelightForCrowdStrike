@@ -15,7 +15,7 @@ widgets:
       (#path=x509) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
       | groupby(["certificate.not_valid_after", "certificate.subject"])
       | "date expired" := rename(certificate.not_valid_after)
-      | sort("date expired", limit=50, order=asce)
+      | sort("date expired", limit=50, order=asc)
     visualization: table-view
     start: 24h
     width: 12
@@ -28,7 +28,7 @@ widgets:
     queryString: |-
       (#path=x509) AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
       | groupby("certificate.subject")
-      | sort(limit=20, order=asce)
+      | sort(limit=20, order=asc)
     visualization: table-view
     start: 24h
     width: 6
