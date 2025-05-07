@@ -1,0 +1,92 @@
+name: corelight-investigator
+fieldsToBeRemovedBeforeParsing: []
+$schema: https://schemas.humio.com/parser/v0.3.0
+script: |
+  // CrowdStrike Falcon Complete LogScale
+  // Corelight Parser
+  // Copyright: CrowdStrike 2024
+
+  // #region PREPARSE
+  /************************************************************
+  ****** Parse timestamp and log headers
+  ****** Extract message field for parsing
+  ****** Parse structured data
+  ************************************************************/
+
+  // Documentation: ADD Investigator Info HERE
+
+  | parseJson(prefix="Vendor.", excludeEmpty=true, handleNull=discard)
+  | parseTimestamp("unixtime", field=Vendor.alert_timestamp.observed, timezone="UTC")
+
+
+  // #endregion
+
+  // #region METADATA
+  /************************************************************
+  ****** Static Metadata Definitions
+  ************************************************************/
+  | Parser.version:="0.0.4"
+  | Cps.version := "1.0.0"
+  | Vendor:="Corelight - Investigator"
+  | ecs.version:="8.16.0"
+
+  // #endregion
+
+  // #region NORMALIZATION
+  /************************************************************
+  ****** Parse unstructured data (i.e. message field)
+  ****** Normalize fields to data model
+  ************************************************************/
+
+  // Event Fields
+  | event.module:=Vendor.alert_info.alert_type
+  | event.action := rename(Vendor.operation)
+  | format(format="investigator.%s", field=["Vendor.alert_info.alert_type"], as="event.dataset")
+  | event.reason := rename(Vendor.alert_info.alert_name)
+  | event.outcome := "unknown"
+  | event.kind := "alert"
+  | event.category[0] := "network"
+  | event.type[0] := "info"
+
+  // Observer fields
+  | observer.type := "Corelight - Investigator"
+
+  // Alert type specific values
+  | case {
+      // Notice Fields
+      Vendor.alert_info.alert_type = "notice" | event.id := rename(Vendor.notice.uid) | observer.name := rename(Vendor.notice.system_name) | network.transport := rename(Vendor.notice.proto) | source.ip := rename(Vendor.notice.orig_h) | source.port := rename(Vendor.notice.orig_p) | destination.ip := rename(Vendor.notice.resp_h) | destination.port := rename(Vendor.notice.resp_p);
+      // Suricata Fields
+      Vendor.alert_info.alert_type = "suricata_corelight" | event.id := rename(Vendor.suricata_corelight.uid) | network.transport := rename(Vendor.suricata_corelight.proto) | source.ip := rename(Vendor.suricata_corelight.source_ip) | source.port := rename(Vendor.suricata_corelight.source_port) | destination.ip := rename(Vendor.suricata_corelight.destination_ip) | destination.port := rename(Vendor.suricata_corelight.destination_port);
+      // Custom Search Rule Fields
+      Vendor.alert_info.alert_type = "custom_search_rule" |  event.id := Vendor.alert_id | source.ip := if(Vendor.related_alert_entities[0].entity_category == "source", then=Vendor.related_alert_entities[0].entity_name, else=if(Vendor.related_alert_entities[1].entity_name != "", then=Vendor.related_alert_entities[1].entity_name, else=*)) | source.port := * | destination.ip := if(Vendor.related_alert_entities[0].entity_category == "destination", then=Vendor.related_alert_entities[0].entity_name, else=if(Vendor.related_alert_entities[1].entity_name != "", then=Vendor.related_alert_entities[1].entity_name, else=*)) | destination.port := *;
+      // ML Fields
+      Vendor.alert_info.alert_type = "ml" |  event.id := Vendor.alert_id | source.ip := rename(Vendor.notice.orig_h) | source.port := rename(Vendor.notice.orig_p) | destination.ip := rename(Vendor.notice.resp_h) | destination.port := rename(Vendor.notice.resp_p);
+      *;
+  }
+
+  // Set Client and Server Fields for notice and suricata alerts
+  | Vendor.alert_info.alert_type match {
+      in(values=["notice", "suricata_corelight"]) => client.ip := source.ip | client.port := source.port | server.ip := destination.ip | server.port := destination.port;
+      * => *;
+  }
+
+  // CrowdStrike Detection name
+  | rule.name := event.reason
+
+  // CrowdStrike severity
+  | event.severity := Vendor.score * 10
+
+  // CrowdStrike tactic & technique
+  | threat.framework := if(Vendor.mitre_tactics[0] != "", then="MITRE ATT&CK", else=*)
+  | objectArray:eval(array="Vendor.mitre_tactics[]", asArray="threat.tactic.name[]", var=x, function={threat.tactic.name := x})
+  | objectArray:eval(array="Vendor.mitre_techniques[]", asArray="threat.technique.name[]", var=x, function={threat.technique.name := splitString(field=x, by=" :: ", index=1)})
+
+  // #endregion
+
+  // #region POST-NORMALIZATION
+  /************************************************************
+  ****** Post Normalization
+  ****** Custom parser logic needed after normalization
+  ************************************************************/
+
+  // #endregion
