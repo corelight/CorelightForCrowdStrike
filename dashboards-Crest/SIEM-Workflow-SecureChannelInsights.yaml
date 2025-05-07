@@ -55,7 +55,7 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: SSH Advanced Threats Infereces
+    title: SSH Advanced Threats Inferences
     isLive: false
     type: query
   bd751781-c602-41be-880a-ad06789757c6:

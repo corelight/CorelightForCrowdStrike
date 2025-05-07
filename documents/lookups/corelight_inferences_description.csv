@@ -7,7 +7,7 @@ LFD,Large Client File Download,A file transfer occurred in which the server sent
 SFU,Small Client File Upload,A file transfer occurred in which the client sent a sequence of bytes to the server.
 LFU,Large Client File Upload,A file transfer occurred in which the client sent a sequence of bytes to the server. Large files are identified dynamically based on trains of MTU-sized packets.
 KS,Keystrokes,An interactive session occurred in which the client set user-driven keystrokes to the server.
-SC,Capabilities Scan- ning,A client exchanged capabilities with the server and then disconnected.
+SC,Capabilities Scanning,A client exchanged capabilities with the server and then disconnected.
 SP,Other Scanning,A client and server didn’t exchange encrypted packets but the client wasn’t a version or capabilities scanner.
 SV,Version Scanning,A client exchanged version strings with the server and then disconnected.
 SA Scanning,N/A,The client scanned authentication methods with the server and then disconnected.
@@ -26,8 +26,8 @@ RSI,Reverse SSH Initiated,The Reverse session is initiated from the server back 
 RSIA,Reverse SSH Initiation Automated,The initiation of the Reverse session happened very early in the packet stream indicating automation.
 RSL,Reverse SSH Logged In,The Reverse tunnel login has succeeded.
 RSK,Reverse SSH Keystrokes,Keystrokes are detected within the Reverse tunnel.
-NRC,No Remote Com- mand,The -N flag was used in the SSH session.
-AFR,SSH Agent For- warding Requested,Agent forwarding is requested by the Client.
+NRC,No Remote Command,The -N flag was used in the SSH session.
+AFR,SSH Agent Forwarding Requested,Agent forwarding is requested by the Client.
 FC,FreeRDP Driven Client,Indicates a CLI tool client (likely FreeRDP-based). This inference doesn’t require that the client successfully authenticated to the server.
 MSC,Metasploit Scanner Client,Indicates a Metasploit client.
 HBC,THC-Hydra Bruteforce Client,Indicates a Hydra client.

@@ -26,7 +26,7 @@ widgets:
     queryString: |
       (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
       | groupby([host, status_code])
-      | sort(_count, order=asce, limit=10)
+      | sort(_count, order=asc, limit=10)
     visualization: table-view
     start: 24h
     width: 4
@@ -140,7 +140,7 @@ widgets:
     queryString: |-
       (#path=http or #path=http_red) host!=control AND ("_system_name"=?{system_name=*}) AND (?{additional_filter=*}) AND ("#repo"=?{fed_tenant=*})
       | groupby(user_agent)
-      | sort(_count, order=asce, limit=10)
+      | sort(_count, order=asc, limit=10)
     visualization: table-view
     start: 24h
     width: 8

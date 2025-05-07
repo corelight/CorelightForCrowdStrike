@@ -77,7 +77,7 @@ widgets:
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | groupby([source.address], function=count(as=Count), limit=1000000)
       | rename(field="source.address", as="Host Header")
-      | sort(Count, order=asce, limit=10)
+      | sort(Count, order=asc, limit=10)
     end: now
     start: 1d
     width: 6
@@ -813,7 +813,7 @@ widgets:
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | groupby([Vendor.user_agent], function=count(as=Count), limit=1000000)
       | rename(field="Vendor.user_agent", as="Http User Agent")
-      | sort(Count, order=asce, limit=10)
+      | sort(Count, order=asc, limit=10)
     end: now
     start: 1d
     width: 6

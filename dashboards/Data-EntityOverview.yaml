@@ -69,7 +69,7 @@ widgets:
   9e505a18-4d5e-42f9-b81f-47baf5e21935:
     x: 0
     y: 0
-    description: Provides a list of IOC IP's with whichthis entity has communicated.
+    description: Provides a list of IOC IP's with which this entity has communicated.
     height: 3
     queryString: |-
       #path=conn ?entity_target AND ("#repo"=?{fed_tenant=*})
