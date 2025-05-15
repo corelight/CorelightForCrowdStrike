@@ -1,205 +1,376 @@
-name: SIEM-Workflow - Security Posture
-updateFrequency: never
-timeSelector:
-  defaultTimeJumpInMs: 30000
+sections:
+  section-1735818809117-3:
+    collapsed: true
+    order: 3
+    title: DNS Hygiene
+    widgetIds:
+    - d9f2c0ac-b279-4d48-a609-30a51134bf36
+    - ce8451c2-6457-4231-9b03-c622ff79cd69
+    - 8869fc52-7741-44b7-984d-0bc65b93bab7
+    - c76f65ed-c1ff-4205-a26e-e719a679c47b
+    - bafbb309-32a6-4cc5-9723-d4ac9e659442
+    - 65e17273-4dc6-46c0-983c-fb6c91697e10
+    - 3e1015d8-a435-4393-adae-911a885f3576
+    - bb9a9444-626b-4ded-a5d2-e54e0290325b
+  section-1735818783123-1:
+    collapsed: true
+    order: 1
+    title: Encrypted Traffic Hygiene
+    widgetIds:
+    - 23fdd839-9ae5-4aa9-a2c8-1d9321fbabe1
+    - 30d0a180-9e45-4879-b3bd-77cc2ffaf213
+    - 827e6895-9b09-4510-a2c1-89d047d86a71
+    - 708d2f80-6094-4f95-951a-ed626e8f0b65
+    - c352c748-dcd9-452d-870f-007c8c66876e
+    - 8b3e89a5-661d-487b-92a6-0c4ecae29b21
+    - e3b178ef-374a-4fca-9ba1-fcb4f5ff994a
+    - 682a9ecb-f0eb-4fcf-92fb-962acd0e169c
+  section-1735818717134-0:
+    collapsed: false
+    order: 0
+    title: Alert Insights
+    widgetIds:
+    - 939dc377-3354-4681-8475-32c18d850f10
+    - 70b64df0-ac79-44c3-9bc5-5cea840df46c
+    - 49a96fd1-03a5-4806-b2cc-76b0525cf435
+    - 989ab1ea-3e78-4858-a706-34dad824934a
+    - note-1736241084408-0
+    - note-1736241207395-1
+    - note-1736241225400-2
+    - note-1736241272402-3
+    - cd51db76-df5e-4d6f-80eb-1e94b5067167
+    - eade3882-ec2b-4b45-bfe6-d7aa32dba4e2
+    - c4e5dc13-805c-435e-a62e-29a13068ea69
+    - 161b5c5f-a3fb-473c-98dd-6197bb07d9b9
+    - d3838125-47a4-4130-81fa-41159093a42d
+    - fcfc50f2-499e-4c43-83bc-b2ac4153a225
+    - b89b8361-c20b-4076-91d9-581f82c76781
+    - 278c20a9-b9d3-489a-8437-e07eeed455ee
+    - 452acfe5-8676-4da4-930d-6eda51758dbd
+    - caaa5386-60da-4054-ae83-72f421f9adb7
+    - 0f1774d2-22ea-4bbc-a777-132df8b81399
+    - c5d36309-46a3-4dae-81e9-cbbc80e89d69
+    - 7cc7d093-0311-4921-aef3-ed89a6b9cb51
+    - 896d47ad-7cc2-4a48-abad-46e70a7e6e1b
+    - 92a6c5ba-e149-4950-b2c5-54fe33175850
+    - 2232c7eb-584d-4c93-87c9-19585a534f83
+    - d5643ab2-5c07-410a-a7bf-d4e79dff8eac
+  section-1735818819106-4:
+    collapsed: true
+    order: 4
+    title: Remote Management Hygiene
+    widgetIds:
+    - 6d3049d9-b7f0-40ca-8007-ccc4f28260ce
+    - f4e652f0-1799-492b-9fc8-f553872b3f59
+    - 09cdace8-9640-41f3-b54a-731a965b3252
+  section-1735818798128-2:
+    collapsed: true
+    order: 2
+    title: Unencrypted Traffic Hygiene - Indicators
+    widgetIds:
+    - 9bd3e327-05fb-4dbb-8bf5-c85bf08c723d
+    - 220c9791-c17c-4919-a42c-628d8e7c9830
+    - ee732104-7dd9-4b18-82f1-4d64557cc2ae
+    - b0bc7e1d-4280-4b23-b4bc-9060ea8b9bf2
+    - aefe19ab-99e6-463c-8056-acda28bd0d45
+    - 3fb0486d-9ba2-431e-94b6-210f665c6117
+name: SIEM-Workflow-SecurityPosture
+timeSelector: {}
 sharedTimeInterval:
   enabled: true
   isLive: false
   start: 1d
+labels:
+- Corelight
 widgets:
-  c76f65ed-c1ff-4205-a26e-e719a679c47b:
+  682a9ecb-f0eb-4fcf-92fb-962acd0e169c:
     x: 6
-    y: 16
+    y: 2
     height: 2
     queryString: |-
-      @event_parsed!="false" | #path=dns | ("#repo"=?{fed_tenant=*})
-      | qtype_name = "AXFR" OR qtype_name="IXFR" OR qtype_name="ANY" OR qtype_name="TXT"
-      | groupby(qtype_name, function=count(field=qtype_name, as="totalunusualqueries"))
-      | sum(totalunusualqueries)
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "x509" or Vendor._path = "x509_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | parseInt("Vendor.certificate.key_length", as=key_length)
+      | key_length < 2048
+      | timeChart(function=count(Vendor.fingerprint, distinct=true, as=Count))
     end: now
     start: 1d
-    width: 2
+    width: 6
+    options:
+      series: {}
+      legend: false
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: Certs w/ Low Keys - Over Time
+    isLive: false
+    type: query
+  d3838125-47a4-4130-81fa-41159093a42d:
+    x: 3
+    y: 15
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor.note", values=["SSL::Certificate_Expired", "SSL::Invalid_Server_Cert", "SSL::Old_Version"])
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 3
     options:
       default: {}
+      value-format: abbreviated
     visualization: single-value
-    title: Unusual Qtypes
+    title: SSL Certificates Issues
     isLive: false
     type: query
-  d9f2c0ac-b279-4d48-a609-30a51134bf36:
+  3e1015d8-a435-4393-adae-911a885f3576:
     x: 8
-    y: 10
-    height: 8
+    y: 0
+    height: 2
     queryString: |-
-      @event_parsed!="false" | #path=dns | ("#repo"=?{fed_tenant=*})
-      | groupBy(id.resp_h)
-      | worldMap(ip=id.resp_h, magnitude=count(id.resp_h))
-    visualization: world-map
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
+      | timeChart(function=count(as=Total))
     end: now
     start: 1d
-    width: 4
-    title: Most Common Connections
-    isLive: false
-    type: query
-  f4e652f0-1799-492b-9fc8-f553872b3f59:
-    x: 0
-    y: 19
-    height: 4
-    queryString: |
-      #path=vpn AND ("#repo"=?{fed_tenant=*})
-      |ipLocation(id.resp_h)
-      | groupby(id.resp_h.country)
-    end: '2024-04-25T23:13:19.179Z'
-    start: '2024-04-17T23:13:19.179Z'
     width: 4
     options:
       series: {}
-      withXAxisTitle: false
-      labelAngle: 0
-      valuesOnBars: false
-      barChartType: grouped
-      labelLimit: 48
-      inputDataFormat: ''
-      labelAlign: right
-      withYAxisTitle: false
-    visualization: bar-chart
-    title: Top VPN destinations by Country
+      legend: false
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: Unusual Qtypes - Over Time
     isLive: false
     type: query
   220c9791-c17c-4919-a42c-628d8e7c9830:
-    x: 6
-    y: 3
+    x: 10
     height: 2
     queryString: |-
-      @event_parsed!="false" | #path=ftp | ("#repo"=?{fed_tenant=*})
-      | join({#path=ssl}, field=[uid], key=[uid], mode=left)
-      | is_encrypted:="No"
-      | select([uid, is_encrypted])
-      | case { is_encrypted="No"  | encrypted := "Not Encrypted";
-               else | encrypted := "Encrypted" }
-      | join({#path=conn | case { id.resp_p=990 OR id.resp_p=22 | known_encrypted_port:="Yes";
-                                  else | known_encrypted_port:="No"}}, field=[uid], key=[uid], mode=left)
-      | groupby(uid)
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "ftp"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Details of FTP sessions
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = "ftp"
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: FTP Sessions
+    isLive: false
+    type: query
+  ce8451c2-6457-4231-9b03-c622ff79cd69:
+    x: 6
+    y: 2
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="destination.port", values=[53,5353])
+      | is_dest_internal_ip := if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
+      | is_dest_internal_ip="true"
+      | count(distinct=true, field=destination.ip, as=Count)
+    end: now
+    start: 1d
+    width: 6
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Internal DNS Servers
+    isLive: false
+    type: query
+  d5643ab2-5c07-410a-a7bf-d4e79dff8eac:
+    x: 0
+    y: 0
+    height: 2
+    text: |-
+      ---
+      If you have imported **Security-CorelightAlertAggregations**, **Security-CorelightSuricata**, **Security-CorelightNotices** and **Security-CorelightIntel** dashboards with other name, please refer to this [document](https://docs.google.com/document/d/1QviJAHQHph4uoaxqpfjHQeRDrdK209VfeTc_MNabm28/edit?usp=sharing) for the required changes.
+    width: 12
+    title: Note
+    type: note
+  989ab1ea-3e78-4858-a706-34dad824934a:
+    x: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
       | count()
     end: now
     start: 1d
-    width: 3
+    width: 4
+    y: 8
+    interactions:
+    - name: Details of Suricata IDS Alert Overview
+      useWidgetTimeWindow: true
+      dashboardReference:
+        name: Security-CorelightSuricata
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      type: dashboardlink
     options:
+      trend-value: pct
+      trend: false
+      last-bucket: exclude
+      first-bucket: exclude
+      sparkline-zero: false
+      value-format: abbreviated
       default: {}
+      sparkline-type: line
     visualization: single-value
-    title: FTP sessions
+    title: Suricata Alerts (All Suricata Alerts)
     isLive: false
     type: query
-  f088a77d-8865-4e70-bbf2-712422863bb3:
+  note-1736241272402-3:
     x: 0
-    y: 18
-    description: 'This data provides insight to remote activity, VPN connections,
-      and RDP connection attempts.  '
+    y: 17
     height: 1
     text: ''
     width: 12
-    title: Remote Activity Hygiene
+    title: Threat Intel
     type: note
-  6afe8645-b602-4a4a-8760-c25546d6282e:
-    x: 6
-    y: 9
-    description: This data provides insight to unusual DNS activity and where DNS
-      servers are responding to queries.
+  note-1736241084408-0:
+    x: 0
+    y: 2
     height: 1
     text: ''
-    width: 6
-    title: DNS Hygiene
+    width: 12
+    title: Suricata Aggregations
     type: note
-  23fdd839-9ae5-4aa9-a2c8-1d9321fbabe1:
-    x: 0
-    y: 12
-    height: 6
-    queryString: |-
-      @event_parsed!="false" | #path=ssl | ("#repo"=?{fed_tenant=*})
-      | src_type := if(cidr(id.orig_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
-      | dest_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
-      | case {src_type="Internal" AND dest_type="External" | connection_type := "Internal to External";
-              src_type="External" AND dest_type="Internal" | connection_type := "External to Internal";
-              src_type="Internal" AND dest_type="Internal" | connection_type := "Internal to Internal";
-              src_type="External" AND dest_type="External" | connection_type := "External to External";  }
-      | case { version="TLSv13" | version_status:="Most Secure";
-              version="TLSv12" or "DTLSv12" | version_status:="Secure";
-              else | version_status:="Unknown"  }
-      | groupBy([version_status])
-    visualization: bar-chart
-    end: now
-    start: 1d
-    width: 6
-    title: Internal vs External Certificates Use
-    isLive: false
-    type: query
-  c352c748-dcd9-452d-870f-007c8c66876e:
-    x: 2
-    y: 1
+  aefe19ab-99e6-463c-8056-acda28bd0d45:
+    x: 6
+    y: 0
     height: 2
     queryString: |-
-      @event_parsed!="false" | #path=x509 certificate.key_length < 2048 | ("#repo"=?{fed_tenant=*})
-      | groupby(certificate.key_length, function=count(as="weak_keys"))
-      | sum(weak_keys)
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=["smb_files", "smb_mapping"])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | count(as=Count)
     end: now
     start: 1d
     width: 2
     options:
       default: {}
-    visualization: single-value
-    title: Certs /w Low Keys
-    isLive: false
-    type: query
-  b0bc7e1d-4280-4b23-b4bc-9060ea8b9bf2:
-    x: 6
-    y: 1
-    height: 2
-    queryString: |-
-      @event_parsed!="false" | #path=etc_viz | ("#repo"=?{fed_tenant=*})
-      | NOT (viz_stat = "Ee!" OR viz_stat = "Ee!!" OR viz_stat = "Ee" OR viz_stat = "E" OR viz_stat = "e" OR viz_stat = "!")
-      | groupby(uid)
-      | count()
-    end: now
-    start: 1d
-    width: 3
-    options:
-      default: {}
-    visualization: single-value
-    title: Unencrypted Connections
-    isLive: false
-    type: query
-  061d9b50-b38a-439b-bc31-e8f8fdb31770:
-    x: 9
-    y: 3
-    height: 2
-    queryString: |-
-      @event_parsed!="false" | #path=smb | ("#repo"=?{fed_tenant=*})
-      | in(field="smb_cmd", values=["Negotiate Protocol Request", "Session Setup AndX Request"])
-      | groupby(uid)
-      | count()
-    end: now
-    start: 1d
-    width: 3
-    options:
-      default: {}
+      value-format: abbreviated
     visualization: single-value
     title: SMB v1 Connections
     isLive: false
     type: query
-  30d0a180-9e45-4879-b3bd-77cc2ffaf213:
+  c352c748-dcd9-452d-870f-007c8c66876e:
+    x: 4
+    y: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "x509" or Vendor._path = "x509_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | parseInt("Vendor.certificate.key_length", as=key_length)
+      | key_length < 2048
+      | count(Vendor.fingerprint, distinct=true, as=Count)
+    end: now
+    start: 1d
+    width: 4
+    options:
+      default: {}
+      sparkline-type: line
+      trend: false
+      value-format: abbreviated
+    visualization: single-value
+    title: Certs w/ Low Keys
+    isLive: false
+    type: query
+  92a6c5ba-e149-4950-b2c5-54fe33175850:
+    x: 4
+    y: 18
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = intel
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | timeChart(function=count(as=Count))
+    end: now
+    start: 1d
+    width: 6
+    options:
+      series: {}
+      legend: false
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: Threat Intel (Intel Indicators) - Over Time
+    isLive: false
+    type: query
+  note-1736241207395-1:
     x: 0
     y: 7
-    height: 5
+    height: 1
+    text: ''
+    width: 12
+    title: Suricata Alerts
+    type: note
+  30d0a180-9e45-4879-b3bd-77cc2ffaf213:
+    x: 0
+    y: 8
+    height: 4
     queryString: |-
-      #path=ssl AND ("#repo"=?{fed_tenant=*})
-      | version_status :=
-        if(regex("^TLSv13$", field=version), then="Most Secure", else=
-        if(regex("^TLSv12$", field=version), then="Secure", else=
-        if(regex("^TLSv11$", field=version), then="Old Version", else=
-        if(regex("^TLSv10$", field=version), then="Old Version", else=
-        if(regex("^DTLSv12", field=version), then="Secure", else="unknown")))))
-      | groupby(field="version_status", function=count())
-    end: '2024-04-25T17:12:02.75Z'
-    start: '2024-04-17T17:12:02.75Z'
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | case {
+        Vendor.version="TLSv13"
+        | version_status := "Most Secure";
+        Vendor.version="TLSv12" or Vendor.version="DTLSv12"
+        | version_status := "Secure";
+        Vendor.version="unknown-64282"
+        | version_status := "Unknown";
+        *
+        | version_status := "Old Version";
+      }
+      | top([version_status])
+    end: now
+    start: 1d
     width: 6
     options:
       series:
@@ -209,276 +380,886 @@ widgets:
           color: '#bf5f5f'
         Secure:
           color: '#40c486'
-        unknown:
+        Unknown:
           color: '#878787'
       legendLabelOverflow: full
       legend: true
       enableTrellis: false
       maxLegendRows: 4
-      maxSeriesCount: 50
-      innerRadius: 41
+      maxSeriesCount: 10
+      innerRadius: 0
       legendPosition: right
-      legendTitle: TLS Version Statuses
+      legendTitle: TLS Version Status
     visualization: pie-chart
     title: TLS Versions
     isLive: false
     type: query
-  bafbb309-32a6-4cc5-9723-d4ac9e659442:
+  c76f65ed-c1ff-4205-a26e-e719a679c47b:
     x: 6
-    y: 14
     height: 2
     queryString: |-
-      @event_parsed!="false" | #path = "dns" | ("#repo"=?{fed_tenant=*})
-      rcode_name="SERVFAIL" OR rcode_name = "REFUSED" OR rcode_name="FORMERR" OR rcode_name="NOTIMP" OR rcode_name="NOTAUTH"
-      | groupby(rcode_name, function=count(field=rcode_name, as="totalfailed"))
-      | sum(totalfailed)
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
+      | count(as=Total)
     end: now
     start: 1d
     width: 2
-    options:
-      default: {}
-    visualization: single-value
-    title: Failed DNS Queries
-    isLive: false
-    type: query
-  8b3e89a5-661d-487b-92a6-0c4ecae29b21:
-    x: 0
-    height: 2
-    queryString: |-
-      @event_parsed!="false" | #path="x509" | ("#repo"=?{fed_tenant=*})
-      | join({#path=ssl validation_status="self signed certificate"},
-      field=fingerprint, key= "cert_chain_fps[0]", include=[id.resp_h, cert_chain_fps[0], uid])
-      | host_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="Internal", else="External")
-      | host_type = "Internal"
-      | groupBy([fingerprint, cert_chain_fps[0]], function= tail(1))
-      | select([id.resp_h, fingerprint, cert_chain_fps[0], uid])
-      | count()
-    end: now
-    start: 1d
-    width: 2
-    y: 1
+    y: 0
     interactions:
-    - conditions: null
-      name: 'Interaction #1'
-      titleTemplate: null
+    - name: Details of Unusual Qtypes
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[dns, dns_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
+        | groupBy([source.ip, destination.ip], function=[count(distinct=true, field=event.id, as="Unique Sessions"), collect([dns.question.type], separator=","), collect([dns.question.name], separator=",")], limit=1000000)
+        | "Unique Sessions" > 0
+        | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], [dns.question.type, "Query Types"], [dns.question.name, "Query Type Names"]])
       useWidgetTimeWindow: true
-      dashboardReference:
-        name: SIEM-Workflow - Secure Channel Insights
-        packageSpecifier: null
-        repoOrViewName: null
-      arguments: {}
-      openInNewTab: false
-      type: dashboardlink
+      repoOrViewName: search-all
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
     options:
+      trend-value: pct
+      trend: true
+      value-format: abbreviated
       default: {}
+      sparkline-type: line
     visualization: single-value
-    title: Self Signed Certs
+    title: Unusual Qtypes
     isLive: false
     type: query
-  09cdace8-9640-41f3-b54a-731a965b3252:
-    x: 8
-    y: 19
-    height: 4
+  3fb0486d-9ba2-431e-94b6-210f665c6117:
+    x: 2
+    y: 0
+    height: 2
     queryString: |-
-      @event_parsed!="false" | #path=rdp | ("#repo"=?{fed_tenant=*})
-      | groupby(field=[rdp.auth_successful, @timestamp])
-      | auth_stats := if(regex("^true", field=rdp.auth_successful), then="Successful", else="Failed")
-      | groupBy([auth_stats, @timestamp])
-      | timeChart(span=1h, auth_stats)
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "etc_viz"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
+      | timeChart(function=count(as="Total Count"))
     end: now
     start: 1d
     width: 4
     options:
-      cell-overflow: wrap-text
-      configured-columns: {}
-      row-numbers-enabled: false
-    visualization: table-view
-    title: RDP Authentication Attempts
-    isLive: false
-    type: query
-  9bd3e327-05fb-4dbb-8bf5-c85bf08c723d:
-    x: 6
-    y: 5
-    height: 4
-    queryString: |-
-      #path=conn AND ("#repo"=?{fed_tenant=*})
-      | !in(service, values=["ssl","https", "tls",  "dns", "ssl,http", "http,ssl", "spicy_ipsec_ike_udp", "spicy_tailscale", "spicy_stun" ])
-      | timechart(service)
-    end: '2024-04-25T19:50:12.14Z'
-    start: '2024-04-24T19:50:12.14Z'
-    width: 6
-    options:
-      series:
-        http:
-          color: '#00ab49'
-      lastBucketBehavior: include
+      series: {}
       legend: false
       connect-points: false
+      plotType: line
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Unencrypted Protocols
+    title: Unencrypted Connections - Over Time
     isLive: false
     type: query
-  note-1720509218495-0:
-    x: 0
-    y: 0
-    description: 'This data provides insight into SSL certificates and versions being
-      used internally and externally. '
-    height: 1
-    text: ''
-    width: 6
-    title: Encrypted Traffic Hygiene
-    type: note
-  ee732104-7dd9-4b18-82f1-4d64557cc2ae:
+  7cc7d093-0311-4921-aef3-ed89a6b9cb51:
     x: 9
-    y: 1
+    y: 10
     height: 2
     queryString: |-
-      @event_parsed!="false" | #path=conn | ("#repo"=?{fed_tenant=*})
-      | id.resp_p=23
-      | groupby(uid)
-      | count()
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suri_aggregations
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.sid=*
+      | is_dest_internal_ip := if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
+      | is_dest_internal_ip="true"
+      | count(as=Count)
     end: now
     start: 1d
     width: 3
     options:
       default: {}
+      value-format: abbreviated
     visualization: single-value
-    title: Telnet sessions
+    title: Internal Hosts Affected
     isLive: false
     type: query
-  708d2f80-6094-4f95-951a-ed626e8f0b65:
-    x: 4
-    y: 1
+  8b3e89a5-661d-487b-92a6-0c4ecae29b21:
+    x: 0
+    y: 0
     height: 2
     queryString: |-
-      @event_parsed!="false" |   #path=x509 | ("#repo"=?{fed_tenant=*})
-      | groupby(certificate.not_valid_after)
-      | current_time_epoch := now()
-      | parseTimestamp(format="yyyy-MM-dd'T'HH:mm:ss.SSSSSSz", field="certificate.not_valid_after", as=parsed_not_valid_after)
-      | timeDelta := parsed_not_valid_after - current_time_epoch
-      | timeDelta > 0
-      | Delta_days := timeDelta / (1000 * 60 * 60 * 24)
-      | Delta_days := round(Delta_days)
-      | Delta_days < 16
-      | select([current_time_epoch, certificate.not_valid_after, parsed_not_valid_after, Delta_days])
-      | count()
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | if(Vendor.validation_status=="self signed certificate", then="yes", else="no", as=is_self_signed)
+      | is_self_signed=yes
+      | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
+      | is_dest_internal_ip="true"
+      | count(destination.address, distinct=true, as=Count)
+    end: now
+    start: 1d
+    width: 4
+    options:
+      trend: false
+      sparkline-zero: false
+      value-format: abbreviated
+      default: {}
+      sparkline-type: line
+    visualization: single-value
+    title: Self Signed Certs
+    isLive: false
+    type: query
+  09cdace8-9640-41f3-b54a-731a965b3252:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = rdp
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | if(Vendor.auth_success=="true", then="Success", else="Failure", as="Auth Result")
+      | timeChart("Auth Result")
+    end: now
+    start: 1d
+    width: 12
+    y: 4
+    interactions:
+    - name: Details of RDP Authentication Attempts
+      titleTemplate: Details of {{ fields["Auth Result"] }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = rdp
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | if(Vendor.auth_success=="true", then="Success", else="Failure", as=auth_result)
+        | auth_result=?result
+        | groupBy([auth_result], function=[collect([user.name], separator=","), collect([#event.outcome], separator=","), collect([source.ip], separator=","), collect([destination.port], separator=","), collect([destination.ip], separator=","), count(as=Count)], limit=1000000)
+        | rename([[auth_result, Auth], ["user.name", User], [#event.outcome, Result], [source.ip, Source], [destination.port, Port], [destination.ip, Destination]])
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        result: '["{{ fields[\"Auth Result\"] }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      series:
+        Failure:
+          color: '#ff0000'
+        Success:
+          color: '#00ff11'
+      showOthers: false
+      showDataPoints: true
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: RDP Authentication Attempts
+    isLive: false
+    type: query
+  9bd3e327-05fb-4dbb-8bf5-c85bf08c723d:
+    x: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[http, http_red, http2, conn, conn_red, conn_long, dns, dns_red, ssl, ssl_red, files, files_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | !in(field="network.protocol", values=[ssl,"ssl,http","http,ssl",tls,ssh,https,dtls,"ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
+      | timeChart(network.protocol, limit=10)
+    end: now
+    start: 1d
+    width: 12
+    y: 2
+    interactions:
+    - name: Details of Top Unencrypted Protocols Used
+      titleTemplate: Details of {{ fields.network.protocol }}
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[http, http_red, http2, conn, conn_red, conn_long, dns, dns_red, ssl, ssl_red, files, files_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | !in(field="network.protocol", values=[ssl,"ssl,http","http,ssl",tls,ssh,https,dtls,"ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
+        | network.protocol=?service
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        service: '["{{ fields.network.protocol }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      legendPosition: bottom
+      series: {}
+      gradient: false
+      legend: true
+      connect-points: false
+      plotType: area
+      maxSeriesCount: 10
+      regression: false
+      imputation: none
+      showOthers: false
+      lastBucketBehavior: include
+    visualization: time-chart
+    title: Top Unencrypted Protocols Used
+    isLive: false
+    type: query
+  ee732104-7dd9-4b18-82f1-4d64557cc2ae:
+    x: 8
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, http, http_red, http2, dns, dns_red, ssl, ssl_red, files, files_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | destination.port=23
+      | count(as=Count)
     end: now
     start: 1d
     width: 2
+    y: 0
+    interactions:
+    - name: Details of Telnet sessions
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[conn, conn_red, conn_long, http, http_red, http2, dns, dns_red, ssl, ssl_red, files, files_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | destination.port=23
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
     options:
       default: {}
+      value-format: abbreviated
     visualization: single-value
-    title: Expiring Certs.
+    title: Telnet Sessions
+    isLive: false
+    type: query
+  708d2f80-6094-4f95-951a-ed626e8f0b65:
+    x: 8
+    y: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "x509" or Vendor._path = "x509_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ts_now := now()
+      | parseTimestamp(field=x509.not_after, as=ts_then)
+      | eval(now_now=(ts_then-ts_now)/86400000)
+      | days_to_expire := round(now_now)
+      | days_to_expire > 0 and days_to_expire <= 15
+      | count(Vendor.fingerprint, distinct=true, as="Distinct Certs")
+    end: now
+    start: 1d
+    width: 4
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Expiring Certificate
     isLive: false
     type: query
   827e6895-9b09-4510-a2c1-89d047d86a71:
     x: 0
-    y: 3
+    y: 4
     height: 4
     queryString: |-
-      #path=ssl AND ("#repo"=?{fed_tenant=*})
-      |timeChart(span=1h, function=count())
-    end: '2024-04-25T15:10:11.321Z'
-    start: '2024-04-24T15:10:11.321Z'
-    width: 6
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | timeChart(function=count(as="Encrypted Traffic Volume"))
+    end: now
+    start: 1d
+    width: 12
     options:
-      series:
-        _count:
-          color: '#00ab49'
+      legendPosition: bottom
+      series: {}
       gradient: false
       interpolation: linear
+      xAxisTitle: Encrypted Traffic Volume
       legend: false
       showDataPoints: false
       connect-points: false
-      stacking: none
       yAxisScale: linear
       plotType: area
       maxSeriesCount: 50
       imputation: none
       showOthers: true
       lastBucketBehavior: include
-      regression: true
+      yAxisTitle: ''
+      stacking: none
+      regression: false
       regressionType: linear
     visualization: time-chart
     title: Encrypted Traffic Over Time
     isLive: false
     type: query
-  b5a87b6e-7f19-481a-9544-3e442fc11310:
-    x: 6
-    y: 0
-    description: 'This data provides insight into unencrypted connections and unencrypted
-      protocols. '
-    height: 1
-    text: ''
-    width: 6
-    title: Unencrypted Traffic Hygiene
-    type: note
-  ce8451c2-6457-4231-9b03-c622ff79cd69:
-    x: 6
-    y: 12
+  caaa5386-60da-4054-ae83-72f421f9adb7:
+    x: 0
+    y: 5
     height: 2
     queryString: |-
-      @event_parsed!="false" | #path = "dns" | ("#repo"=?{fed_tenant=*})
-      | groupBy([id.resp_h], function= tail(1))
-      | host_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="internal", else="external")
-      | host_type = "internal"
-      | id.resp_p =53 OR id.resp_p =5353
-      | select([id.orig_h, id.resp_h, id.resp_p])
-      | count()
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.alert.signature_id=*
+      | rename(field=Vendor.alert.signature_id, as=sid)
+      | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[technique_number])
+      | technique_number=*
+      | count(technique_number, distinct=true, as=Count)
     end: now
     start: 1d
-    width: 2
+    width: 4
     options:
       default: {}
     visualization: single-value
-    title: Internal DNS Servers
+    title: Mitre Techniques
     isLive: false
     type: query
-  8869fc52-7741-44b7-984d-0bc65b93bab7:
+  bb9a9444-626b-4ded-a5d2-e54e0290325b:
+    x: 2
+    y: 2
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="dns.response_code", values=["NXDOMAIN", "NOERROR"])
+      | timeChart(function=count(as=Total))
+    end: now
+    start: 1d
+    width: 4
+    options:
+      series: {}
+      legend: false
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: NXDOMAIN Responses - Over Time
+    isLive: false
+    type: query
+  939dc377-3354-4681-8475-32c18d850f10:
+    x: 4
+    y: 8
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | timeChart(function=count(as=Count))
+    end: now
+    start: 1d
+    width: 8
+    options:
+      series:
+        Count: {}
+      interpolation: linear
+      legend: false
+      showDataPoints: false
+      connect-points: false
+      stacking: none
+      yAxisScale: linear
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+      regression: false
+      regressionType: linear
+    visualization: time-chart
+    title: Suricata Alerts (All Suricata Alerts) - Over Time
+    isLive: false
+    type: query
+  65e17273-4dc6-46c0-983c-fb6c91697e10:
+    x: 2
+    y: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
+      | timeChart(function=count(as=Count))
+    end: now
+    start: 1d
+    width: 4
+    options:
+      series: {}
+      legend: false
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: Failed DNS Queries - Over Time
+    isLive: false
+    type: query
+  d9f2c0ac-b279-4d48-a609-30a51134bf36:
+    x: 0
+    y: 4
+    height: 7
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | worldMap(ip=destination.ip)
+    end: now
+    start: 1d
+    width: 12
+    options:
+      magnitudeMode: opacity
+      projection: mercator
+      autoRotate: false
+      norm: true
+      opacityMode: opacity
+      zLevel: 0
+    visualization: world-map
+    title: Geolocation of DNS Responses
+    isLive: false
+    type: query
+  b89b8361-c20b-4076-91d9-581f82c76781:
+    x: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = intel
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 4
+    y: 18
+    interactions:
+    - name: Details of Intel
+      useWidgetTimeWindow: true
+      dashboardReference:
+        name: Security-CorelightIntel
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      type: dashboardlink
+    options:
+      trend-value: pct
+      trend: false
+      value-format: abbreviated
+      default: {}
+      sparkline-type: line
+    visualization: single-value
+    title: Threat Intel (Intel Indicators)
+    isLive: false
+    type: query
+  note-1739430753366-0:
+    x: 0
+    y: 0
+    description: Current Security Posture with Corelight
+    height: 1
+    text: ''
+    width: 12
+    title: Security Posture
+    type: note
+  70b64df0-ac79-44c3-9bc5-5cea840df46c:
+    x: 3
+    y: 10
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | destination.ip=*
+      | count(destination.ip, as=Count, distinct=true)
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Unique Destination IPs
+    isLive: false
+    type: query
+  f4e652f0-1799-492b-9fc8-f553872b3f59:
+    x: 0
+    y: 0
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = vpn
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | ipLocation(destination.ip, as=GeoInfo)
+      | groupBy([destination.ip, GeoInfo.country],limit=1000000)
+      | top(GeoInfo.country,percent=true, as=Count)
+      | rename([[percent,Percent],[GeoInfo.country,Country]])
+      | format(format="%.2f", field=[Percent],as=Percent)
+    end: now
+    start: 1d
+    width: 6
+    options:
+      legendPosition: bottom
+      series: {}
+      withXAxisTitle: true
+      labelAngle: 0
+      valuesOnBars: false
+      barChartType: stacked
+      legend: true
+      barChartOrientation: horizontal
+      labelLimit: 48
+      orderBy: Count
+      maxSeriesCount: 10
+      inputDataFormat: ''
+      labelAlign: right
+      withYAxisTitle: false
+    visualization: bar-chart
+    title: Top VPN destinations by Country
+    isLive: false
+    type: query
+  896d47ad-7cc2-4a48-abad-46e70a7e6e1b:
+    x: 4
+    y: 13
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip=* and Vendor.note != "Intel*"
+      | timeChart(function=count(as=Count))
+    end: now
+    start: 1d
+    width: 8
+    options:
+      series: {}
+      legend: false
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: Notices (Messages excluding Intel) - Over Time
+    isLive: false
+    type: query
+  e3b178ef-374a-4fca-9ba1-fcb4f5ff994a:
+    x: 0
+    y: 2
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | if(Vendor.validation_status=="self signed certificate", then="yes", else="no", as=is_self_signed)
+      | is_self_signed=yes
+      | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
+      | is_dest_internal_ip="true"
+      | timeChart(function=count(destination.address, distinct=true, as=Count))
+    end: now
+    start: 1d
+    width: 6
+    options:
+      series: {}
+      legend: false
+      connect-points: false
+      plotType: line
+      maxSeriesCount: 10
+      imputation: none
+    visualization: time-chart
+    title: Self Signed Certs - Over Time
+    isLive: false
+    type: query
+  eade3882-ec2b-4b45-bfe6-d7aa32dba4e2:
+    x: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip=* and Vendor.note != "Intel*"
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 4
+    y: 13
+    interactions:
+    - name: Details of Notices
+      useWidgetTimeWindow: true
+      dashboardReference:
+        name: Security-CorelightNotices
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      type: dashboardlink
+    options:
+      trend-value: pct
+      trend: false
+      value-format: abbreviated
+      default: {}
+      sparkline-type: line
+    visualization: single-value
+    title: Notices (Messages excluding Intel)
+    isLive: false
+    type: query
+  c5d36309-46a3-4dae-81e9-cbbc80e89d69:
+    x: 8
+    y: 5
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.alert.signature_id=*
+      | rename(field=Vendor.alert.signature_id, as=sid)
+      | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[cve_number])
+      | cve_number=*
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 4
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Detections With CVEs
+    isLive: false
+    type: query
+  note-1736241225400-2:
+    x: 0
+    y: 12
+    height: 1
+    text: ''
+    width: 12
+    title: Notices
+    type: note
+  c4e5dc13-805c-435e-a62e-29a13068ea69:
+    x: 0
+    y: 15
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip=* and Vendor.note = "ATTACK::*"
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Attack Count
+    isLive: false
+    type: query
+  cd51db76-df5e-4d6f-80eb-1e94b5067167:
     x: 6
     y: 10
     height: 2
     queryString: |-
-      @event_parsed!="false" | #path=dns | ("#repo"=?{fed_tenant=*})
-      | rcode_name="NXDOMAIN"
-      | groupby(rcode_name, function=count(field=rcode_name, as="totalnxdomain"))
-      | sum(totalnxdomain)
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.alert.signature_id=*
+      | count(Vendor.alert.signature_id, as=Count, distinct=true)
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Unique Signatures
+    isLive: false
+    type: query
+  23fdd839-9ae5-4aa9-a2c8-1d9321fbabe1:
+    x: 6
+    y: 8
+    height: 4
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | is_src_internal_ip:=if(cidr("source.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
+      | if(is_src_internal_ip=="false", then="External", else="Internal", as=src_internal)
+      | src_internal="Internal"
+      | case {
+        Vendor.version="TLSv13"
+        | version_status := "Most Secure";
+        Vendor.version="TLSv12" or Vendor.version="DTLSv12"
+        | version_status := "Secure";
+        Vendor.version="unknown-64282"
+        | version_status := "Unknown";
+        *
+        | version_status := "Old Version";
+      }
+      | top([version_status])
+    end: now
+    start: 1d
+    width: 6
+    options:
+      withXAxisTitle: false
+      yAxisTitle: Count
+      orderBy: _count
+      maxSeriesCount: 10
+      withYAxisTitle: false
+    visualization: bar-chart
+    title: Internal TLS Version Profile
+    isLive: false
+    type: query
+  452acfe5-8676-4da4-930d-6eda51758dbd:
+    x: 0
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[], limit=1000000)}, include=[event.id], name="list_of_uids")
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | groupBy([event.id], function=collect([Vendor.alert.signature_id], separator=", "), limit=1000000)
+      | crypto:sha1([Vendor.alert.signature_id], as=SHA1)
+      | regex(field="SHA1", regex="^.(?<did>.{8})")
+      | count(did, distinct=true, as=Count)
+    end: now
+    start: 1d
+    width: 4
+    y: 3
+    interactions:
+    - name: Details of Suricata Aggregations
+      useWidgetTimeWindow: true
+      dashboardReference:
+        name: Security-CorelightAlertAggregations
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      type: dashboardlink
+    options:
+      trend-value: abs
+      trend: false
+      color-method: static
+      sparkline-zero: false
+      use-colorised-thresholds: false
+      value-format: abbreviated
+      default: {}
+      sparkline-type: line
+    visualization: single-value
+    title: Suricata Aggregations (From Suricata Alerts)
+    isLive: false
+    type: query
+  2232c7eb-584d-4c93-87c9-19585a534f83:
+    x: 4
+    y: 3
+    height: 2
+    queryString: |-
+      defineTable(query={#Vendor=corelight and @event_parsed!=false
+      | in(field="Vendor._path", values=[suricata_corelight])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
+      | sid := Vendor.alert.signature_id
+      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+      | parseInt("impact_score", as=impact_score)
+      | impact_score > 3
+      | groupBy([event.id], function=[], limit=1000000)}, include=[event.id], name="list_of_uids")
+      | match(table=list_of_uids, field=[event.id], column=[event.id])
+      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | groupBy([event.id], function=[collect([Vendor.alert.signature_id], separator=", "), tail(1)], limit=1000000)
+      | crypto:sha1([Vendor.alert.signature_id], as=SHA1)
+      | regex(field="SHA1", regex="^.(?<did>.{8})")
+      | timeChart(function=count(did, distinct=true, as=Count))
+    end: now
+    start: 1d
+    width: 8
+    options:
+      series: {}
+      legend: false
+      connect-points: false
+      plotType: line
+      imputation: none
+    visualization: time-chart
+    title: Suricata Aggregations (From Suricata Alerts) - Over Time
+    isLive: false
+    type: query
+  8869fc52-7741-44b7-984d-0bc65b93bab7:
+    x: 0
+    y: 2
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="dns.response_code", values=["NXDOMAIN", "NOERROR"])
+      | count(as=Total)
     end: now
     start: 1d
     width: 2
     options:
       default: {}
+      trend-value: pct
+      value-format: abbreviated
     visualization: single-value
     title: NXDOMAIN Responses
     isLive: false
     type: query
   6d3049d9-b7f0-40ca-8007-ccc4f28260ce:
-    x: 4
-    y: 19
+    x: 6
+    y: 0
     height: 4
     queryString: |-
-      @event_parsed!="false"
-      /* End of Prefix */
-      | @event_parsed!="false" | #path=vpn | ("#repo"=?{fed_tenant=*})
-      | groupBy([id.resp_h], function= tail(1))
-      | host_type := if(cidr(id.resp_h, subnet=["0.0.0.0/8", "224.0.0.0/4", "10.0.0.0/8", "100.64.0.0/10", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "192.168.0.0/16", "127.0.0.0/8", "127.0.0.0/32", "169.254.0.0/16", "0.0.0.0/32", "203.0.113.0/24","240.0.0.0/4","255.255.255.255/32"]), then="internal", else="external")
-      | host_type = "external"
-      | timechart(span=1h, id.resp_h)
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = vpn
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
+      | is_dest_internal_ip="false"
+      | timeChart(function=count(as=Count))
     end: now
     start: 1d
-    width: 4
+    width: 6
     options:
       interpolation: linear
-      legend: false
+      legend: true
+      showDataPoints: true
       connect-points: false
       stacking: none
       yAxisScale: linear
       extrapolate: true
       plotType: line
       maxSeriesCount: 10
-      regression: true
+      regression: false
       imputation: none
       showOthers: false
       lastBucketBehavior: include
@@ -486,12 +1267,210 @@ widgets:
     title: Outbound VPN Connections
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.15.0
+  161b5c5f-a3fb-473c-98dd-6197bb07d9b9:
+    x: 6
+    y: 15
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.note = "MeterpreterDetection::Meterpreter_Detected"
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Meterpreter Count
+    isLive: false
+    type: query
+  fcfc50f2-499e-4c43-83bc-b2ac4153a225:
+    x: 9
+    y: 15
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = notice
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.note = *
+      | count(Vendor.note, distinct=true, as=Count)
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Unique Note Count
+    isLive: false
+    type: query
+  0f1774d2-22ea-4bbc-a777-132df8b81399:
+    x: 4
+    y: 5
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.alert.signature_id=*
+      | rename(field=Vendor.alert.signature_id, as=sid)
+      | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[impact_score])
+      | max("impact_score", as=Max)
+      | default(value=0, field=[Max])
+    end: now
+    start: 1d
+    width: 4
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Highest Score
+    isLive: false
+    type: query
+  49a96fd1-03a5-4806-b2cc-76b0525cf435:
+    x: 0
+    y: 10
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = suricata_corelight
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | source.ip=*
+      | count(source.ip, as=Count, distinct=true)
+    end: now
+    start: 1d
+    width: 3
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Unique Source IPs
+    isLive: false
+    type: query
+  b0bc7e1d-4280-4b23-b4bc-9060ea8b9bf2:
+    x: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = "etc_viz"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
+      | count(as="Total Count")
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Details of Unencrypted Connections
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | Vendor._path = "etc_viz"
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
+        | groupBy([destination.port, destination.address], limit=1000000)
+        | default(value="unknown", field=[destination.address, destination.port])
+        | default(value="0", field=[_count])
+        | rename([[destination.address, "Destination Host"], [destination.port, Port], [_count, Count]])
+        | select(["Destination Host", Port, Count])
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      trend-value: pct
+      trend: true
+      suffix: ''
+      sparkline-zero: false
+      value-format: abbreviated
+      default: {}
+      sparkline-type: line
+    visualization: single-value
+    title: Unencrypted Connections
+    isLive: false
+    type: query
+  bafbb309-32a6-4cc5-9723-d4ac9e659442:
+    x: 0
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._path", values=[dns, dns_red])
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
+      | count(as=Count)
+    end: now
+    start: 1d
+    width: 2
+    y: 0
+    interactions:
+    - name: Details of Failed DNS Queries
+      queryString: |-
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._path", values=[dns, dns_red])
+        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+        | in(field="sensor_name", values=[?system_name])
+        | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
+      useWidgetTimeWindow: true
+      arguments:
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
+    options:
+      trend-value: pct
+      trend: true
+      value-format: abbreviated
+      default: {}
+      sparkline-type: line
+    visualization: single-value
+    title: Failed DNS Queries
+    isLive: false
+    type: query
+  278c20a9-b9d3-489a-8437-e07eeed455ee:
+    x: 10
+    y: 18
+    height: 2
+    queryString: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | Vendor._path = intel
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | in(field="sensor_name", values=[?system_name])
+      | Vendor.seen.indicator=*
+      | count(Vendor.seen.indicator, distinct=true, as=Count)
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: abbreviated
+    visualization: single-value
+    title: Unique Indicators
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0
 parameters:
-  fed_tenant:
-    label: Tenant
-    fileName: 'members.csv'
+  system_name:
+    label: Corelight Sensor
+    query: |-
+      #Vendor = corelight and @event_parsed!="false"
+      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
+      | groupBy([sensor_name], function=[])
+    timeInterval: 24h
+    useDashboardTimeIfSet: true
+    type: query
     defaultValue: '*'
-    type: file
-    order: 1
-    valueField: 'members'
+    width: 1
+    order: 50
+    valueField: sensor_name
