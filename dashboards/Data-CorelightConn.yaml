@@ -14,8 +14,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -35,8 +34,7 @@ widgets:
     - name: Details of Top Responders
       titleTemplate: Details of {{ fields.destination.ip }}
       queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
-        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
         \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
         |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
@@ -74,8 +72,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -95,8 +92,7 @@ widgets:
     - name: Details of Top Originators
       titleTemplate: Details of {{ fields.source.ip }}
       queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
-        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
         \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
         |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
@@ -135,8 +131,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -164,8 +159,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip = ?src_ip AND destination.ip = ?dest_ip AND source.port = ?src_port AND destination.port = ?dest_port AND network.protocol = ?service AND ?additional_filter
         | case {
             in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -214,8 +208,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -235,8 +228,7 @@ widgets:
     - name: Details of Top Services
       titleTemplate: Details of {{ fields.network.protocol }}
       queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
-        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
         \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
         |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
@@ -277,8 +269,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -302,8 +293,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip = ?src_ip AND destination.ip = ?dest_ip AND source.port = ?src_port AND destination.port = ?dest_port AND network.protocol = ?service AND ?additional_filter
         | case {
             in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -343,8 +333,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -372,8 +361,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip = ?src_ip AND destination.ip = ?dest_ip AND source.port = ?src_port AND destination.port = ?dest_port AND network.protocol = ?service AND ?additional_filter
         | case {
             in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -416,8 +404,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{src_ip=*} AND destination.ip = ?{dest_ip=*} AND source.port = ?{src_port=*} AND destination.port = ?{dest_port=*} AND network.protocol = ?{service=*} AND ?{additional_filter=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -437,8 +424,7 @@ widgets:
     - name: Details of Top Responder Port
       titleTemplate: Details of Port {{ fields.destination.port }}
       queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
-        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        conn\" OR Vendor._path=\"conn_long\" OR Vendor._path=\"conn_red\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | source.ip=?src_ip AND destination.ip=?dest_ip AND source.port=?src_port\
         \ AND destination.port=?dest_port AND network.protocol=?service AND ?additional_filter\n\
         |case { \n    in(field=\"source.ip\",values=[\"0.0.0.0\",\"255.255.255.255\"\
@@ -500,22 +486,20 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name
   service:
     label: Service
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "conn" OR Vendor._path = "conn_long" OR Vendor._path = "conn_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([network.protocol], function=[], limit=1000000)
     timeInterval: 24h
     useDashboardTimeIfSet: true

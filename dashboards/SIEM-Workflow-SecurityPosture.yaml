@@ -91,7 +91,7 @@ widgets:
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "x509" or Vendor._path = "x509_red"
       | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | parseInt("Vendor.certificate.key_length", as=key_length)
       | key_length < 2048
       | timeChart(function=count(Vendor.fingerprint, distinct=true, as=Count))
@@ -116,8 +116,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="Vendor.note", values=["SSL::Certificate_Expired", "SSL::Invalid_Server_Cert", "SSL::Old_Version"])
       | count(as=Count)
     end: now
@@ -137,8 +136,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
       | timeChart(function=count(as=Total))
     end: now
@@ -161,8 +159,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ftp"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | count(as=Count)
     end: now
     start: 1d
@@ -173,8 +170,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "ftp"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -196,8 +192,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="destination.port", values=[53,5353])
       | is_dest_internal_ip := if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip="true"
@@ -228,8 +223,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | count()
     end: now
     start: 1d
@@ -280,8 +274,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=["smb_files", "smb_mapping"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | count(as=Count)
     end: now
     start: 1d
@@ -300,8 +293,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "x509" or Vendor._path = "x509_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | parseInt("Vendor.certificate.key_length", as=key_length)
       | key_length < 2048
       | count(Vendor.fingerprint, distinct=true, as=Count)
@@ -324,8 +316,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = intel
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=count(as=Count))
     end: now
     start: 1d
@@ -356,8 +347,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | case {
         Vendor.version="TLSv13"
         | version_status := "Most Secure";
@@ -400,8 +390,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
       | count(as=Total)
     end: now
@@ -413,8 +402,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[dns, dns_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
         | groupBy([source.ip, destination.ip], function=[count(distinct=true, field=event.id, as="Unique Sessions"), collect([dns.question.type], separator=","), collect([dns.question.name], separator=",")], limit=1000000)
         | "Unique Sessions" > 0
@@ -443,8 +431,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "etc_viz"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
       | timeChart(function=count(as="Total Count"))
     end: now
@@ -468,8 +455,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suri_aggregations
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.sid=*
       | is_dest_internal_ip := if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip="true"
@@ -491,8 +477,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | if(Vendor.validation_status=="self signed certificate", then="yes", else="no", as=is_self_signed)
       | is_self_signed=yes
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -517,8 +502,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | if(Vendor.auth_success=="true", then="Success", else="Failure", as="Auth Result")
       | timeChart("Auth Result")
     end: now
@@ -531,8 +515,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | if(Vendor.auth_success=="true", then="Success", else="Failure", as=auth_result)
         | auth_result=?result
         | groupBy([auth_result], function=[collect([user.name], separator=","), collect([#event.outcome], separator=","), collect([source.ip], separator=","), collect([destination.port], separator=","), collect([destination.ip], separator=","), count(as=Count)], limit=1000000)
@@ -567,8 +550,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http, http_red, http2, conn, conn_red, conn_long, dns, dns_red, ssl, ssl_red, files, files_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | !in(field="network.protocol", values=[ssl,"ssl,http","http,ssl",tls,ssh,https,dtls,"ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
       | timeChart(network.protocol, limit=10)
     end: now
@@ -581,8 +563,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[http, http_red, http2, conn, conn_red, conn_long, dns, dns_red, ssl, ssl_red, files, files_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | !in(field="network.protocol", values=[ssl,"ssl,http","http,ssl",tls,ssh,https,dtls,"ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
         | network.protocol=?service
       useWidgetTimeWindow: true
@@ -615,8 +596,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, http, http_red, http2, dns, dns_red, ssl, ssl_red, files, files_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | destination.port=23
       | count(as=Count)
     end: now
@@ -628,8 +608,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[conn, conn_red, conn_long, http, http_red, http2, dns, dns_red, ssl, ssl_red, files, files_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | destination.port=23
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -652,10 +631,9 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "x509" or Vendor._path = "x509_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ts_now := now()
-      | parseTimestamp(field=x509.not_after, as=ts_then)
+      | parseTimestamp(field=Vendor.certificate.not_valid_after, as=ts_then)
       | eval(now_now=(ts_then-ts_now)/86400000)
       | days_to_expire := round(now_now)
       | days_to_expire > 0 and days_to_expire <= 15
@@ -677,8 +655,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=count(as="Encrypted Traffic Volume"))
     end: now
     start: 1d
@@ -713,8 +690,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.alert.signature_id=*
       | rename(field=Vendor.alert.signature_id, as=sid)
       | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[technique_number])
@@ -736,8 +712,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="dns.response_code", values=["NXDOMAIN", "NOERROR"])
       | timeChart(function=count(as=Total))
     end: now
@@ -761,8 +736,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=count(as=Count))
     end: now
     start: 1d
@@ -792,8 +766,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
       | timeChart(function=count(as=Count))
     end: now
@@ -817,8 +790,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | worldMap(ip=destination.ip)
     end: now
     start: 1d
@@ -840,8 +812,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = intel
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | count(as=Count)
     end: now
     start: 1d
@@ -882,8 +853,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | destination.ip=*
       | count(destination.ip, as=Count, distinct=true)
     end: now
@@ -903,8 +873,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ipLocation(destination.ip, as=GeoInfo)
       | groupBy([destination.ip, GeoInfo.country],limit=1000000)
       | top(GeoInfo.country,percent=true, as=Count)
@@ -939,8 +908,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=* and Vendor.note != "Intel*"
       | timeChart(function=count(as=Count))
     end: now
@@ -964,8 +932,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | if(Vendor.validation_status=="self signed certificate", then="yes", else="no", as=is_self_signed)
       | is_self_signed=yes
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -991,8 +958,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=* and Vendor.note != "Intel*"
       | count(as=Count)
     end: now
@@ -1025,8 +991,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.alert.signature_id=*
       | rename(field=Vendor.alert.signature_id, as=sid)
       | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[cve_number])
@@ -1057,8 +1022,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=* and Vendor.note = "ATTACK::*"
       | count(as=Count)
     end: now
@@ -1078,8 +1042,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.alert.signature_id=*
       | count(Vendor.alert.signature_id, as=Count, distinct=true)
     end: now
@@ -1099,8 +1062,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | is_src_internal_ip:=if(cidr("source.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | if(is_src_internal_ip=="false", then="External", else="Internal", as=src_internal)
       | src_internal="Internal"
@@ -1134,8 +1096,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -1144,8 +1105,7 @@ widgets:
       | groupBy([event.id], function=[], limit=1000000)}, include=[event.id], name="list_of_uids")
       | match(table=list_of_uids, field=[event.id], column=[event.id])
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([event.id], function=collect([Vendor.alert.signature_id], separator=", "), limit=1000000)
       | crypto:sha1([Vendor.alert.signature_id], as=SHA1)
       | regex(field="SHA1", regex="^.(?<did>.{8})")
@@ -1183,8 +1143,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -1193,8 +1152,7 @@ widgets:
       | groupBy([event.id], function=[], limit=1000000)}, include=[event.id], name="list_of_uids")
       | match(table=list_of_uids, field=[event.id], column=[event.id])
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([event.id], function=[collect([Vendor.alert.signature_id], separator=", "), tail(1)], limit=1000000)
       | crypto:sha1([Vendor.alert.signature_id], as=SHA1)
       | regex(field="SHA1", regex="^.(?<did>.{8})")
@@ -1219,8 +1177,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="dns.response_code", values=["NXDOMAIN", "NOERROR"])
       | count(as=Total)
     end: now
@@ -1241,8 +1198,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip="false"
       | timeChart(function=count(as=Count))
@@ -1274,8 +1230,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.note = "MeterpreterDetection::Meterpreter_Detected"
       | count(as=Count)
     end: now
@@ -1295,8 +1250,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.note = *
       | count(Vendor.note, distinct=true, as=Count)
     end: now
@@ -1316,8 +1270,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.alert.signature_id=*
       | rename(field=Vendor.alert.signature_id, as=sid)
       | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[impact_score])
@@ -1340,8 +1293,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = suricata_corelight
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=*
       | count(source.ip, as=Count, distinct=true)
     end: now
@@ -1360,8 +1312,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "etc_viz"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
       | count(as="Total Count")
     end: now
@@ -1373,8 +1324,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "etc_viz"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
         | groupBy([destination.port, destination.address], limit=1000000)
         | default(value="unknown", field=[destination.address, destination.port])
@@ -1406,8 +1356,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[dns, dns_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
       | count(as=Count)
     end: now
@@ -1419,8 +1368,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[dns, dns_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
       useWidgetTimeWindow: true
       arguments:
@@ -1445,8 +1393,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = intel
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.seen.indicator=*
       | count(Vendor.seen.indicator, distinct=true, as=Count)
     end: now
@@ -1465,12 +1412,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 50
-    valueField: sensor_name
+    valueField: Vendor._system_name

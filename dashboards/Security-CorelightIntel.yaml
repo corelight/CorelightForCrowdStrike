@@ -14,8 +14,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = intel
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.seen.indicator_type=?{indicator_type=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
       | top([source.ip, destination.ip, destination.port, Vendor.seen.indicator_type, Vendor.seen.indicator, Vendor.seen.where], limit=5, as="Total Events")
@@ -29,8 +28,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = intel
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter and Vendor.seen.indicator_type=?indicator_type
         | source.ip=?filter or destination.ip=?filter or destination.port=?filter or Vendor.seen.indicator=?filter
         | source.ip=?table_src_ip and destination.ip=?table_dst_ip and destination.port=?table_port and Vendor.seen.indicator_type=?table_indicator_type and Vendor.seen.indicator=?table_indicator and Vendor.seen.where=?table_where
@@ -63,8 +61,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = intel
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
       | timeChart(series=Vendor._path, function=count())
     end: now
@@ -77,8 +74,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = intel
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip=?filter or destination.ip=?filter or destination.port=?filter or Vendor.seen.indicator=?filter
         | Vendor._path=?path
       useWidgetTimeWindow: true
@@ -126,8 +122,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = intel
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.seen.indicator_type=?{indicator_type=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
       | top([Vendor.seen.indicator_type])
@@ -139,8 +134,7 @@ widgets:
     - name: Details of Indicators
       titleTemplate: Details of {{ fields.Vendor.seen.indicator_type }}
       queryString: "#Vendor = corelight and @event_parsed!=\"false\"\n| Vendor._path\
-        \ = intel\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
-        | in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter and\
+        \ = intel\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter and\
         \ Vendor.seen.indicator_type=?indicator_type\n| source.ip=?filter or destination.ip=?filter\
         \ or destination.port=?filter or Vendor.seen.indicator=?filter\n| Vendor.seen.indicator_type=?chart_indicator_type "
       useWidgetTimeWindow: true
@@ -172,8 +166,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = intel
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.seen.indicator_type=?{indicator_type=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
       | formatTime(format="%F %r", as="Time")
@@ -210,8 +203,7 @@ parameters:
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = intel
       | Vendor.seen.indicator_type=*
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([Vendor.seen.indicator_type], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
@@ -224,12 +216,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 0
-    valueField: sensor_name
+    valueField: Vendor._system_name

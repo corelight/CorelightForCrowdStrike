@@ -14,8 +14,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -35,8 +34,7 @@ widgets:
     - name: Details of Top Query Types
       titleTemplate: Details of {{ fields.dns.question.type }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
-        \ = dns OR Vendor._path = dns_red\n| coalesce([observer.name, Vendor._system_name],\
-        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\
+        \ = dns OR Vendor._path = dns_red\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\
         \ AND \"destination.port\"=?port AND \"dns.question.type\"=?qtype_name\n|\
         \ case {\n    in(field=\"source.ip\", values=[\"0.0.0.0\", \"255.255.255.255\"\
         ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\", values=[\"\
@@ -74,8 +72,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -97,8 +94,7 @@ widgets:
     - name: Details of Top Originators by Count
       titleTemplate: Details of {{ fields["Source IP"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
-        \ = dns OR Vendor._path = dns_red\n| coalesce([observer.name, Vendor._system_name],\
-        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\
+        \ = dns OR Vendor._path = dns_red\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\
         \ AND \"destination.port\"=?port AND \"dns.question.type\"=?qtype_name\n|\
         \ case {\n    in(field=\"source.ip\", values=[\"0.0.0.0\", \"255.255.255.255\"\
         ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\", values=[\"\
@@ -138,8 +134,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -162,8 +157,7 @@ widgets:
     - name: Details of Top 10 Queries by Count
       titleTemplate: Details of {{ fields.Query }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
-        \ = dns OR Vendor._path = dns_red\n| coalesce([observer.name, Vendor._system_name],\
-        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\
+        \ = dns OR Vendor._path = dns_red\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\
         \ AND \"destination.port\"=?port AND \"dns.question.type\"=?qtype_name\n|\
         \ case {\n    in(field=\"source.ip\", values=[\"0.0.0.0\", \"255.255.255.255\"\
         ]) |\n    is_broadcast := true;\n    in(field=\"destination.ip\", values=[\"\
@@ -195,8 +189,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "destination.port"=?{port=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -221,8 +214,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = dns OR Vendor._path = dns_red
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "destination.port"=?port
         | case {
             in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -260,8 +252,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "destination.port"=?{port=*} AND "dns.question.type"=?{qtype_name=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -286,8 +277,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = dns OR Vendor._path = dns_red
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "destination.port"=?port AND "dns.question.type"=?qtype_name
         | case {
             in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -326,8 +316,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "destination.port"=?{port=*}
       | dns.question.type=PTR AND dns.response_code = "NXDOMAIN"
       | default(value="unknown", field=[dns.question.name])
@@ -343,8 +332,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = dns OR Vendor._path = dns_red
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "destination.port"=?port
         | dns.question.type=PTR AND dns.response_code = "NXDOMAIN"
         | default(value="unknown", field=[dns.question.name])
@@ -380,8 +368,7 @@ parameters:
     query: |
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([destination.port], function=[], limit=1000000)
     timeInterval: 1d
     useDashboardTimeIfSet: true
@@ -395,8 +382,7 @@ parameters:
     query: |
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = dns OR Vendor._path = dns_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([dns.question.type], function=[], limit=1000000)
     timeInterval: 1d
     useDashboardTimeIfSet: true
@@ -409,12 +395,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name

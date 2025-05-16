@@ -30,9 +30,8 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "software"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
-      | coalesce([source.address, Vendor.host_header], as=tx_host)
+      | in(field="Vendor._system_name", values=[?system_name])
+      | coalesce([Vendor.host, Vendor.host_header], as=tx_host)
       | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*} AND Vendor.name=?{software=*} AND tx_host=?{host=*}
       | default(value="0", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2])
       | format(format="%d.%d.%d", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2], as=Version)
@@ -50,9 +49,8 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "software"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
-        | coalesce([source.address, Vendor.host_header], as=tx_host)
+        | in(field="Vendor._system_name", values=[?system_name])
+        | coalesce([Vendor.host, Vendor.host_header], as=tx_host)
         | "Vendor.software_type"= ?software_type and ?additional_filter and Vendor.name = ?software
         | tx_host=?host
       useWidgetTimeWindow: true
@@ -80,8 +78,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "software"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*}
       | top(Vendor.name)
     end: now
@@ -92,8 +89,7 @@ widgets:
     - name: Details of Top Software
       titleTemplate: Details of {{ fields.Vendor.name }}
       queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
-        software\"\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
-        | in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        software\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
         | \"Vendor.software_type\"=?software_type\n| Vendor.name=?Vendor_name "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -121,8 +117,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "software"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*}
       | top(Vendor.software_type)
       | rename([[Vendor.software_type, "Software Type"], [_count, Count]])
@@ -135,8 +130,7 @@ widgets:
     - name: Details of Top Software Types
       titleTemplate: Details of {{ fields["Software Type"] }}
       queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
-        software\"\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
-        | in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        software\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
         | \"Vendor.software_type\"=?software_type\n| Vendor.software_type=?Software_Type "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -174,8 +168,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "software"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | "Vendor.software_type"=?{software_type=*} AND ?{additional_filter=*}
       | default(value="0", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2])
       | format(format="%d.%d.%d", field=[Vendor.version.major, Vendor.version.minor, Vendor.version.minor2], as=Version)
@@ -190,8 +183,7 @@ widgets:
     - name: Details of Top Software Versions
       titleTemplate: Details of {{ fields.Software }}
       queryString: "#Vendor=corelight and @event_parsed!=\"false\"\n| Vendor._path=\"\
-        software\"\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
-        | in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        software\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
         | \"Vendor.software_type\"=?software_type\n| default(value=\"0\", field=[Vendor.version.major,\
         \ Vendor.version.minor, Vendor.version.minor2])\n| format(format=\"%d.%d.%d\"\
         ,field=[Vendor.version.major,Vendor.version.minor,Vendor.version.minor2],as=Version)\
@@ -232,9 +224,8 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "software" and Vendor.software_type=?{software_type=*}
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
-      | coalesce([source.address, Vendor.host_header], as=tx_host)
+      | in(field="Vendor._system_name", values=[?system_name])
+      | coalesce([Vendor.host, Vendor.host_header], as=tx_host)
       | groupBy([tx_host], function=[], limit=1000000)
     timeInterval: 24h
     useDashboardTimeIfSet: true
@@ -248,8 +239,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "software"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([Vendor.software_type], limit=1000000)
       | select(Vendor.software_type)
     timeInterval: 24h
@@ -264,8 +254,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "software" and Vendor.software_type=?{software_type=*} and Vendor.name=*
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([Vendor.name], function=[], limit=1000000)
     timeInterval: 24h
     useDashboardTimeIfSet: true
@@ -284,12 +273,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name
