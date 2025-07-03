@@ -24,7 +24,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | groupBy(Vendor.alert.category, limit=1000000)
       | rename([[Vendor.alert.category,Category],[_count,Count]])
@@ -39,8 +39,7 @@ widgets:
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -68,7 +67,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | groupBy(source.ip, function=[count(as="# Rules",field=Vendor.alert.signature,distinct=true), count(as="# Hits")], limit=1000000)
       | rename(field="source.ip", as="Source IP")
@@ -83,8 +82,7 @@ widgets:
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -118,7 +116,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | groupBy([Vendor.alert.severity,Vendor.alert.signature,Vendor.alert.signature_id], function=[count(as="# Sources",field=source.ip,distinct=true), count(as="Count")], limit=1000000)
       | rename([[Vendor.alert.severity,Severity],[Vendor.alert.signature,Signature],[Vendor.alert.signature_id,SID]])
@@ -177,8 +175,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*} AND event.id=*
       | Vendor.alert.signature_id = ?{sid=*}
       | rename(field="Vendor.ts", as="Time")
@@ -198,8 +195,7 @@ widgets:
       titleTemplate: Details of {{ fields["Session ID"] }}
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
         | event.id = ?uid
       useWidgetTimeWindow: true
@@ -231,7 +227,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | timechart(function=count(as=Count))
     end: now
@@ -244,8 +240,7 @@ widgets:
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -274,7 +269,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | count(as=Count)
     end: now
@@ -287,8 +282,7 @@ widgets:
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -313,7 +307,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | count(as=Count,field=Vendor.alert.signature,distinct=true)
     end: now
@@ -326,8 +320,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
         | Vendor.alert.signature=*
       useWidgetTimeWindow: true
@@ -365,7 +358,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy(Vendor.alert.category, function=[])
     timeInterval: 1d
     useDashboardTimeIfSet: true
@@ -390,12 +383,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 0
-    valueField: sensor_name
+    valueField: Vendor._system_name

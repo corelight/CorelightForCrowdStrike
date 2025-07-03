@@ -71,12 +71,11 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
-      | groupby([source.address], function=count(as=Count), limit=1000000)
-      | rename(field="source.address", as="Host Header")
+      | groupby([Vendor.host], function=count(as=Count), limit=1000000)
+      | rename(field="Vendor.host", as="Host Header")
       | sort(Count, order=asc, limit=10)
     end: now
     start: 1d
@@ -86,11 +85,10 @@ widgets:
     - name: Details of Rare Host Headers
       titleTemplate: Details of {{ fields["Host Header"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000)\n\
-        | source.address=?source_address "
+        | Vendor.host=?source_address "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -108,7 +106,7 @@ widgets:
           width: 550
         host_header:
           width: 571
-        source.address:
+        Vendor.host:
           width: 571
       row-numbers-enabled: false
     visualization: table-view
@@ -121,14 +119,12 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | Vendor._path = conn OR Vendor._path = conn_red
-                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-                      | in(field="sensor_name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | ?{additional_filter=*}
                       | network.direction = outbound OR network.direction = external},
                       include=[network.direction],
@@ -144,14 +140,12 @@ widgets:
     - name: Details of Local Hosts - Outbound
       titleTemplate: Details of {{ fields["User Agent"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
         | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
         \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
-        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
-        \             | in(field=\"sensor_name\", values=[?system_name])\n       \
+        \             | in(field=\"Vendor._system_name\", values=[?system_name])\n       \
         \         | ?additional_filter\n                | network.direction = outbound\
         \ OR network.direction = external},\n                include=[network.direction],\n\
         \                field=event.id,\n                key=event.id)\n| Vendor.user_agent=?vendor_user_agent "
@@ -183,8 +177,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | count(Vendor.user_agent, distinct=true)
@@ -197,8 +190,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[http,http2,http_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "Vendor.user_agent" = ?user_agent
         | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
         | Vendor.user_agent=*
@@ -247,8 +239,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | count(event.id, distinct=true)
@@ -261,8 +252,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[http,http2,http_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "Vendor.user_agent" = ?user_agent
         | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
         | event.id=*
@@ -302,12 +292,11 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
-      | top([source.address])
-      | rename(field="source.address", as="Host Header")
+      | top([Vendor.host])
+      | rename(field="Vendor.host", as="Host Header")
       | rename(field="_count", as="Count")
     end: now
     start: 1d
@@ -317,11 +306,10 @@ widgets:
     - name: Details of Top Host Headers by Count
       titleTemplate: Details of {{ fields["Host Header"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
-        | source.address = ?source_address"
+        | Vendor.host = ?source_address"
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -346,8 +334,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | count(Vendor.referrer, distinct=true)
@@ -360,8 +347,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[http,http2,http_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "Vendor.user_agent" = ?user_agent
         | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
         | Vendor.referrer = *
@@ -387,12 +373,11 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*} AND http.request.method = ?{http_method=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
-      | top([source.address], as=Count)
-      | rename(field="source.address", as="Host Header")
+      | top([Vendor.host], as=Count)
+      | rename(field="Vendor.host", as="Host Header")
     end: now
     start: 1d
     width: 6
@@ -401,11 +386,10 @@ widgets:
     - name: Details of Rare Host Headers
       titleTemplate: Details of {{ fields["Host Header"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent AND http.request.method\
         \ = ?http_method\n| groupBy([\"event.id\",source.ip,destination.ip], function\
-        \ = tail(1), limit=1000000)\n| source.address=?source_address "
+        \ = tail(1), limit=1000000)\n| Vendor.host=?source_address "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -424,7 +408,7 @@ widgets:
           width: 580
         host_header:
           width: 571
-        source.address:
+        Vendor.host:
           width: 571
       row-numbers-enabled: false
     visualization: table-view
@@ -446,19 +430,18 @@ widgets:
     queryString: |+
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | Vendor._path = conn OR Vendor._path = conn_red
-                      | in(field="observer.name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | ?{additional_filter=*}
                       | network.direction = internal OR network.direction = inbound},
                       include=[network.direction],
                       field=event.id,
                       key=event.id)
-      | count(field=source.address, distinct=true)
+      | count(field=Vendor.host, distinct=true)
 
     end: now
     start: 1d
@@ -475,12 +458,11 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*} AND http.response.status_code = ?{http_status=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
-      | groupBy([source.address,http.response.status_code,Vendor.status_msg], function=count(as=Count), limit=1000000)
-      | rename(field="source.address", as="Host Header")
+      | groupBy([Vendor.host,http.response.status_code,Vendor.status_msg], function=count(as=Count), limit=1000000)
+      | rename(field="Vendor.host", as="Host Header")
       | rename(field="http.response.status_code", as="Status Code")
       | rename(field="Vendor.status_msg", as="Status Message")
       | sort(Count,limit=10)
@@ -492,11 +474,10 @@ widgets:
     - name: Details of Rare Host Headers
       titleTemplate: Details of {{ fields["Host Header"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent AND http.response.status_code\
         \ = ?http_status\n| groupBy([\"event.id\",source.ip,destination.ip], function\
-        \ = tail(1), limit=1000000)\n| source.address=?source_address "
+        \ = tail(1), limit=1000000)\n| Vendor.host=?source_address "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -513,7 +494,7 @@ widgets:
       configured-columns:
         host_header:
           width: 571
-        source.address:
+        Vendor.host:
           width: 571
       row-numbers-enabled: false
     visualization: table-view
@@ -527,19 +508,18 @@ widgets:
     queryString: |+
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | Vendor._path = conn OR Vendor._path = conn_red
-                      | in(field="observer.name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | ?{additional_filter=*}
                       | network.direction = outbound OR network.direction = external},
                       include=[network.direction],
                       field=event.id,
                       key=event.id)
-      | count(field=source.address, distinct=true)
+      | count(field=Vendor.host, distinct=true)
 
     end: now
     start: 1d
@@ -556,8 +536,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | avg("Vendor.response_body_len")
@@ -570,8 +549,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[http,http2,http_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "Vendor.user_agent" = ?user_agent
         | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       useWidgetTimeWindow: true
@@ -605,11 +583,10 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
-      | count(source.address, distinct=true)
+      | count(Vendor.host, distinct=true)
     end: now
     start: 1d
     width: 2
@@ -619,11 +596,10 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[http,http2,http_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "Vendor.user_agent" = ?user_agent
         | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
-        | source.address=*
+        | Vendor.host=*
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -660,8 +636,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | length(Vendor.user_agent, as="http_user_agent")
@@ -675,8 +650,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=[http,http2,http_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter AND "Vendor.user_agent" = ?user_agent
         | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       useWidgetTimeWindow: true
@@ -701,14 +675,12 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | Vendor._path = conn OR Vendor._path = conn_red
-                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-                      | in(field="sensor_name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | ?{additional_filter=*}
                       | network.direction = internal OR network.direction = inbound},
                       include=[network.direction],
@@ -724,14 +696,12 @@ widgets:
     - name: Details of Local Hosts - Inbound
       titleTemplate: Details of {{ fields["User Agent"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
         | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
         \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
-        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
-        \             | in(field=\"sensor_name\", values=[?system_name])\n       \
+        \             | in(field=\"Vendor._system_name\", values=[?system_name])\n       \
         \         | ?additional_filter\n                | network.direction = inbound\
         \ OR network.direction = internal},\n                include=[network.direction],\n\
         \                field=event.id,\n                key=event.id)\n| Vendor.user_agent=?vendor_user_agent "
@@ -763,8 +733,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | top(Vendor.status_msg)
@@ -776,8 +745,7 @@ widgets:
     - name: Details of HTTP Status Code Breakdown
       titleTemplate: Details of {{ fields.Vendor.status_msg }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
         | Vendor.status_msg = ?status_msg"
@@ -807,8 +775,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | groupby([Vendor.user_agent], function=count(as=Count), limit=1000000)
@@ -822,8 +789,7 @@ widgets:
     - name: Details of Rare User Agents
       titleTemplate: Details of {{ fields["Http User Agent"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
         | Vendor.user_agent=?http_user_agent "
@@ -856,8 +822,7 @@ widgets:
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = conn OR Vendor._path = conn_red
       | network.protocol=http
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | top([source.ip])
       | rename(field="source.ip", as="Source IP")
       | rename(field="_count", as="Count")
@@ -869,8 +834,7 @@ widgets:
     - name: Details of Top Originators
       titleTemplate: Details of {{ fields["Source IP"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
-        \ = conn OR Vendor._path = conn_red\n| network.protocol=http\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        \ = conn OR Vendor._path = conn_red\n| network.protocol=http\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | source.ip = ?Id_Orig_H "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -894,21 +858,19 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | Vendor._path = conn OR Vendor._path = conn_red
-                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-                      | in(field="sensor_name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | ?{additional_filter=*}
                       | network.direction = outbound OR network.direction = external},
                       include=[network.direction],
                       field=event.id,
                       key=event.id)
-      | top(source.address, as=Count)
-      | rename(field="source.address", as="Host Header")
+      | top(Vendor.host, as=Count)
+      | rename(field="Vendor.host", as="Host Header")
     end: now
     start: 1d
     width: 6
@@ -917,17 +879,15 @@ widgets:
     - name: Details of Local Hosts - Outbound
       titleTemplate: Details of {{ fields["Host Header"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
         | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
         \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
-        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
-        \             | in(field=\"sensor_name\", values=[?system_name])         \
+        \             | in(field=\"Vendor._system_name\", values=[?system_name])         \
         \       \n                | ?additional_filter\n                | network.direction\
         \ = outbound OR network.direction = external},\n                include=[network.direction],\n\
-        \                field=event.id,\n                key=event.id)\n| source.address=?host_header "
+        \                field=event.id,\n                key=event.id)\n| Vendor.host=?host_header "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -956,21 +916,19 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | Vendor._path = conn OR Vendor._path = conn_red
-                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-                      | in(field="sensor_name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | ?{additional_filter=*}
                       | network.direction = internal OR network.direction = inbound},
                       include=[network.direction],
                       field=event.id,
                       key=event.id)
-      | top(source.address, as=Count)
-      | rename(field="source.address", as="Host Header")
+      | top(Vendor.host, as=Count)
+      | rename(field="Vendor.host", as="Host Header")
     end: now
     start: 1d
     width: 6
@@ -979,17 +937,15 @@ widgets:
     - name: Details of Local Hosts - Inbound
       titleTemplate: Details of {{ fields["Host Header"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[http,http2,http_red])\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+        Vendor._path\", values=[http,http2,http_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter AND \"Vendor.user_agent\" = ?user_agent\n| groupBy([\"\
         event.id\",source.ip,destination.ip], function = tail(1), limit=1000000) \n\
         | join(query={#Vendor = corelight and @event_parsed != \"false\"\n       \
         \         | Vendor._path = conn OR Vendor._path = conn_red\n             \
-        \   | coalesce([observer.name, Vendor._system_name], as=sensor_name)\n   \
-        \             | in(field=\"sensor_name\", values=[?system_name])\n       \
+        \             | in(field=\"Vendor._system_name\", values=[?system_name])\n       \
         \         | ?additional_filter\n                | network.direction = inbound\
         \ OR network.direction = internal},\n                include=[network.direction],\n\
-        \                field=event.id,\n                key=event.id)\n| source.address=?host_header "
+        \                field=event.id,\n                key=event.id)\n| Vendor.host=?host_header "
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -1025,8 +981,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | top([Vendor.user_agent],limit=100)
     timeInterval: 24h
     useDashboardTimeIfSet: true
@@ -1040,8 +995,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | groupBy([http.request.method])
@@ -1064,8 +1018,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=[http,http2,http_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND "Vendor.user_agent" = ?{user_agent=*}
       | groupBy(["event.id",source.ip,destination.ip], function = tail(1), limit=1000000)
       | groupBy([http.response.status_code])
@@ -1081,12 +1034,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=observer.name)
-      | groupBy([observer.name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: observer.name
+    valueField: Vendor._system_name

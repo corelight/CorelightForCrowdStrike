@@ -15,8 +15,7 @@ widgets:
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
       | join(query={#Vendor = corelight and @event_parsed != "false"| Vendor._path = "conn" or Vendor._path = "conn_long" or Vendor._path = "conn_red"}, field=event.id, include=[network.direction], limit=200000)
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | network.direction=?{direction=*} and ?{additional_filter=*}
       | "Subject ID" := coalesce([Vendor.subject, destination.address])
       | top(["Subject ID"], percent=true)
@@ -34,8 +33,7 @@ widgets:
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "ssl" or Vendor._path = "ssl_red"
         | join(query={#Vendor = corelight and @event_parsed != "false"| Vendor._path = "conn" or Vendor._path = "conn_long" or Vendor._path = "conn_red"}, field=event.id, include=[Vendor.local_orig, Vendor.local_resp, network.direction], limit=200000)
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | network.direction=?direction and ?additional_filter
         | c_id := coalesce([Vendor.subject, destination.address])
         | c_id = ?c_id
@@ -64,8 +62,7 @@ widgets:
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
       | join(query={#Vendor = corelight and @event_parsed != "false"| Vendor._path = "conn" or Vendor._path = "conn_long" or Vendor._path = "conn_red"}, field=event.id, include=[network.direction], limit=200000)
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | network.direction=internal or network.direction=inbound
       | top([Vendor.validation_status], percent=true)
@@ -83,8 +80,7 @@ widgets:
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "ssl" or Vendor._path = "ssl_red"
         | join(query={#Vendor = corelight and @event_parsed != "false"| Vendor._path = "conn" or Vendor._path = "conn_long" or Vendor._path = "conn_red"}, field=event.id, include=[Vendor.local_orig, Vendor.local_resp, network.direction], limit=200000)
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | network.direction=internal or network.direction=inbound
         | Vendor.validation_status=?validation_status
@@ -112,8 +108,7 @@ widgets:
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = "ssl" or Vendor._path = "ssl_red"
       | join(query={#Vendor = corelight and @event_parsed != "false"| Vendor._path = "conn" or Vendor._path = "conn_long" or Vendor._path = "conn_red"}, field=event.id, include=[network.direction], limit=200000)
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | network.direction=?{direction=*} and ?{additional_filter=*}
       | top([Vendor.cipher])
     end: now
@@ -127,8 +122,7 @@ widgets:
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = "ssl" or Vendor._path = "ssl_red"
         | join(query={#Vendor = corelight and @event_parsed != "false"| Vendor._path = "conn" or Vendor._path = "conn_long" or Vendor._path = "conn_red"}, field=event.id, include=[Vendor.local_orig, Vendor.local_resp, network.direction], limit=200000)
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | network.direction=?direction and ?additional_filter
         | Vendor.cipher = ?cipher
         | rename([[Vendor.subject, "SSL Subject"], [destination.address, "SSL Subject Common Name"], [Vendor.cipher, "SSL Cipher"], [network.direction, "Direction"]])
@@ -186,12 +180,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=observer.name)
-      | groupBy([observer.name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: observer.name
+    valueField: Vendor._system_name

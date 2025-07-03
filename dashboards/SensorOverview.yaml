@@ -53,8 +53,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path=corelight_metrics_iface
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=[avg("Vendor.mgmt.in.bytes.mbps", as="Inbound Traffic Rate"), avg("Vendor.mgmt.out.bytes.mbps", as="Outbound Traffic Rate")])
       | format(format="%.2f", field=["Inbound Traffic Rate"], as="Inbound Traffic Rate")
       | format(format="%.2f", field=["Outbound Traffic Rate"], as="Outbound Traffic Rate")
@@ -67,8 +66,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path=corelight_metrics_iface
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -94,8 +92,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_no_three_way_handshake.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -132,8 +129,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path=corelight_metrics_iface
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=[avg("Vendor.monitor.total.kpps", as="Monitor Traffic Packet Rate"), avg("Vendor.monitor.total.drops.kpps", as="Monitor Traffic Drop Rate")])
       | format(format="%.1f", field=["Monitor Traffic Packet Rate"], as="Monitor Traffic Packet Rate")
     end: now
@@ -145,8 +141,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path=corelight_metrics_iface
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -171,8 +166,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path=corelight_metrics_bro
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | select([@timestamp,"Vendor.logs.conn.entries.per-second",
               "Vendor.logs.dce_rpc.entries.per-second",
               "Vendor.logs.dhcp.entries.per-second",
@@ -279,8 +273,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path=corelight_metrics_bro
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -303,8 +296,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path=corelight_metrics_iface
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=avg("Vendor.monitor.total.mbps", as="Monitor Traffic Rate"))
       | format(format="%.1f", field=["Monitor Traffic Rate"], as="Monitor Traffic Rate")
     end: now
@@ -316,8 +308,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path=corelight_metrics_iface
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -343,8 +334,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path=corelight_metrics_bro
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=[avg("Vendor.logs.splunk_export.lag", as="Splunk"), avg("Vendor.logs.syslog_export.lag", as="Syslog"), avg("Vendor.logs.json_export.lag", as="JSON"), avg("Vendor.logs.kafka_export.lag", as="Kafka")])
       | format(format="%.2f", field=[Splunk], as=Splunk)
       | format(format="%.2f", field=[JSON], as=JSON)
@@ -359,8 +349,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path=corelight_metrics_iface
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -386,8 +375,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_half_duplex.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -425,8 +413,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.bursty.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -464,8 +451,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_scan.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -502,8 +488,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_bro])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | default(value="0", field=[Vendor.cpu])
       | timeChart(function=[avg("Vendor.cpu",as="Bro CPU Usage")])
       | format(format="%.1f", field=["Bro CPU Usage"], as="Bro CPU Usage")
@@ -517,8 +502,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values= [corelight_metrics_bro])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -550,8 +534,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.dns_half_duplex_resp.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -588,8 +571,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_memory])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | default(value="0", field=[Vendor.usage])
       | timeChart(function=avg("Vendor.usage", as="Memory Usage"))
       | format(format="%.1f", field=["Memory Usage"], as="Memory Usage")
@@ -603,8 +585,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values= [corelight_metrics_memory])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -636,8 +617,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_byte_counts_wrong.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -675,8 +655,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.local_to_local.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -714,8 +693,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.remote_to_remote.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -752,8 +730,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path=corelight_metrics_iface
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=[avg("Vendor.mgmt.in.packets.kpps", as="Inbound Traffic Packet Rate"), avg("Vendor.mgmt.out.packets.kpps", as="Outbound Traffic Packet Rate")])
       | format(format="%.2f", field=["Inbound Traffic Packet Rate"], as="Inbound Traffic Packet Rate")
       | format(format="%.2f", field=["Outbound Traffic Packet Rate"], as="Outbound Traffic Packet Rate")
@@ -766,8 +743,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path=corelight_metrics_iface
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -792,8 +768,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_system])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | default(value="0", field=[Vendor.cpu.1.temperature])
       | timeChart(function=[avg("Vendor.cpu.1.temperature", as="CPU1 Temperature")])
       | format(format="%.1f", field=["CPU1 Temperature"], as="CPU1 Temperature")
@@ -807,8 +782,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values= [corelight_metrics_system])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -839,8 +813,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.dns_half_duplex_orig.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -877,8 +850,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path=corelight_metrics_bro
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | timeChart(function=[avg("Vendor.files.total", as="Extracted Files"), avg("Vendor.files.queued.sftp", as="Queued Files for SFTP"), avg("Vendor.files.queued.s3", as="Queued Files for Amazon S3")])
       | format(format="%.2f", field=["Extracted Files"], as="Extracted Files")
       | format(format="%.2f", field=["Queued Files for SFTP"], as="Queued Files for SFTP")
@@ -892,8 +864,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path=corelight_metrics_iface
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -919,8 +890,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_no_ssl_on_443.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -958,8 +928,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_retransmissions.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -996,8 +965,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_disk])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | default(value="0", field=[Vendor.usage.data,Vendor.usage.os])
       | timeChart(function=[avg("Vendor.usage.data", as="Data Disk Usage"), avg("Vendor.usage.os",as="OS Disk Usage")])
       | format(format="%.1f", field=["Data Disk Usage"], as="Data Disk Usage")
@@ -1012,8 +980,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values= [corelight_metrics_disk])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -1046,8 +1013,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_backscatter.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -1096,8 +1062,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | avg(Vendor.check.tcp_missed_bytes.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -1135,12 +1100,11 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed!="false"
       | in(field="Vendor._path", values=[corelight_metrics_system, corelight_metrics_memory, corelight_metrics_disk])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name

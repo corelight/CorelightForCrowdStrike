@@ -14,17 +14,16 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=["x509", "x509_red"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
-      | groupBy([x509.not_after,x509.subject.distinguished_name], function=[], limit=1000000)
+      | groupBy([Vendor.certificate.not_valid_after,Vendor.certificate.subject], function=[], limit=1000000)
       | ts_now := now()
-      | parseTimestamp(field=x509.not_after, as=ts_then)
+      | parseTimestamp(field=Vendor.certificate.not_valid_after, as=ts_then)
       | now_now := ts_now-ts_then
       | now_now := round(now_now)
       | now_now > 0
-      | select([x509.not_after, x509.subject.distinguished_name])
-      | rename([[x509.not_after, "Certificate Not Valid After"], [x509.subject.distinguished_name, "Certificate Subject"]])
+      | select([Vendor.certificate.not_valid_after, Vendor.certificate.subject])
+      | rename([[Vendor.certificate.not_valid_after, "Certificate Not Valid After"], [Vendor.certificate.subject, "Certificate Subject"]])
       | sort(field="Certificate Not Valid After", order=asc, limit=20000)
     end: now
     start: 1d
@@ -37,10 +36,9 @@ widgets:
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=["x509", "x509_red"])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
-        | x509.subject.distinguished_name = ?subject AND x509.not_after = ?expiry_time_stamp
+        | Vendor.certificate.subject = ?subject AND Vendor.certificate.not_valid_after = ?expiry_time_stamp
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -65,8 +63,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=["x509", "x509_red", "ssl", "ssl_red", "conn", "conn_long", "conn_red"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | is_src_internal_ip := if(cidr(source.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(source.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(source.ip, subnet="192.168.0.0/16"), then=true, else=false)))
       | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
@@ -83,8 +80,8 @@ widgets:
           | direction := "unknown"
       }
       | direction=?{direction=*}
-      | groupBy([x509.subject.distinguished_name],limit=100000)
-      | rename([[_count, Count], [x509.subject.distinguished_name, "SSL Subject"]])
+      | groupBy([Vendor.certificate.subject],limit=100000)
+      | rename([[_count, Count], [Vendor.certificate.subject, "SSL Subject"]])
       | sort(Count, order=asc, limit=10)
     end: now
     start: 1d
@@ -96,8 +93,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field="Vendor._path", values=["x509", "x509_red", "ssl", "ssl_red", "conn", "conn_long", "conn_red"])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | is_src_internal_ip := if(cidr(source.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(source.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(source.ip, subnet="192.168.0.0/16"), then=true, else=false)))
         | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
@@ -114,7 +110,7 @@ widgets:
             | direction := "unknown"
         }
         | direction=?direction
-        | x509.subject.distinguished_name = ?ssl_subject
+        | Vendor.certificate.subject = ?ssl_subject
       useWidgetTimeWindow: true
       repoOrViewName: search-all
       arguments:
@@ -139,8 +135,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field="Vendor._path", values=["x509", "x509_red", "ssl", "ssl_red", "conn", "conn_long", "conn_red"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | is_src_internal_ip := if(cidr(source.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(source.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(source.ip, subnet="192.168.0.0/16"), then=true, else=false)))
       | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
@@ -157,9 +152,9 @@ widgets:
           | direction := "unknown"
       }
       | direction=?{direction=*}
-      | top([x509.subject.distinguished_name], percent=true)
+      | top([Vendor.certificate.subject], percent=true)
       | format(format="%.2f", field=percent, as=Percent)
-      | rename([[_count, Count], [x509.subject.distinguished_name, "SSL Subject"]])
+      | rename([[_count, Count], [Vendor.certificate.subject, "SSL Subject"]])
       | drop(percent)
     end: now
     start: 'calendar: now@y'
@@ -170,8 +165,7 @@ widgets:
       titleTemplate: Details of {{ fields["SSL Subject"] }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
         Vendor._path\", values=[\"x509\", \"x509_red\", \"ssl\", \"ssl_red\", \"conn\"\
-        , \"conn_long\", \"conn_red\"])\n| coalesce([observer.name, Vendor._system_name],\
-        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        , \"conn_long\", \"conn_red\"])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
         | is_src_internal_ip := if(cidr(source.ip, subnet=\"10.0.0.0/8\"), then=true,\
         \ else=if(cidr(source.ip, subnet=\"172.16.0.0/12\"), then=true, else=if(cidr(source.ip,\
         \ subnet=\"192.168.0.0/16\"), then=true, else=false)))\n| is_dest_internal_ip\
@@ -182,7 +176,7 @@ widgets:
         \ and is_dest_internal_ip=false\n    | direction := \"outbound\";\n    is_src_internal_ip=false\
         \ and is_dest_internal_ip=false\n    | direction := \"external\";\n    is_src_internal_ip=false\
         \ and is_dest_internal_ip=true\n    | direction := \"inbound\";\n    *\n \
-        \   | direction := \"unknown\"\n}\n| direction=?direction \n| x509.subject.distinguished_name\
+        \   | direction := \"unknown\"\n}\n| direction=?direction \n| Vendor.certificate.subject\
         \ = ?ssl_subject"
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -236,12 +230,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=observer.name)
-      | groupBy([observer.name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: observer.name
+    valueField: Vendor._system_name

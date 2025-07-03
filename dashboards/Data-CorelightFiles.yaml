@@ -36,8 +36,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | Vendor.mime_type = "application/x-dosexec" AND Vendor.filename != *exe*
       | top([Vendor.mime_type, Vendor.filename], limit=15)
@@ -56,8 +55,7 @@ widgets:
       queryString: |-
         #Vendor=corelight AND @event_parsed!="false"
         | Vendor._path=files OR Vendor._path=files_red
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | Vendor.mime_type = "application/x-dosexec" AND Vendor.filename != *exe*
         | Vendor.filename = ?filename
@@ -95,8 +93,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -144,8 +141,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | top([destination.ip])
       | rename([[destination.ip, "Destination Host"], [_count, "Destination File Count"]])
@@ -166,8 +162,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -187,8 +182,7 @@ widgets:
     - name: Details of Top File Protocols by File Count
       titleTemplate: Details of {{ fields.Vendor.source }}
       queryString: "#Vendor=corelight AND @event_parsed!=\"false\"\n| Vendor._path=files\
-        \ OR Vendor._path=files_red\n| coalesce([observer.name, Vendor._system_name],\
-        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        \ OR Vendor._path=files_red\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
         | Vendor.mime_type=?mime_type\n| case { \n    in(field=\"source.ip\",values=[\"\
         0.0.0.0\",\"255.255.255.255\"])\n    | is_broadcast := true;\n    in(field=\"\
         destination.ip\",values=[\"255.255.255.255\",\"0.0.0.0\"])\n    | is_broadcast\
@@ -221,8 +215,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | top([source.ip], sum=Vendor.seen_bytes, as="Source Bytes")
       | rename([[source.ip, "Source Host"]])
@@ -246,8 +239,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | top([destination.ip], sum=Vendor.seen_bytes, as="Destination Bytes")
       | rename([[destination.ip, "Destination Host"]])
@@ -271,8 +263,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -319,8 +310,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -341,8 +331,7 @@ widgets:
     - name: Details of Top 20 Mime Types by File Count
       titleTemplate: Details of {{ fields.Vendor.mime_type }}
       queryString: "#Vendor=corelight AND @event_parsed!=\"false\"\n| Vendor._path=files\
-        \ OR Vendor._path=files_red\n| coalesce([observer.name, Vendor._system_name],\
-        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        \ OR Vendor._path=files_red\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
         | Vendor.mime_type=?mime_type\n| case { \n    in(field=\"source.ip\",values=[\"\
         0.0.0.0\",\"255.255.255.255\"])\n    | is_broadcast := true;\n    in(field=\"\
         destination.ip\",values=[\"255.255.255.255\",\"0.0.0.0\"])\n    | is_broadcast\
@@ -380,8 +369,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} AND Vendor.mime_type=?{mime_type=*}
       | top([source.ip])
       | rename([[source.ip, "Source Host"], [_count, "Source File Count"]])
@@ -410,8 +398,7 @@ parameters:
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = files OR Vendor._path = files_red
       | groupBy([event.id], function=tail(1), limit=1000000)
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.mime_type != "application/pkix-cert"
       | groupBy([Vendor.mime_type], function=[])
     timeInterval: 24h
@@ -425,12 +412,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=observer.name)
-      | groupBy([observer.name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 50
-    valueField: observer.name
+    valueField: Vendor._system_name

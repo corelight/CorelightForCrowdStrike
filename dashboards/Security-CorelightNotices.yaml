@@ -14,8 +14,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | timeChart(Vendor._path, function=count())
@@ -29,8 +28,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = ?path
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | event.reason=?msg and Vendor.note=?note
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
       useWidgetTimeWindow: true
@@ -69,8 +67,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | format(format="%s/%s", field=[network.transport, Vendor.p], as=pp)
@@ -87,8 +84,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = notice
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
         | Vendor.note=?notes
@@ -128,8 +124,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
@@ -144,8 +139,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = notice
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
         | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
@@ -180,8 +174,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
@@ -206,8 +199,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | top([Vendor.note])
@@ -221,8 +213,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = notice
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
         | Vendor.note=?chart_note
@@ -264,8 +255,7 @@ parameters:
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
       | Vendor.note=*
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | top([Vendor.note], limit=100)
       | drop([_count])
     timeInterval: 24h
@@ -285,23 +275,21 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name
   msg:
     label: Message
     query: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
       | event.reason=*
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | top([event.reason], limit=100)
       | drop([_count])
     timeInterval: 24h
@@ -316,8 +304,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = notice
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
       | groupBy([severity_display, Vendor.severity.name], function=[])
     timeInterval: 24h

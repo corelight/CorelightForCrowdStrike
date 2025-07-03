@@ -18,8 +18,7 @@ widgets:
           corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
           corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
       | in(Vendor._path,values=[?sourcetype])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | source.ip =?{filter=*} OR destination.ip=?{filter=*} OR event.id=?{filter=*} OR Vendor.fuid=?{filter=*} OR network.community_id=?{filter=*}
       | top(Vendor._path)
@@ -30,8 +29,7 @@ widgets:
     interactions:
     - name: Details of Filtered Corelight Data for This Unique Entity
       titleTemplate: Details of Log type {{ fields.Vendor._path }}
-      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| coalesce([observer.name,\
-        \ Vendor._system_name], as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n\
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
         | ?additional_filter \n| source.ip =?filter OR destination.ip=?filter OR event.id=?filter\
         \ OR Vendor.fuid=?filter OR network.community_id=?filter\n| Vendor._path =\
         \ ?sourcetype\n"
@@ -66,8 +64,7 @@ widgets:
           corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
           corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
       | in(Vendor._path,values=[?sourcetype])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | source.ip =?{filter=*} OR destination.ip=?{filter=*} OR event.id=?{filter=*} OR Vendor.fuid=?{filter=*} OR network.community_id=?{filter=*}
       | formatTime(format="%F %r", as="Time")
@@ -93,8 +90,7 @@ widgets:
           corelight_metrics_iface,corelight_metrics_memory,corelight_metrics_s,corelight_metrics_smartpcap,
           corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
           corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | top(Vendor._path,limit=10)
     end: now
     start: 1d
@@ -105,8 +101,7 @@ widgets:
       titleTemplate: Details of Log type {{ fields.Vendor._path }}
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | Vendor._path = ?sourcetype
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -166,7 +161,7 @@ parameters:
     label: Source Type
     query: |-
       #Vendor = corelight and @event_parsed != "false"
-      | in(field="observer.name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | !in(field=Vendor._path, values=[corelight_audit_log,
                                           corelight_metrics_bro,
                                           corelight_metrics_cpu,
@@ -195,12 +190,11 @@ parameters:
     label: Corelight Sensor
     query: |
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name

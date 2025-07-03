@@ -14,8 +14,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | regex(field=Vendor.cipher,regex="RC4|DES|3DES|MD5|NULL|EXPORT")
       | groupBy([Vendor.cipher], function=[], limit=1000000)
       | count()
@@ -36,8 +35,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inference, function=tail(limit=20000), limit=1000000)], var="Inference")
       | lower("Inference", as=Inference)
       | in(field="Inference", values=["abp", "rsp", "rsi", "rsia", "rsl", "rsk"])
@@ -65,8 +63,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | is_src_internal_ip:=if(cidr("source.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | case{
@@ -114,8 +111,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
       | lower("inferences", as="inferences")
       | in(field="inferences", values=["ks", "auto"])
@@ -140,8 +136,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inference, function=tail(limit=20000), limit=1000000)], var="inference")
       | lower("inference", as=inference)
       | in(field="inference", values=["abp", "rsp", "rsi", "rsia", "rsl", "rsk"])
@@ -165,8 +160,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | destination.ip = *
       | text:contains(Vendor.validation_status, substring="self signed certificate")
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -203,29 +197,27 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip = "true"
       | array:reduceAll(array="Vendor.cert_chain_fps[]", function=[groupBy(fingerprint, function=tail(limit=20000), limit=1000000)], var="fingerprint")
       | join(query={#Vendor = corelight and @event_parsed != "false"
               | in(field=Vendor._path, values= [x509, x509_red])
-              | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-              | in(field="sensor_name", values=[?sensor_name])
+              | in(field="Vendor._system_name", values=[?sensor_name])
               | rename(field="Vendor.fingerprint", as="fingerprint")
               | ts_now := now()
-              | parseTimestamp(field=x509.not_after, as=ts_then)
+              | parseTimestamp(field=Vendor.certificate.not_valid_after, as=ts_then)
               | time_diff := ts_then - ts_now
               | time_diff >0
               | formatDuration("time_diff",as=time_diff,from=ms)
               | regex(field="time_diff",regex="(?<days>\\d+)d")
               | days<30
               | days_to_expiry:= days
-      }, field=fingerprint, key=fingerprint, mode=inner,include=[x509.subject.distinguished_name,x509.not_after,days_to_expiry], limit=200000)
-      | groupBy([x509.subject.distinguished_name,destination.ip],function=[collect([destination.port],separator=", "),collect([x509.not_after],separator=", "),collect([days_to_expiry],separator=", ")], limit=1000000)
-      | default(value="N/A", field=["destination.ip", "destination.port", "x509.not_after", "days_to_expiry"])
-      | default(value="No Results", field=[x509.subject.distinguished_name])
-      | rename([[x509.subject.distinguished_name,"Subject"],["destination.ip","Host"],["destination.port","Port"],[x509.not_after,"Not Valid After"],["days_to_expiry","Days to Expire"]])
+      }, field=fingerprint, key=fingerprint, mode=inner,include=[Vendor.certificate.subject,Vendor.certificate.not_valid_after,days_to_expiry], limit=200000)
+      | groupBy([Vendor.certificate.subject,destination.ip],function=[collect([destination.port],separator=", "),collect([Vendor.certificate.not_valid_after],separator=", "),collect([days_to_expiry],separator=", ")], limit=1000000)
+      | default(value="N/A", field=["destination.ip", "destination.port", "Vendor.certificate.not_valid_after", "days_to_expiry"])
+      | default(value="No Results", field=[Vendor.certificate.subject])
+      | rename([[Vendor.certificate.subject,"Subject"],["destination.ip","Host"],["destination.port","Port"],[Vendor.certificate.not_valid_after,"Not Valid After"],["days_to_expiry","Days to Expire"]])
     end: now
     start: 1d
     width: 6
@@ -267,8 +259,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | is_src_internal_ip:=if(cidr("source.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | case{
@@ -321,8 +312,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | regex(field=Vendor.cipher,regex="RC4|DES|3DES|MD5|NULL|EXPORT")
       | is_src_internal_ip:=if(cidr(source.ip, subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip:=if(cidr(destination.ip, subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -351,8 +341,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
       | lower("inferences", as="inferences")
       | in(field="inferences", values=["sfd","lfd","sfu","lfu"])
@@ -381,8 +370,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
       | lower("inferences", as="inferences")
       | in(field="inferences", values=["sc", "sp", "sv", "sa", "afr", "ban"])
@@ -409,8 +397,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inference, function=tail(limit=20000), limit=1000000)], var="inference")
       | lower("inference",as="inference")
       | in(field="inference", values=["pka", "auto", "ks", "cts"])
@@ -433,14 +420,12 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [x509, x509_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | rename([[Vendor.certificate.key_length, key_length],[Vendor.fingerprint,match_fingerprint]])
       | key_length < 2048
       | join({#Vendor = corelight and @event_parsed != "false"
           | in(field=Vendor._path, values= [ssl,ssl_red])
-          | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-          | in(field="observer.name", values=[?sensor_name])
+          | in(field="Vendor._system_name", values=[?sensor_name])
           | array:reduceAll(array="Vendor.cert_chain_fps[]", function=[groupBy(x, function=tail(limit=1), limit=100000)], var="x")
           | rename(field="x", as="match_fingerprint")
           | host_type:=if(cidr(destination.ip, subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="Internal", else="External")
@@ -470,8 +455,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | text:contains(Vendor.validation_status, substring="self signed certificate")
       | destination.ip = *
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -537,25 +521,23 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssl, ssl_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip = "true"
       | array:reduceAll(array="Vendor.cert_chain_fps[]", function=[groupBy(fingerprint, function=tail(limit=20000), limit=1000000)], var="fingerprint")
       | join(query={#Vendor = corelight and @event_parsed != "false"
               | in(field=Vendor._path, values= [x509, x509_red])
-              | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-              | in(field="sensor_name", values=[?sensor_name])
+              | in(field="Vendor._system_name", values=[?sensor_name])
               | rename(field="Vendor.fingerprint", as="fingerprint")
               | ts_now := now()
-              | parseTimestamp(field=x509.not_after, as=ts_then)
+              | parseTimestamp(field=Vendor.certificate.not_valid_after, as=ts_then)
               | time_diff := ts_then - ts_now
               | time_diff >0
               | formatDuration("time_diff",as=time_diff,from=ms)
               | regex(field="time_diff",regex="(?<days>\\d+)d")
               | days<30
-      }, field=fingerprint, key=fingerprint, mode=inner,include=[x509.subject.distinguished_name], limit=200000)
-      | groupBy([x509.subject.distinguished_name,destination.ip],function=count(as=Count))
+      }, field=fingerprint, key=fingerprint, mode=inner,include=[Vendor.certificate.subject], limit=200000)
+      | groupBy([Vendor.certificate.subject,destination.ip],function=count(as=Count))
       | count()
     end: now
     start: 1d
@@ -586,14 +568,12 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [x509, x509_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | rename([[Vendor.certificate.key_length, key_length],[Vendor.fingerprint,match_fingerprint]])
       | key_length < 2048
       | join({#Vendor = corelight and @event_parsed != "false"
           | in(field=Vendor._path, values= [ssl,ssl_red])
-          | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-          | in(field="observer.name", values=[?sensor_name])
+          | in(field="Vendor._system_name", values=[?sensor_name])
           | array:reduceAll(array="Vendor.cert_chain_fps[]", function=[groupBy(x, function=tail(limit=1), limit=100000)], var="x")
           | rename(field="x", as="match_fingerprint")
           | host_type:=if(cidr(destination.ip, subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="Internal", else="External")
@@ -646,8 +626,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inference, function=tail(limit=20000), limit=1000000)], var="inference")
       | lower("inference",as="inference")
       | in(field="inference", values=["pka", "auto", "ks", "cts"])
@@ -674,8 +653,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
       | lower("inferences", as="inferences")
       | in(field="inferences", values=["sfd","lfd","sfu","lfu"])
@@ -700,8 +678,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
       | lower("inferences", as="inferences")
       | in(field="inferences", values=["sc", "sp", "sv", "sa", "afr", "ban"])
@@ -747,8 +724,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values= [ssh, ssh_red])
-      | coalesce(["observer.name", "Vendor._system_name"], as="sensor_name")
-      | in(field="sensor_name", values=[?sensor_name])
+      | in(field="Vendor._system_name", values=[?sensor_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
       | lower("inferences", as="inferences")
       | in(field="inferences", values=["ks", "auto"])
@@ -775,15 +751,14 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 1d
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 50
-    valueField: sensor_name
+    valueField: Vendor._system_name
   traffic_direction:
     label: Traffic Direction
     order: 1

@@ -23,8 +23,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -33,8 +32,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id =*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | is_dest_internal_ip:=if(cidr(destination.ip, subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -60,8 +58,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -70,8 +67,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id=*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -130,8 +126,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -140,8 +135,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | event.id!="" and event.id =*
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -167,8 +161,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -177,8 +170,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id=*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -207,8 +199,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -217,8 +208,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id=*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -244,8 +234,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -254,8 +243,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id=*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -282,8 +270,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -292,8 +279,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id=*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -332,8 +318,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -342,8 +327,7 @@ widgets:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id =*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -390,8 +374,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
           | in(field="Vendor._path", values=[suricata_corelight])
-          | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-          | in(field="sensor_name", values=[?system_name])
+          | in(field="Vendor._system_name", values=[?system_name])
           | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
           | sid := Vendor.alert.signature_id
           | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -400,8 +383,7 @@ widgets:
           | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id =*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -427,8 +409,7 @@ widgets:
     queryString: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
           | in(field="Vendor._path", values=[suricata_corelight])
-          | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-          | in(field="sensor_name", values=[?system_name])
+          | in(field="Vendor._system_name", values=[?system_name])
           | Vendor.suri_id!="" and Vendor.alert.signature_id!="" and event.id!="" and event.id =*
           | sid := Vendor.alert.signature_id
           | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -437,8 +418,7 @@ widgets:
           | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | event.id!="" and event.id =*
       | source.ip = ?{entity=*} or destination.ip = ?{entity=*}
       | match(table=list_of_uids, field=[event.id], column=[event.id])
@@ -478,8 +458,7 @@ parameters:
     query: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -488,8 +467,7 @@ parameters:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | match(table=list_of_uids, field=[event.id], column=[event.id])
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[category, impact_score])
@@ -514,8 +492,7 @@ parameters:
     query: |-
       defineTable(query={#Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[suricata_corelight])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -524,8 +501,7 @@ parameters:
       | groupBy([event.id], function=[])}, include=[event.id], name="list_of_uids")
       | #Vendor=corelight and @event_parsed!=false
       | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | match(table=list_of_uids, field=[event.id], column=[event.id])
       | sid := Vendor.alert.signature_id
       | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
@@ -544,12 +520,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 0
-    valueField: sensor_name
+    valueField: Vendor._system_name

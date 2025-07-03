@@ -14,8 +14,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=20000), limit=1000000)], var="Inferences")
       | Inferences=?{inference=*}
@@ -30,8 +29,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = vpn
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | array:contains(array="Vendor.inferences[]", value=?chart_inference)
       useWidgetTimeWindow: true
@@ -70,8 +68,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -100,8 +97,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -120,8 +116,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = vpn
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?inference
         | case {
@@ -157,8 +152,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=20000), limit=1000000)], var="Inferences")
       | Inferences=?{inference=*}
@@ -173,8 +167,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = vpn
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?chart_inference
         | case {
@@ -216,8 +209,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -236,8 +228,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = vpn
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?inference
         | case {
@@ -274,8 +265,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -298,8 +288,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed!="false"
         | Vendor._path = vpn
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?inference
         | case {
@@ -335,8 +324,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | network.protocol="spicy*"
       | inference_filter := ?inference
@@ -380,8 +368,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=20000), limit=1000000)], var="Inferences")
       | select([Inferences])
     timeInterval: 24h
@@ -396,22 +383,20 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 0
-    valueField: sensor_name
+    valueField: Vendor._system_name
   vpn_type:
     label: VPN Type
     query: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | groupBy([Vendor.vpn_type], function=[], limit=1000000)
     timeInterval: 24h
     useDashboardTimeIfSet: true

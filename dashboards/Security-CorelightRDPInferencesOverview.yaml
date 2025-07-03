@@ -14,8 +14,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, function=tail(limit=20000), limit=1000000)], var="x")
       | rename([[x, Inferences]])
@@ -30,8 +29,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | array:contains("Vendor.inferences[]", value=?inference)
       useWidgetTimeWindow: true
@@ -74,8 +72,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | Vendor.auth_success != true
       | count()
@@ -89,8 +86,7 @@ widgets:
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | Vendor.auth_success != true
       useWidgetTimeWindow: true
@@ -128,8 +124,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, limit=1000000)], var="x")
       | rename([[x, Inferences],[_count,Count]])
@@ -143,8 +138,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | array:contains("Vendor.inferences[]", value=?inference)
       useWidgetTimeWindow: true
@@ -172,8 +166,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | Vendor.auth_success = true
       | count()
@@ -187,8 +180,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | Vendor.auth_success = true
       useWidgetTimeWindow: true
@@ -227,8 +219,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
       | groupBy([@timestamp,sensor_name,user.name,source.ip,destination.ip,destination.port,Vendor.auth_success,inferences,@rawstring], limit=1000000)
@@ -255,8 +246,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | top(Vendor.security_protocol)
     end: now
@@ -269,8 +259,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | Vendor._path = rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | Vendor.security_protocol = ?protocol
       useWidgetTimeWindow: true
@@ -299,8 +288,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | top(field=["user.name",Vendor.auth_success],limit=20)
       | default(value="no_value", field=[Vendor.auth_success,user.name])
@@ -314,8 +302,7 @@ widgets:
       titleTemplate: Details of User '{{ fields["Connecting User"] }}' and Auth Success
         '{{ fields["Auth Success"] }}'
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
-        \ = rdp\n| coalesce([observer.name, Vendor._system_name], as=sensor_name)\n\
-        | in(field=\"sensor_name\", values=[?system_name])  \n| ?additional_filter\n\
+        \ = rdp\n| in(field=\"Vendor._system_name\", values=[?system_name])  \n| ?additional_filter\n\
         | default(value=\"no_value\", field=[Vendor.auth_success])\n| Vendor.auth_success\
         \ = ?auth_success AND user.name = ?user_name"
       useWidgetTimeWindow: true
@@ -357,8 +344,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path = rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query

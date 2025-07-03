@@ -13,8 +13,7 @@ widgets:
     height: 4
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
       | direction := if(is_dest_internal_ip==true, then="Internal", else=if(is_dest_internal_ip==false, then="External", else="Unknown"))
@@ -28,8 +27,7 @@ widgets:
       titleTemplate: Details of {{ fields.direction }}
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
         | direction := if(is_dest_internal_ip==true, then="Internal", else=if(is_dest_internal_ip==false, then="External", else="Unknown"))
@@ -59,8 +57,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(Vendor._path, values=["http", "http2", "http_red"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | top([destination.ip, source.ip, http.request.method, url.path])
       | default(value="unknown", field=[destination.ip, source.ip, http.request.method, url.path])
@@ -74,8 +71,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(Vendor._path, values=["http", "http2", "http_red"])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | source.ip=?src_ip and destination.ip=?dst_ip and http.request.method=?method and url.path=?uri
       useWidgetTimeWindow: true
@@ -113,8 +109,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(Vendor._path, values=["http", "http2", "http_red"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | groupBy([Vendor.user_agent], limit=1000000)
       | sort(_count, order=asc, limit=10)
@@ -128,8 +123,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(Vendor._path, values=["http", "http2", "http_red"])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | Vendor.user_agent=?user_agent
       useWidgetTimeWindow: true
@@ -158,8 +152,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | in(field="destination.port", values=[80, 8080, 443])
       | top([destination.port])
@@ -173,8 +166,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red"])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | destination.port=?port
       useWidgetTimeWindow: true
@@ -203,8 +195,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | !in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       |(source.ip=?{ip=*} or destination.ip=?{ip=*})
       | top([Vendor._path])
     end: now
@@ -216,8 +207,7 @@ widgets:
       titleTemplate: Details of {{ fields.Vendor._path }}
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | Vendor._path=?sourcetype
       useWidgetTimeWindow: true
@@ -246,8 +236,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | case {
           in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -277,8 +266,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red"])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | case {
             in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
@@ -321,8 +309,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | !in(field=destination.port, values=[80,443,8080])
       | format("%s/%s", field=[network.transport, destination.port], as=tp)
@@ -337,8 +324,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red"])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | !in(field=destination.port, values=[80,443,8080])
         | format("%s/%s", field=[network.transport, destination.port], as=tp)
@@ -373,12 +359,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name],function=[])
+      | groupBy([Vendor._system_name],function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 10
-    valueField: sensor_name
+    valueField: Vendor._system_name
