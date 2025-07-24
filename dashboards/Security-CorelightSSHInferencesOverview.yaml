@@ -15,8 +15,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[ssh,ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | inference_filter := ?{inferences=*}
       | case {
@@ -28,8 +27,7 @@ widgets:
       | top([source.ip,destination.ip], as=Count, limit=20000)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | in(field=Vendor._path, values=[ssh,ssh_red])
-                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-                      | in(field="sensor_name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | default(field=[source.ip,destination.ip],value=unknown)
                       | ?{additional_filter=*}
                       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
@@ -59,8 +57,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[ssh,ssh_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | inference_filter := ?inferences
         | case {
@@ -95,8 +92,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[ssh,ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | array:filter(array="Vendor.inferences[]", function={in(field=x,values=?{inferences=*})}, var="x")
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, function=tail(limit=20000), limit=1000000)], var="x")
@@ -110,8 +106,7 @@ widgets:
     - name: Details of SSH Inferences Over Time
       titleTemplate: Details of {{ fields.InferenceName }}
       queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=Vendor._path,\
-        \ values=[ssh,ssh_red])\n| coalesce([observer.name, Vendor._system_name],\
-        \ as=sensor_name)\n| in(field=\"sensor_name\", values=[?system_name])\n| ?additional_filter\n\
+        \ values=[ssh,ssh_red])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
         | array:reduceAll(array=\"Vendor.inferences[]\", function=[groupBy(inferences,\
         \ function=tail(limit=20000), limit=1000000)], var=\"inferences\")\n| match(file=\"\
         ssh_inference_lookup.csv\", include=[InferenceName], column=inferences, field=inferences)\
@@ -161,8 +156,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[ssh,ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | inference_filter := ?inferences
       | case {
@@ -192,8 +186,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[ssh,ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | array:filter(array="Vendor.inferences[]", function={in(field=x,values=?{inferences=*})}, var="x")
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, function=tail(limit=20000), limit=1000000)], var="x")
@@ -209,8 +202,7 @@ widgets:
       queryString: |
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[ssh,ssh_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | array:contains(array="Vendor.inferences[]", value=?inferences)
       useWidgetTimeWindow: true
@@ -242,8 +234,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[ssh,ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | inference_filter := ?{inferences=*}
       | case {
@@ -255,8 +246,7 @@ widgets:
       | top([source.ip,destination.ip], as=Count, limit=5)
       | join(query={#Vendor = corelight and @event_parsed != "false"
                       | in(field=Vendor._path, values=[ssh,ssh_red])
-                      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-                      | in(field="sensor_name", values=[?system_name])
+                      | in(field="Vendor._system_name", values=[?system_name])
                       | default(field=[source.ip,destination.ip],value=unknown)
                       | ?{additional_filter=*}
                       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
@@ -280,8 +270,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[ssh,ssh_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | inference_filter := ?inferences
         | case {
@@ -316,8 +305,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[ssh,ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | ?{additional_filter=*}
       | inference_filter := ?{inferences=*}
       | case {
@@ -339,8 +327,7 @@ widgets:
       queryString: |-
         #Vendor = corelight and @event_parsed != "false"
         | in(field=Vendor._path, values=[ssh,ssh_red])
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | ?additional_filter
         | inference_filter := ?inferences
         | case {
@@ -382,8 +369,7 @@ parameters:
     query: |-
       #Vendor = corelight and @event_parsed != "false"
       | in(field=Vendor._path, values=[ssh,ssh_red])
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inference, function=tail(limit=1), limit=1000000)], var="inference")
       | match(file="ssh_inference_lookup.csv", include=[InferenceName,inferences], column=inferences, field=inference)
       | select([InferenceName,inferences])
@@ -400,12 +386,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name

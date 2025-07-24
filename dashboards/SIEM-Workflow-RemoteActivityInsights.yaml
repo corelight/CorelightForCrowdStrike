@@ -42,8 +42,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | !in(field=#event.outcome, values=unknown)
       | timeChart(#event.outcome)
     end: now
@@ -56,8 +55,7 @@ widgets:
       queryString: |-
         #Vendor=corelight @event_parsed!="false"
         | Vendor._path=rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | !in(field=#event.outcome, values=unknown)
         | #event.outcome=?outcome
       useWidgetTimeWindow: true
@@ -100,8 +98,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | array:contains("Vendor.inferences[]", value="COM")
       | array:contains("Vendor.inferences[]", value="RW")
       | array:contains("Vendor.inferences[]", value="NSP")
@@ -125,8 +122,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | array:contains("Vendor.inferences[]", value="COM")
       | array:contains("Vendor.inferences[]", value="RW")
       | array:contains("Vendor.inferences[]", value="NSP")
@@ -155,8 +151,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | !in(field=#event.outcome, values=unknown)
       | count(field=#event.outcome)
     end: now
@@ -169,8 +164,7 @@ widgets:
       queryString: |-
         #Vendor=corelight @event_parsed!="false"
         | Vendor._path=rdp
-        | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-        | in(field="sensor_name", values=[?system_name])
+        | in(field="Vendor._system_name", values=[?system_name])
         | !in(field=#event.outcome, values=unknown)
       useWidgetTimeWindow: true
       repoOrViewName: search-all
@@ -199,8 +193,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^RW$|^FW$",flags=i)
       | groupBy([event.id], function=[])
@@ -221,13 +214,12 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^TLS$|^SK$",flags=i)
-      | groupBy([source.ip,destination.ip], function=[selectLast([Inferences]),collect([destination.geo.country_name],separator=", "),collect([Vendor.vpn_type],separator=", "),count(as=Count)],limit=1000000)
-      | default(value="N/A", field=[source.ip,destination.ip,destination.geo.country_name,Vendor.vpn_type,Inferences])
-      | rename([[source.ip,"Source IP"],[destination.ip,"Destination IP"],[destination.geo.country_name,"Destination Country"],[Vendor.vpn_type,"VPN Type"]])
+      | groupBy([source.ip,destination.ip], function=[selectLast([Inferences]),collect([Vendor.resp_cc],separator=", "),collect([Vendor.vpn_type],separator=", "),count(as=Count)],limit=1000000)
+      | default(value="N/A", field=[source.ip,destination.ip,Vendor.resp_cc,Vendor.vpn_type,Inferences])
+      | rename([[source.ip,"Source IP"],[destination.ip,"Destination IP"],[Vendor.resp_cc,"Destination Country"],[Vendor.vpn_type,"VPN Type"]])
       | sort(Count,limit=20000)
     end: now
     start: 1d
@@ -247,8 +239,7 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^RW$|^FW$",flags=i)
       | groupBy([event.id], function=[collect([source.ip],separator=", "),collect([destination.ip],separator=", "),collect([network.transport],separator=", "),selectLast([Inferences]),collect([destination.port],separator=","),collect([Vendor.orig_bytes],separator=", "),count(as=Count)], limit=1000000)
@@ -275,8 +266,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | lower(#event.outcome, as=#event.outcome)
       | lower(Vendor.auth_success, as=Vendor.auth_success)
       | #event.outcome = "failure" or Vendor.auth_success = "false"
@@ -311,16 +301,14 @@ widgets:
     queryString: |
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=rdp
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | lower(#event.outcome, as=#event.outcome)
       | lower(Vendor.auth_success, as=Vendor.auth_success)
       | #event.outcome = "failure" or Vendor.auth_success = "false"
       | groupBy([user.name], function=count(as=Count))
       | user.name =~ join(query={#Vendor = corelight and @event_parsed!="false"
           | Vendor._path=rdp
-          | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-          | in(field="sensor_name", values=[?system_name])
+          | in(field="Vendor._system_name", values=[?system_name])
           | lower(#event.outcome, as=#event.outcome)
           | lower(Vendor.auth_success, as=Vendor.auth_success)
           | #event.outcome = "failure" or Vendor.auth_success = "false"},
@@ -361,8 +349,7 @@ widgets:
     queryString: |-
       #Vendor = corelight and @event_parsed!="false"
       | Vendor._path=vpn
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="sensor_name", values=[?system_name])
+      | in(field="Vendor._system_name", values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^TLS$|^SK$",flags=i)
       | groupBy([source.ip,destination.ip], function=[])
@@ -428,12 +415,11 @@ parameters:
     label: Corelight Sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | groupBy([sensor_name], function=[])
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: Vendor._system_name

@@ -21,7 +21,7 @@ Upon successful upload of the file Humio will display the assets included in the
 
 <img src="tutorial_figures/investigator_package_imported.jpg" width=50% height=50%>
 
-## Step 2: verify that the assests were imported successfully 
+## Step 2: verify that the assets were imported successfully 
 
 Verify that the assets are listed in the description of the installed package.
 

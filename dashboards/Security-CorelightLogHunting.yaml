@@ -1,96 +1,200 @@
-name: Security - Corelight Log Hunting
-description: Corelight log hunter, use filters to zero in on your target.
+name: Security-CorelightLogHunting
+description: ''
 timeSelector: {}
 sharedTimeInterval:
   enabled: true
-  isLive: true
-  start: 15m
+  isLive: false
+  start: 1d
+labels:
+- Corelight
 widgets:
   17d56b3f-fe43-4372-bba3-f08d75f88a3f:
     x: 0
-    y: 0
-    description: A view of the number of logs based on the filters applied
-    height: 7
-    queryString: |-
-      ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
-      |("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*})
-      AND (?{additional_filter=*})
-      | top(#path)
-    start: 24h
-    width: 5
+    height: 4
+    queryString: |
+      #Vendor = corelight and @event_parsed != "false"
+      | !in(field=Vendor._path, values=[corelight_audit_log,corelight_metrics_bro,corelight_metrics_cpu,corelight_metrics_disk,corelight_metrics_docker,
+          corelight_metrics_iface,corelight_metrics_memory,corelight_metrics_s,corelight_metrics_smartpcap,
+          corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
+          corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
+      | in(Vendor._path,values=[?sourcetype])
+      | in(field="Vendor._system_name", values=[?system_name])
+      | ?{additional_filter=*}
+      | source.ip =?{filter=*} OR destination.ip=?{filter=*} OR event.id=?{filter=*} OR Vendor.fuid=?{filter=*} OR network.community_id=?{filter=*}
+      | top(Vendor._path)
+    end: now
+    start: 1d
+    width: 6
+    y: 1
+    interactions:
+    - name: Details of Filtered Corelight Data for This Unique Entity
+      titleTemplate: Details of Log type {{ fields.Vendor._path }}
+      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
+        | ?additional_filter \n| source.ip =?filter OR destination.ip=?filter OR event.id=?filter\
+        \ OR Vendor.fuid=?filter OR network.community_id=?filter\n| Vendor._path =\
+        \ ?sourcetype\n"
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        additional_filter: '["{{ parameters.additional_filter }}"]'
+        filter: '["{{ parameters.filter }}"]'
+        sourcetype: '["{{ fields.Vendor._path }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
     options:
-      innerRadius: 23
       series: {}
+      maxSeriesCount: 10
+      innerRadius: 0
+      legendPosition: right
+      legendTitle: Source Types
     visualization: pie-chart
-    title: Filtered Corelight data by log type
+    title: Filtered Corelight Data for This Unique Entity
+    isLive: false
     type: query
   2d38934a-a9cf-47b3-baac-8640233e3aa9:
     x: 0
-    y: 7
-    height: 8
+    y: 5
+    height: 6
     queryString: |
-      ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
-      |("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*} OR uid=?{filter=*} OR fuid=?{filter=*} OR community_id=?{filter=*}) AND (?{additional_filter=*})
-      | rename("#path",as="log_type")
-      | rename("id.orig_h", as="source")
-      | rename("id.resp_h", as="destination")
-      | rename("id.resp_p", as="dest port")
-      | select([@timestamp, "log_type", "source", "destination", "dest port", @rawstring])
-    visualization: table-view
-    start: 24h
+      #Vendor = corelight and @event_parsed != "false"
+      | !in(field=Vendor._path, values=[corelight_audit_log,corelight_metrics_bro,corelight_metrics_cpu,corelight_metrics_disk,corelight_metrics_docker,
+          corelight_metrics_iface,corelight_metrics_memory,corelight_metrics_s,corelight_metrics_smartpcap,
+          corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
+          corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
+      | in(Vendor._path,values=[?sourcetype])
+      | in(field="Vendor._system_name", values=[?system_name])
+      | ?{additional_filter=*}
+      | source.ip =?{filter=*} OR destination.ip=?{filter=*} OR event.id=?{filter=*} OR Vendor.fuid=?{filter=*} OR network.community_id=?{filter=*}
+      | formatTime(format="%F %r", as="Time")
+      | select([Time, "Vendor._path", "source.ip", "destination.ip", "destination.port", @rawstring])
+      | rename([[Vendor._path,"Source Type"],[source.ip,"Source IP"],[destination.ip,"Destination IP"],[destination.port,"Destination Port"],[@rawstring,"Raw Data"]])
+    end: now
+    start: 1d
     width: 12
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
     title: Log Data
+    isLive: false
     type: query
   88cb7e27-1710-47c4-b716-d80a037cff10:
-    x: 5
-    y: 0
-    description: A view of the number of logs based on the filters applied (no KV
-      filter)
-    height: 7
-    queryString: |-
-      ("_system_name"=?{system_name=*}) AND ("#repo"=?{fed_tenant=*})
-      |("id.orig_h"=?{filter=*} OR "id.resp_h"=?{filter=*})
-      | top(#path)
-      | sort()
-    start: 24h
-    width: 7
+    x: 6
+    height: 4
+    queryString: |
+      #Vendor = corelight and @event_parsed != "false"
+      | !in(field=Vendor._path, values=[corelight_audit_log,corelight_metrics_bro,corelight_metrics_cpu,corelight_metrics_disk,corelight_metrics_docker,
+          corelight_metrics_iface,corelight_metrics_memory,corelight_metrics_s,corelight_metrics_smartpcap,
+          corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
+          corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
+      | in(field="Vendor._system_name", values=[?system_name])
+      | top(Vendor._path,limit=10)
+    end: now
+    start: 1d
+    width: 6
+    y: 1
+    interactions:
+    - name: Details of All Corelight Data for This Unique Entity
+      titleTemplate: Details of Log type {{ fields.Vendor._path }}
+      queryString: |
+        #Vendor = corelight and @event_parsed != "false"
+        | in(field="Vendor._system_name", values=[?system_name])
+        | Vendor._path = ?sourcetype
+      useWidgetTimeWindow: true
+      repoOrViewName: search-all
+      arguments:
+        sourcetype: '["{{ fields.Vendor._path }}"]'
+        system_name: '["{{ parameters.system_name }}"]'
+      openInNewTab: true
+      isLive: false
+      type: searchlink
     options:
-      labelAngle: 14
+      legendPosition: bottom
+      series: {}
+      labelAngle: 0
       valuesOnBars: true
+      xAxisTitle: Source Types
+      barChartType: grouped
       legend: false
-      labelAlign: right
-      categoryPadding: 0.01
-      seriesPadding: 0.03
+      yAxisTitle: Count
+      barChartOrientation: horizontal
+      labelLimit: 44
+      maxSeriesCount: 10
+      seriesPadding: 0
       sortOrder: descending
-      paddingBottom: 153
+      orderBy: _count
+      labelAlign: right
+      withYAxisTitle: false
+      categoryPadding: 0.05
+      inputDataFormat: ''
     visualization: bar-chart
-    title: Filtered Corelight data by log (no KV Filter)
+    title: All Corelight Data for This Unique Entity (Only Time Range filter applies
+      to this graph)
+    isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.2.0
+  note-1734958798038-0:
+    x: 0
+    y: 0
+    height: 1
+    text: ''
+    width: 12
+    title: Log Hunting
+    type: note
+$schema: https://schemas.humio.com/dashboard/v0.17.0
 parameters:
   additional_filter:
-    defaultValue: '*'
-    label: additional_filter (K/V pair)
-    order: 50
+    label: Additional Filter
+    order: 4
     type: text
+    defaultValue: '*'
+    width: 1
   filter:
-    defaultValue: '*'
-    label: src, dest, uid, fuid, community_id
-    order: 2
+    label: IP, uid, fuid, or community_id
+    order: 3
     type: text
+    defaultValue: '*'
+    width: 1
+  sourcetype:
+    label: Source Type
+    query: |-
+      #Vendor = corelight and @event_parsed != "false"
+      | in(field="Vendor._system_name", values=[?system_name])
+      | !in(field=Vendor._path, values=[corelight_audit_log,
+                                          corelight_metrics_bro,
+                                          corelight_metrics_cpu,
+                                          corelight_metrics_disk,
+                                          corelight_metrics_docker,
+                                          corelight_metrics_iface,
+                                          corelight_metrics_memory,
+                                          corelight_metrics_s,
+                                          corelight_metrics_smartpcap,
+                                          corelight_metrics_suricata,
+                                          corelight_metrics_system,
+                                          corelight_metrics_utilization,
+                                          corelight_metrics_zeek_doctor,
+                                          corelight_overall_capture_loss,
+                                          corelight_pipeline_test,
+                                          corelight_service_status])
+      | groupBy(Vendor._path, function=[])
+    timeInterval: 1d
+    useDashboardTimeIfSet: true
+    type: query
+    defaultValue: '*'
+    width: 1
+    order: 2
+    valueField: Vendor._path
   system_name:
-    label: System Name
-    query: _system_name=* | groupby(_system_name, function=[tail(1), count()])
+    label: Corelight Sensor
+    query: |
+      #Vendor = corelight and @event_parsed!="false"
+      | groupBy([Vendor._system_name], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
+    width: 1
     order: 1
-    valueField: _system_name
-  fed_tenant:
-    label: Tenant
-    fileName: 'members.csv'
-    defaultValue: '*'
-    type: file
-    order: 1
-    valueField: 'members'
+    valueField: Vendor._system_name
