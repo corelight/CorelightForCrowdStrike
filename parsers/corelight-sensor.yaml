@@ -2370,6 +2370,12 @@ script: |-
   | file.x509.signature_algorithm := Vendor.certificate.sig_alg
   | file.x509.subject.distinguished_name := Vendor.certificate.subject
 
+  //asn fields for suricata, intel
+  | case {
+        in(field="Vendor._path", values=["suricata_corelight", "intel"]) | asn(server.ip);
+        *;
+    }
+  
   //tls Fields
   | tls.client.ja3 := Vendor.ja3
   | tls.server.ja3s := Vendor.ja3s
