@@ -2,7 +2,7 @@ sections:
   section-1735818809117-3:
     collapsed: true
     order: 3
-    title: DNS Hygiene
+    title: DNS hygiene
     widgetIds:
     - d9f2c0ac-b279-4d48-a609-30a51134bf36
     - ce8451c2-6457-4231-9b03-c622ff79cd69
@@ -15,7 +15,7 @@ sections:
   section-1735818783123-1:
     collapsed: true
     order: 1
-    title: Encrypted Traffic Hygiene
+    title: Encrypted traffic hygiene
     widgetIds:
     - 23fdd839-9ae5-4aa9-a2c8-1d9321fbabe1
     - 30d0a180-9e45-4879-b3bd-77cc2ffaf213
@@ -28,7 +28,7 @@ sections:
   section-1735818717134-0:
     collapsed: false
     order: 0
-    title: Alert Insights
+    title: Alert insights
     widgetIds:
     - 939dc377-3354-4681-8475-32c18d850f10
     - 70b64df0-ac79-44c3-9bc5-5cea840df46c
@@ -58,7 +58,7 @@ sections:
   section-1735818819106-4:
     collapsed: true
     order: 4
-    title: Remote Management Hygiene
+    title: Remote management hygiene
     widgetIds:
     - 6d3049d9-b7f0-40ca-8007-ccc4f28260ce
     - f4e652f0-1799-492b-9fc8-f553872b3f59
@@ -66,7 +66,7 @@ sections:
   section-1735818798128-2:
     collapsed: true
     order: 2
-    title: Unencrypted Traffic Hygiene - Indicators
+    title: Unencrypted traffic hygiene - indicators
     widgetIds:
     - 9bd3e327-05fb-4dbb-8bf5-c85bf08c723d
     - 220c9791-c17c-4919-a42c-628d8e7c9830
@@ -74,7 +74,8 @@ sections:
     - b0bc7e1d-4280-4b23-b4bc-9060ea8b9bf2
     - aefe19ab-99e6-463c-8056-acda28bd0d45
     - 3fb0486d-9ba2-431e-94b6-210f665c6117
-name: SIEM-Workflow-SecurityPosture
+name: Corelight security posture
+updateFrequency: never
 timeSelector: {}
 sharedTimeInterval:
   enabled: true
@@ -82,16 +83,18 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- SIEM
+- Workflow
 widgets:
   682a9ecb-f0eb-4fcf-92fb-962acd0e169c:
     x: 6
     y: 2
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "x509" or Vendor._path = "x509_red"
-      | coalesce([observer.name, Vendor._system_name], as=sensor_name)
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.x509" or #event.dataset = "ndr.x509_red"
+      | coalesce([observer.name, observer.hostname], as=sensor_name)
+      | in(field=observer.hostname, values=[?system_name])
       | parseInt("Vendor.certificate.key_length", as=key_length)
       | key_length < 2048
       | timeChart(function=count(Vendor.fingerprint, distinct=true, as=Count))
@@ -106,7 +109,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Certs w/ Low Keys - Over Time
+    title: Certs w/ low keys - over time
     isLive: false
     type: query
   d3838125-47a4-4130-81fa-41159093a42d:
@@ -114,10 +117,10 @@ widgets:
     y: 15
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="Vendor.note", values=["SSL::Certificate_Expired", "SSL::Invalid_Server_Cert", "SSL::Old_Version"])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.notice
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=Vendor.note, values=["SSL::Certificate_Expired", "SSL::Invalid_Server_Cert", "SSL::Old_Version"])
       | count(as=Count)
     end: now
     start: 1d
@@ -126,7 +129,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: SSL Certificates Issues
+    title: SSL certificates issues
     isLive: false
     type: query
   3e1015d8-a435-4393-adae-911a885f3576:
@@ -134,10 +137,10 @@ widgets:
     y: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=dns.question.type, values=["AXFR", "IXFR", "ANY", "TXT"])
       | timeChart(function=count(as=Total))
     end: now
     start: 1d
@@ -150,16 +153,16 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Unusual Qtypes - Over Time
+    title: Unusual QTypes - over time
     isLive: false
     type: query
   220c9791-c17c-4919-a42c-628d8e7c9830:
     x: 10
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "ftp"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.ftp"
+      | in(field=observer.hostname, values=[?system_name])
       | count(as=Count)
     end: now
     start: 1d
@@ -168,11 +171,10 @@ widgets:
     interactions:
     - name: Details of FTP sessions
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = "ftp"
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = "ndr.ftp"
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -182,7 +184,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: FTP Sessions
+    title: FTP sessions
     isLive: false
     type: query
   ce8451c2-6457-4231-9b03-c622ff79cd69:
@@ -190,10 +192,10 @@ widgets:
     y: 2
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="destination.port", values=[53,5353])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=destination.port, values=[53,5353])
       | is_dest_internal_ip := if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip="true"
       | count(distinct=true, field=destination.ip, as=Count)
@@ -204,7 +206,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Internal DNS Servers
+    title: Internal DNS servers
     isLive: false
     type: query
   d5643ab2-5c07-410a-a7bf-d4e79dff8eac:
@@ -213,7 +215,7 @@ widgets:
     height: 2
     text: |-
       ---
-      If you have imported **Security-CorelightAlertAggregations**, **Security-CorelightSuricata**, **Security-CorelightNotices** and **Security-CorelightIntel** dashboards with other name, please refer to this [document](https://docs.google.com/document/d/1QviJAHQHph4uoaxqpfjHQeRDrdK209VfeTc_MNabm28/edit?usp=sharing) for the required changes.
+      Make sure to import **Corelight_security_alert_aggregations**, **Corelight_security_suricata**, **Corelight_security_notices** and **Corelight_security_intel** dashboards with default name only.
     width: 12
     title: Note
     type: note
@@ -221,19 +223,19 @@ widgets:
     x: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | count()
     end: now
     start: 1d
     width: 4
     y: 8
     interactions:
-    - name: Details of Suricata IDS Alert Overview
+    - name: Details of Suricata IDS alert overview
       useWidgetTimeWindow: true
       dashboardReference:
-        name: Security-CorelightSuricata
+        name: Corelight_security_suricata
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -248,7 +250,7 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Suricata Alerts (All Suricata Alerts)
+    title: Suricata alerts (all Suricata alerts)
     isLive: false
     type: query
   note-1736241272402-3:
@@ -272,9 +274,9 @@ widgets:
     y: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=["smb_files", "smb_mapping"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.smb_files", "ndr.smb_mapping"])
+      | in(field=observer.hostname, values=[?system_name])
       | count(as=Count)
     end: now
     start: 1d
@@ -283,7 +285,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: SMB v1 Connections
+    title: SMB v1 connections
     isLive: false
     type: query
   c352c748-dcd9-452d-870f-007c8c66876e:
@@ -291,9 +293,9 @@ widgets:
     y: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "x509" or Vendor._path = "x509_red"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.x509" or #event.dataset = "ndr.x509_red"
+      | in(field=observer.hostname, values=[?system_name])
       | parseInt("Vendor.certificate.key_length", as=key_length)
       | key_length < 2048
       | count(Vendor.fingerprint, distinct=true, as=Count)
@@ -306,7 +308,7 @@ widgets:
       trend: false
       value-format: abbreviated
     visualization: single-value
-    title: Certs w/ Low Keys
+    title: Certs w/ low keys
     isLive: false
     type: query
   92a6c5ba-e149-4950-b2c5-54fe33175850:
@@ -314,9 +316,9 @@ widgets:
     y: 18
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = intel
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.intel"
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=count(as=Count))
     end: now
     start: 1d
@@ -329,7 +331,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Threat Intel (Intel Indicators) - Over Time
+    title: Threat intel (intel indicators) - over time
     isLive: false
     type: query
   note-1736241207395-1:
@@ -345,9 +347,9 @@ widgets:
     y: 8
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.ssl" or #event.dataset = "ndr.ssl_red"
+      | in(field=observer.hostname, values=[?system_name])
       | case {
         Vendor.version="TLSv13"
         | version_status := "Most Secure";
@@ -381,34 +383,33 @@ widgets:
       legendPosition: right
       legendTitle: TLS Version Status
     visualization: pie-chart
-    title: TLS Versions
+    title: TLS versions
     isLive: false
     type: query
   c76f65ed-c1ff-4205-a26e-e719a679c47b:
     x: 6
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=dns.question.type, values=["AXFR", "IXFR", "ANY", "TXT"])
       | count(as=Total)
     end: now
     start: 1d
     width: 2
     y: 0
     interactions:
-    - name: Details of Unusual Qtypes
+    - name: Details of unusual QTypes
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._path", values=[dns, dns_red])
-        | in(field="Vendor._system_name", values=[?system_name])
-        | in(field="dns.question.type", values=[AXFR, IXFR, ANY, TXT])
-        | groupBy([source.ip, destination.ip], function=[count(distinct=true, field=event.id, as="Unique Sessions"), collect([dns.question.type], separator=","), collect([dns.question.name], separator=",")], limit=1000000)
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+        | in(field=observer.hostname, values=[?system_name])
+        | in(field=dns.question.type, values=["AXFR", "IXFR", "ANY", "TXT"])
+        | groupBy([source.ip, destination.ip], function=[count(distinct=true, field=event.id, as="Unique Sessions"), collect([dns.question.type], separator=","), collect([dns.question.name], separator=",")], limit=max)
         | "Unique Sessions" > 0
         | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], [dns.question.type, "Query Types"], [dns.question.name, "Query Type Names"]])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -421,7 +422,7 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Unusual Qtypes
+    title: Unusual QTypes
     isLive: false
     type: query
   3fb0486d-9ba2-431e-94b6-210f665c6117:
@@ -429,10 +430,10 @@ widgets:
     y: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "etc_viz"
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.etc_viz"
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=Vendor.viz_stat, values=["C", "Cc", "C!", "cc"])
       | timeChart(function=count(as="Total Count"))
     end: now
     start: 1d
@@ -445,7 +446,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Unencrypted Connections - Over Time
+    title: Unencrypted connections - over time
     isLive: false
     type: query
   7cc7d093-0311-4921-aef3-ed89a6b9cb51:
@@ -453,9 +454,9 @@ widgets:
     y: 10
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suri_aggregations
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suri_aggregations"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.sid=*
       | is_dest_internal_ip := if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip="true"
@@ -467,7 +468,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Internal Hosts Affected
+    title: Internal hosts affected
     isLive: false
     type: query
   8b3e89a5-661d-487b-92a6-0c4ecae29b21:
@@ -475,9 +476,9 @@ widgets:
     y: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.ssl" or #event.dataset = "ndr.ssl_red"
+      | in(field=observer.hostname, values=[?system_name])
       | if(Vendor.validation_status=="self signed certificate", then="yes", else="no", as=is_self_signed)
       | is_self_signed=yes
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -493,16 +494,16 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Self Signed Certs
+    title: Self signed certs
     isLive: false
     type: query
   09cdace8-9640-41f3-b54a-731a965b3252:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.rdp"
+      | in(field=observer.hostname, values=[?system_name])
       | if(Vendor.auth_success=="true", then="Success", else="Failure", as="Auth Result")
       | timeChart("Auth Result")
     end: now
@@ -513,15 +514,14 @@ widgets:
     - name: Details of RDP Authentication Attempts
       titleTemplate: Details of {{ fields["Auth Result"] }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = "ndr.rdp"
+        | in(field=observer.hostname, values=[?system_name])
         | if(Vendor.auth_success=="true", then="Success", else="Failure", as=auth_result)
         | auth_result=?result
-        | groupBy([auth_result], function=[collect([user.name], separator=","), collect([#event.outcome], separator=","), collect([source.ip], separator=","), collect([destination.port], separator=","), collect([destination.ip], separator=","), count(as=Count)], limit=1000000)
+        | groupBy([auth_result], function=[collect([user.name], separator=","), collect([#event.outcome], separator=","), collect([source.ip], separator=","), collect([destination.port], separator=","), collect([destination.ip], separator=","), count(as=Count)], limit=max)
         | rename([[auth_result, Auth], ["user.name", User], [#event.outcome, Result], [source.ip, Source], [destination.port, Port], [destination.ip, Destination]])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         result: '["{{ fields[\"Auth Result\"] }}"]'
         system_name: '["{{ parameters.system_name }}"]'
@@ -541,17 +541,17 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: RDP Authentication Attempts
+    title: RDP authentication attempts
     isLive: false
     type: query
   9bd3e327-05fb-4dbb-8bf5-c85bf08c723d:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[http, http_red, http2, conn, conn_red, conn_long, dns, dns_red, ssl, ssl_red, files, files_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | !in(field="network.protocol", values=[ssl,"ssl,http","http,ssl",tls,ssh,https,dtls,"ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.http", "ndr.http_red", "ndr.http2", "ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.ssl", "ndr.ssl_red", "ndr.files", "ndr.files_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | !in(field=network.protocol, values=["ssl","ssl,http","http,ssl","tls","ssh","https","dtls","ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
       | timeChart(network.protocol, limit=10)
     end: now
     start: 1d
@@ -561,13 +561,12 @@ widgets:
     - name: Details of Top Unencrypted Protocols Used
       titleTemplate: Details of {{ fields.network.protocol }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._path", values=[http, http_red, http2, conn, conn_red, conn_long, dns, dns_red, ssl, ssl_red, files, files_red])
-        | in(field="Vendor._system_name", values=[?system_name])
-        | !in(field="network.protocol", values=[ssl,"ssl,http","http,ssl",tls,ssh,https,dtls,"ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.http", "ndr.http_red", "ndr.http2", "ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.ssl", "ndr.ssl_red", "ndr.files", "ndr.files_red"])
+        | in(field=observer.hostname, values=[?system_name])
+        | !in(field=network.protocol, values=["ssl","ssl,http","http,ssl","tls","ssh","https","dtls","ssl,xmpp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_ipsec_ike_udp","spicy_ipsec_udp","spicy_stun_tcp","krb,krb_tcp"])
         | network.protocol=?service
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         service: '["{{ fields.network.protocol }}"]'
         system_name: '["{{ parameters.system_name }}"]'
@@ -587,16 +586,16 @@ widgets:
       showOthers: false
       lastBucketBehavior: include
     visualization: time-chart
-    title: Top Unencrypted Protocols Used
+    title: Top unencrypted protocols used
     isLive: false
     type: query
   ee732104-7dd9-4b18-82f1-4d64557cc2ae:
     x: 8
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[conn, conn_red, conn_long, http, http_red, http2, dns, dns_red, ssl, ssl_red, files, files_red])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.http", "ndr.http_red", "ndr.http2", "ndr.dns", "ndr.dns_red", "ndr.ssl", "ndr.ssl_red", "ndr.files", "ndr.files_red"])
+      | in(field=observer.hostname, values=[?system_name])
       | destination.port=23
       | count(as=Count)
     end: now
@@ -606,12 +605,11 @@ widgets:
     interactions:
     - name: Details of Telnet sessions
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._path", values=[conn, conn_red, conn_long, http, http_red, http2, dns, dns_red, ssl, ssl_red, files, files_red])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.http", "ndr.http_red", "ndr.http2", "ndr.dns", "ndr.dns_red", "ndr.ssl", "ndr.ssl_red", "ndr.files", "ndr.files_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | destination.port=23
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -621,7 +619,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Telnet Sessions
+    title: Telnet sessions
     isLive: false
     type: query
   708d2f80-6094-4f95-951a-ed626e8f0b65:
@@ -629,9 +627,9 @@ widgets:
     y: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "x509" or Vendor._path = "x509_red"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.x509" or #event.dataset = "ndr.x509_red"
+      | in(field=observer.hostname, values=[?system_name])
       | ts_now := now()
       | parseTimestamp(field=Vendor.certificate.not_valid_after, as=ts_then)
       | eval(now_now=(ts_then-ts_now)/86400000)
@@ -645,7 +643,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Expiring Certificate
+    title: Expiring certificate
     isLive: false
     type: query
   827e6895-9b09-4510-a2c1-89d047d86a71:
@@ -653,9 +651,9 @@ widgets:
     y: 4
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.ssl" or #event.dataset = "ndr.ssl_red"
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=count(as="Encrypted Traffic Volume"))
     end: now
     start: 1d
@@ -680,7 +678,7 @@ widgets:
       regression: false
       regressionType: linear
     visualization: time-chart
-    title: Encrypted Traffic Over Time
+    title: Encrypted traffic over time
     isLive: false
     type: query
   caaa5386-60da-4054-ae83-72f421f9adb7:
@@ -688,9 +686,9 @@ widgets:
     y: 5
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.alert.signature_id=*
       | rename(field=Vendor.alert.signature_id, as=sid)
       | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[technique_number])
@@ -702,7 +700,7 @@ widgets:
     options:
       default: {}
     visualization: single-value
-    title: Mitre Techniques
+    title: Mitre techniques
     isLive: false
     type: query
   bb9a9444-626b-4ded-a5d2-e54e0290325b:
@@ -710,10 +708,10 @@ widgets:
     y: 2
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="dns.response_code", values=["NXDOMAIN", "NOERROR"])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=dns.response_code, values=["NXDOMAIN", "NOERROR"])
       | timeChart(function=count(as=Total))
     end: now
     start: 1d
@@ -726,7 +724,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: NXDOMAIN Responses - Over Time
+    title: NXDOMAIN responses - over time
     isLive: false
     type: query
   939dc377-3354-4681-8475-32c18d850f10:
@@ -734,9 +732,9 @@ widgets:
     y: 8
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=count(as=Count))
     end: now
     start: 1d
@@ -756,7 +754,7 @@ widgets:
       regression: false
       regressionType: linear
     visualization: time-chart
-    title: Suricata Alerts (All Suricata Alerts) - Over Time
+    title: Suricata alerts (all Suricata alerts) - over time
     isLive: false
     type: query
   65e17273-4dc6-46c0-983c-fb6c91697e10:
@@ -764,10 +762,10 @@ widgets:
     y: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=dns.response_code, values=["SERVFAIL", "REFUSED", "FORMERR", "NOTIMP", "NOTAUTH"])
       | timeChart(function=count(as=Count))
     end: now
     start: 1d
@@ -780,7 +778,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Failed DNS Queries - Over Time
+    title: Failed DNS queries - over time
     isLive: false
     type: query
   d9f2c0ac-b279-4d48-a609-30a51134bf36:
@@ -788,9 +786,9 @@ widgets:
     y: 4
     height: 7
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
       | worldMap(ip=destination.ip)
     end: now
     start: 1d
@@ -803,26 +801,26 @@ widgets:
       opacityMode: opacity
       zLevel: 0
     visualization: world-map
-    title: Geolocation of DNS Responses
+    title: Geolocation of DNS responses
     isLive: false
     type: query
   b89b8361-c20b-4076-91d9-581f82c76781:
     x: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = intel
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.intel"
+      | in(field=observer.hostname, values=[?system_name])
       | count(as=Count)
     end: now
     start: 1d
     width: 4
     y: 18
     interactions:
-    - name: Details of Intel
+    - name: Details of intel
       useWidgetTimeWindow: true
       dashboardReference:
-        name: Security-CorelightIntel
+        name: Corelight_security_intel
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -834,7 +832,7 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Threat Intel (Intel Indicators)
+    title: Threat intel (intel indicators)
     isLive: false
     type: query
   note-1739430753366-0:
@@ -851,9 +849,9 @@ widgets:
     y: 10
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | destination.ip=*
       | count(destination.ip, as=Count, distinct=true)
     end: now
@@ -863,7 +861,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Unique Destination IPs
+    title: Unique destination IPs
     isLive: false
     type: query
   f4e652f0-1799-492b-9fc8-f553872b3f59:
@@ -871,11 +869,11 @@ widgets:
     y: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | ipLocation(destination.ip, as=GeoInfo)
-      | groupBy([destination.ip, GeoInfo.country],limit=1000000)
+      | groupBy([destination.ip, GeoInfo.country],limit=max)
       | top(GeoInfo.country,percent=true, as=Count)
       | rename([[percent,Percent],[GeoInfo.country,Country]])
       | format(format="%.2f", field=[Percent],as=Percent)
@@ -894,11 +892,10 @@ widgets:
       labelLimit: 48
       orderBy: Count
       maxSeriesCount: 10
-      inputDataFormat: ''
       labelAlign: right
       withYAxisTitle: false
     visualization: bar-chart
-    title: Top VPN destinations by Country
+    title: Top VPN destinations by country
     isLive: false
     type: query
   896d47ad-7cc2-4a48-abad-46e70a7e6e1b:
@@ -906,9 +903,9 @@ widgets:
     y: 13
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.notice"
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=* and Vendor.note != "Intel*"
       | timeChart(function=count(as=Count))
     end: now
@@ -922,7 +919,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Notices (Messages excluding Intel) - Over Time
+    title: Notices (messages excluding intel) - over time
     isLive: false
     type: query
   e3b178ef-374a-4fca-9ba1-fcb4f5ff994a:
@@ -930,9 +927,9 @@ widgets:
     y: 2
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.ssl" or #event.dataset = "ndr.ssl_red"
+      | in(field=observer.hostname, values=[?system_name])
       | if(Vendor.validation_status=="self signed certificate", then="yes", else="no", as=is_self_signed)
       | is_self_signed=yes
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
@@ -949,16 +946,16 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Self Signed Certs - Over Time
+    title: Self signed certs - over time
     isLive: false
     type: query
   eade3882-ec2b-4b45-bfe6-d7aa32dba4e2:
     x: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.notice"
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=* and Vendor.note != "Intel*"
       | count(as=Count)
     end: now
@@ -966,10 +963,10 @@ widgets:
     width: 4
     y: 13
     interactions:
-    - name: Details of Notices
+    - name: Details of notices
       useWidgetTimeWindow: true
       dashboardReference:
-        name: Security-CorelightNotices
+        name: Corelight_security_notices
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -981,7 +978,7 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Notices (Messages excluding Intel)
+    title: Notices (messages excluding intel)
     isLive: false
     type: query
   c5d36309-46a3-4dae-81e9-cbbc80e89d69:
@@ -989,9 +986,9 @@ widgets:
     y: 5
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.alert.signature_id=*
       | rename(field=Vendor.alert.signature_id, as=sid)
       | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[cve_number])
@@ -1004,7 +1001,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Detections With CVEs
+    title: Detections with CVEs
     isLive: false
     type: query
   note-1736241225400-2:
@@ -1020,9 +1017,9 @@ widgets:
     y: 15
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.notice"
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=* and Vendor.note = "ATTACK::*"
       | count(as=Count)
     end: now
@@ -1032,7 +1029,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Attack Count
+    title: Attack count
     isLive: false
     type: query
   cd51db76-df5e-4d6f-80eb-1e94b5067167:
@@ -1040,9 +1037,9 @@ widgets:
     y: 10
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.alert.signature_id=*
       | count(Vendor.alert.signature_id, as=Count, distinct=true)
     end: now
@@ -1052,7 +1049,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Unique Signatures
+    title: Unique signatures
     isLive: false
     type: query
   23fdd839-9ae5-4aa9-a2c8-1d9321fbabe1:
@@ -1060,9 +1057,9 @@ widgets:
     y: 8
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "ssl" or Vendor._path = "ssl_red"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.ssl" or #event.dataset = "ndr.ssl_red"
+      | in(field=observer.hostname, values=[?system_name])
       | is_src_internal_ip:=if(cidr("source.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | if(is_src_internal_ip=="false", then="External", else="Internal", as=src_internal)
       | src_internal="Internal"
@@ -1087,26 +1084,29 @@ widgets:
       maxSeriesCount: 10
       withYAxisTitle: false
     visualization: bar-chart
-    title: Internal TLS Version Profile
+    title: Internal TLS version profile
     isLive: false
     type: query
   452acfe5-8676-4da4-930d-6eda51758dbd:
     x: 0
     height: 2
     queryString: |-
-      defineTable(query={#Vendor=corelight and @event_parsed!=false
-      | in(field="Vendor._path", values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
-      | sid := Vendor.alert.signature_id
-      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
-      | parseInt("impact_score", as=impact_score)
-      | impact_score > 3
-      | groupBy([event.id], function=[], limit=1000000)}, include=[event.id], name="list_of_uids")
+      defineTable(query={
+        #Vendor=corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.suricata_corelight"])
+        | in(field=observer.hostname, values=[?system_name])
+        | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
+        | sid := Vendor.alert.signature_id
+        | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+        | parseInt("impact_score", as=impact_score)
+        | impact_score > 3
+        | groupBy([event.id], function=[], limit=max)
+      }, include=[event.id], name="list_of_uids")
+
       | match(table=list_of_uids, field=[event.id], column=[event.id])
-      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | groupBy([event.id], function=collect([Vendor.alert.signature_id], separator=", "), limit=1000000)
+      | in(field=#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red", "ndr.dns", "ndr.dns_red", "ndr.suricata_corelight", "ndr.smb_mapping", "ndr.smb_files"])
+      | in(field=observer.hostname, values=[?system_name])
+      | groupBy([event.id], function=collect([Vendor.alert.signature_id], separator=", "), limit=max)
       | crypto:sha1([Vendor.alert.signature_id], as=SHA1)
       | regex(field="SHA1", regex="^.(?<did>.{8})")
       | count(did, distinct=true, as=Count)
@@ -1115,10 +1115,10 @@ widgets:
     width: 4
     y: 3
     interactions:
-    - name: Details of Suricata Aggregations
+    - name: Details of Suricata aggregations
       useWidgetTimeWindow: true
       dashboardReference:
-        name: Security-CorelightAlertAggregations
+        name: Corelight_security_alert_aggregations
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -1133,7 +1133,7 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Suricata Aggregations (From Suricata Alerts)
+    title: Suricata aggregations (from Suricata alerts)
     isLive: false
     type: query
   2232c7eb-584d-4c93-87c9-19585a534f83:
@@ -1141,19 +1141,22 @@ widgets:
     y: 3
     height: 2
     queryString: |-
-      defineTable(query={#Vendor=corelight and @event_parsed!=false
-      | in(field="Vendor._path", values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
-      | sid := Vendor.alert.signature_id
-      | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
-      | parseInt("impact_score", as=impact_score)
-      | impact_score > 3
-      | groupBy([event.id], function=[], limit=1000000)}, include=[event.id], name="list_of_uids")
+      defineTable(query={
+        #Vendor=corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.suricata_corelight"])
+        | in(field=observer.hostname, values=[?system_name])
+        | Vendor.suri_id=* and Vendor.alert.signature_id=* and event.id=*
+        | sid := Vendor.alert.signature_id
+        | match(file="corelight_aggregations_enrichment.csv", field=[sid], include=[impact_score])
+        | parseInt("impact_score", as=impact_score)
+        | impact_score > 3
+        | groupBy([event.id], function=[], limit=max)
+      }, include=[event.id], name="list_of_uids")
+
       | match(table=list_of_uids, field=[event.id], column=[event.id])
-      | in(field="Vendor._path", values=[conn, conn_red, conn_long, files, files_red, http, http2, http_red, ssl, ssl_red, dns, dns_red, suricata_corelight, smb_mapping, smb_files])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | groupBy([event.id], function=[collect([Vendor.alert.signature_id], separator=", "), tail(1)], limit=1000000)
+      | in(field=#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red", "ndr.dns", "ndr.dns_red", "ndr.suricata_corelight", "ndr.smb_mapping", "ndr.smb_files"])
+      | in(field=observer.hostname, values=[?system_name])
+      | groupBy([event.id], function=[collect([Vendor.alert.signature_id], separator=", "), tail(1)], limit=max)
       | crypto:sha1([Vendor.alert.signature_id], as=SHA1)
       | regex(field="SHA1", regex="^.(?<did>.{8})")
       | timeChart(function=count(did, distinct=true, as=Count))
@@ -1167,7 +1170,7 @@ widgets:
       plotType: line
       imputation: none
     visualization: time-chart
-    title: Suricata Aggregations (From Suricata Alerts) - Over Time
+    title: Suricata aggregations (from Suricata alerts) - over time
     isLive: false
     type: query
   8869fc52-7741-44b7-984d-0bc65b93bab7:
@@ -1175,10 +1178,10 @@ widgets:
     y: 2
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="dns.response_code", values=["NXDOMAIN", "NOERROR"])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=dns.response_code, values=["NXDOMAIN", "NOERROR"])
       | count(as=Total)
     end: now
     start: 1d
@@ -1188,7 +1191,7 @@ widgets:
       trend-value: pct
       value-format: abbreviated
     visualization: single-value
-    title: NXDOMAIN Responses
+    title: NXDOMAIN responses
     isLive: false
     type: query
   6d3049d9-b7f0-40ca-8007-ccc4f28260ce:
@@ -1196,9 +1199,9 @@ widgets:
     y: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | is_dest_internal_ip:=if(cidr("destination.ip", subnet=["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]), then="true", else="false")
       | is_dest_internal_ip="false"
       | timeChart(function=count(as=Count))
@@ -1220,7 +1223,7 @@ widgets:
       showOthers: false
       lastBucketBehavior: include
     visualization: time-chart
-    title: Outbound VPN Connections
+    title: Outbound VPN connections
     isLive: false
     type: query
   161b5c5f-a3fb-473c-98dd-6197bb07d9b9:
@@ -1228,9 +1231,9 @@ widgets:
     y: 15
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.notice"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.note = "MeterpreterDetection::Meterpreter_Detected"
       | count(as=Count)
     end: now
@@ -1240,7 +1243,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Meterpreter Count
+    title: Meterpreter count
     isLive: false
     type: query
   fcfc50f2-499e-4c43-83bc-b2ac4153a225:
@@ -1248,9 +1251,9 @@ widgets:
     y: 15
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.notice"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.note = *
       | count(Vendor.note, distinct=true, as=Count)
     end: now
@@ -1260,7 +1263,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Unique Note Count
+    title: Unique note count
     isLive: false
     type: query
   0f1774d2-22ea-4bbc-a777-132df8b81399:
@@ -1268,9 +1271,9 @@ widgets:
     y: 5
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.alert.signature_id=*
       | rename(field=Vendor.alert.signature_id, as=sid)
       | match(file="corelight_aggregations_enrichment.csv", field=sid, include=[impact_score])
@@ -1283,7 +1286,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Highest Score
+    title: Highest score
     isLive: false
     type: query
   49a96fd1-03a5-4806-b2cc-76b0525cf435:
@@ -1291,9 +1294,9 @@ widgets:
     y: 10
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = suricata_corelight
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.suricata_corelight"
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=*
       | count(source.ip, as=Count, distinct=true)
     end: now
@@ -1303,36 +1306,35 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Unique Source IPs
+    title: Unique source IPs
     isLive: false
     type: query
   b0bc7e1d-4280-4b23-b4bc-9060ea8b9bf2:
     x: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = "etc_viz"
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.etc_viz"
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=Vendor.viz_stat, values=["C", "Cc", "C!", "cc"])
       | count(as="Total Count")
     end: now
     start: 1d
     width: 2
     y: 0
     interactions:
-    - name: Details of Unencrypted Connections
+    - name: Details of unencrypted connections
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = "etc_viz"
-        | in(field="Vendor._system_name", values=[?system_name])
-        | in(field="Vendor.viz_stat", values=["C", "Cc", "C!", "cc"])
-        | groupBy([destination.port, destination.address], limit=1000000)
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = "ndr.etc_viz"
+        | in(field=observer.hostname, values=[?system_name])
+        | in(field=Vendor.viz_stat, values=["C", "Cc", "C!", "cc"])
+        | groupBy([destination.port, destination.address], limit=max)
         | default(value="unknown", field=[destination.address, destination.port])
         | default(value="0", field=[_count])
         | rename([[destination.address, "Destination Host"], [destination.port, Port], [_count, Count]])
         | select(["Destination Host", Port, Count])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -1347,29 +1349,29 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Unencrypted Connections
+    title: Unencrypted connections
     isLive: false
     type: query
   bafbb309-32a6-4cc5-9723-d4ac9e659442:
     x: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=[dns, dns_red])
-      | in(field="Vendor._system_name", values=[?system_name])
-      | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+      | in(field=observer.hostname, values=[?system_name])
+      | in(field=dns.response_code, values=["SERVFAIL", "REFUSED", "FORMERR", "NOTIMP", "NOTAUTH"])
       | count(as=Count)
     end: now
     start: 1d
     width: 2
     y: 0
     interactions:
-    - name: Details of Failed DNS Queries
+    - name: Details of failed DNS queries
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._path", values=[dns, dns_red])
-        | in(field="Vendor._system_name", values=[?system_name])
-        | in(field="dns.response_code", values=[SERVFAIL, REFUSED, FORMERR, NOTIMP, NOTAUTH])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.dns", "ndr.dns_red"])
+        | in(field=observer.hostname, values=[?system_name])
+        | in(field=dns.response_code, values=["SERVFAIL", "REFUSED", "FORMERR", "NOTIMP", "NOTAUTH"])
       useWidgetTimeWindow: true
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
@@ -1383,7 +1385,7 @@ widgets:
       default: {}
       sparkline-type: line
     visualization: single-value
-    title: Failed DNS Queries
+    title: Failed DNS queries
     isLive: false
     type: query
   278c20a9-b9d3-489a-8437-e07eeed455ee:
@@ -1391,9 +1393,9 @@ widgets:
     y: 18
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = intel
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = "ndr.intel"
+      | in(field=observer.hostname, values=[?system_name])
       | Vendor.seen.indicator=*
       | count(Vendor.seen.indicator, distinct=true, as=Count)
     end: now
@@ -1403,20 +1405,20 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Unique Indicators
+    title: Unique indicators
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module = ndr
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 50
-    valueField: Vendor._system_name
+    valueField: observer.hostname

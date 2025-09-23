@@ -3,6 +3,291 @@ fieldsToBeRemovedBeforeParsing: []
 testCases:
 - assertions:
   - fieldsHaveValues:
+      Vendor.AA: 'false'
+      Vendor.answers[2]: 100.100.100.101
+      event.id: CBXYzu22zhEPIAAh6g
+      network.protocol: dns
+      Vendor._system_name: server001
+      Vendor.rtt: '0.00008487701416015625'
+      Vendor.rcode: '0'
+      Vendor.Z: '0'
+      client.port: '57390'
+      Vendor.answers[0]: general.lab.example.com
+      Vendor.ts: '2025-08-27T13:42:41.353595Z'
+      Vendor.query: general1.example.com
+      Vendor.id.orig_p: '57390'
+      network.community_id: 1:5+Xn4OHAjs5yO99Tckriltyirwo=
+      Vendor._path: dns
+      event.type[0]: connection
+      Vendor.rcode_name: NOERROR
+      observer.hostname: server001
+      dns.question.type: A
+      Vendor.TTLs[0]: '35.0'
+      Vendor.trans_id: '12492'
+      dns.answers[0].data: general.lab.example.com
+      source.port: '57390'
+      '#event.kind': event
+      Vendor.answers[3]: 100.100.100.102
+      dns.answers[1].ttl: '35.0'
+      Vendor.answers[1]: 100.100.100.100
+      Vendor.id.orig_h: 10.0.1.100
+      network.transport: udp
+      Vendor.id.resp_p: '53'
+      event.category[0]: network
+      dns.answers[3].data: 100.100.100.102
+      Vendor.TTLs[1]: '35.0'
+      '#event.dataset': ndr.dns
+      Vendor.id.resp_h: 10.0.1.1
+      Vendor.is_trusted_domain: 'false'
+      event.type[1]: protocol
+      dns.answers[1].data: 100.100.100.100
+      Vendor._write_ts: '2025-08-27T13:42:41.353680Z'
+      '#event.module': ndr
+      Vendor.qclass: '1'
+      server.port: '53'
+      destination.port: '53'
+      source.ip: 10.0.1.100
+      dns.answers[2].ttl: '35.0'
+      Vendor.uid: CBXYzu22zhEPIAAh6g
+      Vendor.TTLs[3]: '35.0'
+      dns.question.name: general1.example.com
+      dns.answers[0].ttl: '35.0'
+      Vendor.rejected: 'false'
+      Vendor.TTLs[2]: '35.0'
+      dns.answers[2].data: 100.100.100.101
+      Vendor.icann_tld: com
+      Vendor.qtype: '1'
+      Vendor.proto: udp
+      dns.answers[3].ttl: '35.0'
+      Vendor.RA: 'true'
+      dns.response_code: NOERROR
+      Vendor.icann_domain: example.com
+      server.ip: 10.0.1.1
+      Vendor.qtype_name: A
+      Vendor.TC: 'false'
+      Vendor.icann_host_subdomain: general1
+      Vendor.qclass_name: C_INTERNET
+      Vendor.RD: 'true'
+      client.ip: 10.0.1.100
+      destination.ip: 10.0.1.1
+    outputEventIndex: 0
+  event:
+    rawString: '{"_path":"dns","_system_name":"server001","_write_ts":"2025-08-27T13:42:41.353680Z","ts":"2025-08-27T13:42:41.353595Z","uid":"CBXYzu22zhEPIAAh6g","id.orig_h":"10.0.1.100","id.orig_p":57390,"id.resp_h":"10.0.1.1","id.resp_p":53,"proto":"udp","trans_id":12492,"rtt":0.00008487701416015625,"query":"general1.example.com","qclass":1,"qclass_name":"C_INTERNET","qtype":1,"qtype_name":"A","rcode":0,"rcode_name":"NOERROR","AA":false,"TC":false,"RD":true,"RA":true,"Z":0,"answers":["general.lab.example.com","100.100.100.100","100.100.100.101","100.100.100.102"],"TTLs":[35.0,35.0,35.0,35.0],"rejected":false,"is_trusted_domain":"false","icann_host_subdomain":"general1","icann_domain":"example.com","icann_tld":"com"}'
+- assertions:
+  - fieldsHaveValues:
+      Vendor.AA: 'false'
+      Vendor.answers[2]: 100.100.100.102
+      event.id: CBXYzu22zhEPIAAh6g
+      network.protocol: dns
+      Vendor._system_name: server001
+      '#event.kind': event
+      Vendor.rtt: '0.049623966217041016'
+      Vendor.TTLs[1]: '60.0'
+      Vendor.rcode: '0'
+      Vendor.Z: '0'
+      client.port: '34520'
+      Vendor.answers[0]: 100.100.100.100
+      Vendor.ts: '2025-08-27T13:42:41.309046Z'
+      Vendor.query: p-digital.example.com
+      Vendor.id.orig_p: '34520'
+      network.community_id: 1:WwYgKMN6ACjJISmkLGplR23SL7o=
+      Vendor._path: dns
+      event.type[0]: connection
+      Vendor.rcode_name: NOERROR
+      observer.hostname: server001
+      dns.question.type: A
+      Vendor.TTLs[0]: '60.0'
+      Vendor.trans_id: '49253'
+      dns.answers[0].data: 100.100.100.100
+      source.port: '34520'
+      dns.answers[1].ttl: '60.0'
+      Vendor.answers[1]: 100.100.100.10
+      Vendor.id.orig_h: 10.0.1.100
+      network.transport: udp
+      Vendor.id.resp_p: '53'
+      event.category[0]: network
+      '#event.dataset': ndr.dns
+      Vendor.id.resp_h: 10.0.1.51
+      Vendor.is_trusted_domain: 'false'
+      event.type[1]: protocol
+      dns.answers[1].data: 100.100.100.10
+      Vendor._write_ts: '2025-08-27T13:42:41.358670Z'
+      '#event.module': ndr
+      Vendor.qclass: '1'
+      server.port: '53'
+      destination.port: '53'
+      source.ip: 10.0.1.100
+      dns.answers[2].ttl: '60.0'
+      Vendor.uid: CBXYzu22zhEPIAAh6g
+      dns.question.name: p-digital.example.com
+      dns.answers[0].ttl: '60.0'
+      Vendor.rejected: 'false'
+      Vendor.TTLs[2]: '60.0'
+      dns.answers[2].data: 100.100.100.102
+      Vendor.icann_tld: com
+      Vendor.qtype: '1'
+      Vendor.proto: udp
+      Vendor.RA: 'true'
+      dns.response_code: NOERROR
+      Vendor.icann_domain: example.com
+      server.ip: 10.0.1.51
+      Vendor.qtype_name: A
+      Vendor.TC: 'false'
+      Vendor.icann_host_subdomain: digital
+      Vendor.qclass_name: C_INTERNET
+      Vendor.RD: 'true'
+      client.ip: 10.0.1.100
+      destination.ip: 10.0.1.51
+    outputEventIndex: 0
+  event:
+    rawString: '{"_path":"dns","_system_name":"server001","_write_ts":"2025-08-27T13:42:41.358670Z","ts":"2025-08-27T13:42:41.309046Z","uid":"CBXYzu22zhEPIAAh6g","id.orig_h":"10.0.1.100","id.orig_p":34520,"id.resp_h":"10.0.1.51","id.resp_p":53,"proto":"udp","trans_id":49253,"rtt":0.049623966217041016,"query":"p-digital.example.com","qclass":1,"qclass_name":"C_INTERNET","qtype":1,"qtype_name":"A","rcode":0,"rcode_name":"NOERROR","AA":false,"TC":false,"RD":true,"RA":true,"Z":0,"answers":["100.100.100.100","100.100.100.10","100.100.100.102"],"TTLs":[60.0,60.0,60.0],"rejected":false,"is_trusted_domain":"false","icann_host_subdomain":"digital","icann_domain":"example.com","icann_tld":"com"}'
+- assertions:
+  - fieldsHaveValues:
+      Vendor.AA: 'true'
+      event.id: CBXYzu22zhEPIAAh6g
+      network.protocol: dns
+      Vendor._system_name: server001
+      '#event.kind': event
+      Vendor.TTLs[1]: '300.0'
+      Vendor.rcode: '0'
+      Vendor.TC: 'false'
+      Vendor.RD: 'false'
+      Vendor.Z: '0'
+      client.port: '39658'
+      Vendor.answers[0]: TXT 137 example-law.com. IN TXT "v=spf1 mx a ip4:100.100.100.100/19
+        a:100.100.100.100/24 a:100.100.100.100/25 a:192.168.1.0/24 a:192.168.2.0/24
+        ?all"
+      Vendor.ts: '2025-08-27T12:05:58.740911Z'
+      Vendor.query: example-law.com
+      Vendor.id.orig_p: '39658'
+      network.community_id: 1:tmEKTFOt3LxaT+tBvZ5oW9v7TfM=
+      Vendor._path: dns
+      event.type[0]: connection
+      Vendor.rcode_name: NOERROR
+      observer.hostname: server001
+      Vendor.TTLs[0]: '300.0'
+      Vendor.trans_id: '46787'
+      dns.answers[0].data: TXT 137 example-law.com. IN TXT "v=spf1 mx a ip4:100.100.100.100/19
+        a:100.100.100.100/24 a:100.100.100.100/25 a:192.168.1.0/24 a:192.168.2.0/24
+        ?all"
+      source.port: '39658'
+      dns.answers[1].ttl: '300.0'
+      Vendor.answers[1]: TXT 148 v=spf1 include:_netblocks.example.com ip4:100.100.100.100/32
+        ip4:100.100.100.100/19 include:spf-us.example.com include:spf.protection.outlook.com
+        -all
+      Vendor.id.orig_h: 203.0.113.1
+      network.transport: udp
+      Vendor.id.resp_p: '53'
+      event.category[0]: network
+      '#event.dataset': ndr.dns
+      Vendor.id.resp_h: 198.51.100.1
+      Vendor.is_trusted_domain: 'false'
+      event.type[1]: protocol
+      dns.answers[1].data: TXT 148 v=spf1 include:_netblocks.example.com ip4:100.100.100.100/32
+        ip4:100.100.100.100/19 include:spf-us.example.com include:spf.protection.outlook.com
+        -all
+      Vendor._write_ts: '2025-08-27T12:06:08.741628Z'
+      '#event.module': ndr
+      server.port: '53'
+      destination.port: '53'
+      source.ip: 203.0.113.1
+      Vendor.uid: CBXYzu22zhEPIAAh6g
+      dns.question.name: example-law.com
+      dns.answers[0].ttl: '300.0'
+      Vendor.rejected: 'false'
+      Vendor.icann_tld: com
+      Vendor.proto: udp
+      Vendor.RA: 'false'
+      dns.response_code: NOERROR
+      Vendor.icann_domain: example.com
+      server.ip: 198.51.100.1
+      client.ip: 203.0.113.1
+      destination.ip: 198.51.100.1
+    outputEventIndex: 0
+  event:
+    rawString: '{"_path":"dns","_system_name":"server001","_write_ts":"2025-08-27T12:06:08.741628Z","ts":"2025-08-27T12:05:58.740911Z","uid":"CBXYzu22zhEPIAAh6g","id.orig_h":"203.0.113.1","id.orig_p":39658,"id.resp_h":"198.51.100.1","id.resp_p":53,"proto":"udp","trans_id":46787,"query":"example-law.com","rcode":0,"rcode_name":"NOERROR","AA":true,"TC":false,"RD":false,"RA":false,"Z":0,"answers":["TXT
+      137 example-law.com. IN TXT \"v=spf1 mx a ip4:100.100.100.100/19 a:100.100.100.100/24
+      a:100.100.100.100/25 a:192.168.1.0/24 a:192.168.2.0/24 ?all\"","TXT 148 v=spf1
+      include:_netblocks.example.com ip4:100.100.100.100/32 ip4:100.100.100.100/19
+      include:spf-us.example.com include:spf.protection.outlook.com -all"],"TTLs":[300.0,300.0],"rejected":false,"is_trusted_domain":"false","icann_host_subdomain":"","icann_domain":"example.com","icann_tld":"com"}'
+- assertions:
+  - fieldsHaveValues:
+      client.port: '57670'
+      event.id: cnXAAi42YJEpgvNgag
+      network.protocol: ssh
+      source.port: '57670'
+      '#event.kind': event
+      event.category[0]: network
+      source.ip: 172.1.1.1
+      server.ip: 172.2.2.2
+      event.type[0]: connection
+      observer.hostname: example-9000
+      '#event.dataset': ndr.ssh
+      event.type[1]: protocol
+      '#event.module': ndr
+      server.port: '22'
+      destination.port: '22'
+      client.ip: 172.1.1.1
+      destination.ip: 172.2.2.2
+    outputEventIndex: 0
+  event:
+    rawString: '{"_path":"ssh","_system_name":"example-9000","_write_ts":"2025-08-07T19:06:28.845869Z","ts":"2025-08-07T19:06:17.368388Z","uid":"cnXAAi42YJEpgvNgag","id.orig_h":"172.1.1.1","id.orig_p":57670,"id.resp_h":"172.2.2.2","id.resp_p":22,"auth_attempts":0,"client":"\\x00\\x00\\x00<\t\\x00\\xa45b\\x00\\x00\\x00\\x00\\x00\t2O\\x00;\\x00\\x00\\x00\\x01hcurve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,ext-info-c,kex-strict-c-v00@openssh.com\\x00\\x00\\x01necdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512,rsa-sha2-256,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-rsa,ssh-rsa-cert-v01@openssh.com,ssh-dss\\x00\\x00\\x00\\xdeaes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr,chacha20-poly1305@openssh.com,aes256-cbc,rijndael-cbc@lysator.liu.se,aes192-cbc,aes128-cbc,blowfish-cbc,arcfour128,arcfour,cast128-cbc,3des-cbc\\x00\\x00\\x00\\xdeaes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr,chacha20-poly1305@openssh.com,aes256-cbc,rijndael-cbc@lysator.liu.se,aes192-cbc,aes128-cbc,blowfish-cbc,arcfour128,arcfour,cast128-cbc,3des-cbc\\x00\\x00\\x00\\xadhmac-sha2-512,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-256-etm@openssh.com,hmac-md5,hmac-md5-96,hmac-sha1,hmac-sha1-96,hmac-ripemd160,hmac-ripemd160@openssh.com\\x00\\x00\\x00\\xadhmac-sha2-512,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-256-etm@openssh.com,hmac-md5,hmac-md5-96,hmac-sha1,hmac-sha1-96,hmac-ripemd160,hmac-ripemd160@openssh.com\\x00\\x00\\x00\\x04none\\x00\\x00\\x00\\x04none\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x9cI\t\\x001\\x0fy\\x00\\x00\\x00,\\x00\\x1e\\x00\\x00\\x00
+      \\xcd\t+\\x000\\xdek\\x00\\xc8E0\\x00,\\x00\\x00\\x18h\\xeb\\x00\\x00\\x00\\x00","server":"SSH-2.0-OpenSSH_8.0","inferences":["SV"]}'
+- assertions:
+  - fieldsHaveValues:
+      client.port: '55485'
+      event.id: cnXAAi42YJEpgvNgag
+      source.port: '55485'
+      '#event.kind': event
+      event.category[0]: network
+      server.ip: 100.100.100.100
+      destination.address: example-9000
+      Vendor.ts: '2025-08-08T11:38:55.074280Z'
+      server.address: example-9000
+      event.type[0]: connection
+      observer.hostname: example-9000
+      '#event.dataset': ndr.smtp
+      event.type[1]: protocol
+      '#event.module': ndr
+      server.port: '25'
+      destination.port: '25'
+      source.ip: 172.1.1.1
+      Vendor.uid: cnXAAi42YJEpgvNgag
+      client.ip: 172.1.1.1
+      destination.ip: 100.100.100.100
+    outputEventIndex: 0
+  event:
+    rawString: '{"_path":"smtp","_system_name":"example-9000","_write_ts":"2025-08-08T11:39:01.771953Z","ts":"2025-08-08T11:38:55.074280Z","uid":"cnXAAi42YJEpgvNgag","id.orig_h":"172.1.1.1","id.orig_p":55485,"id.resp_h":"100.100.100.100","id.resp_p":25,"trans_depth":1,"helo":"example-9000","last_reply":"220
+      Starting TLS [86Off2AHP8u-PZKaaqB9Q.us33]","path":["100.100.100.100","172.1.1.1"],"tls":true,"fuids":[],"is_webmail":false}'
+- assertions:
+  - fieldsHaveValues:
+      client.port: '12219'
+      network.community_id: 1:QmjkPkFuCFaYKi/lqZfDkypdnJY=
+      event.id: CV22xq2f9UEEur4LLc
+      network.protocol: dns
+      source.port: '12219'
+      '#event.kind': event
+      network.transport: udp
+      event.category[0]: network
+      dns.response_code: SERVFAIL
+      server.ip: 172.2.2.2
+      event.type[0]: connection
+      observer.hostname: example-9000
+      dns.question.type: AAAA
+      '#event.dataset': ndr.dns
+      event.type[1]: protocol
+      '#event.module': ndr
+      server.port: '53'
+      destination.port: '53'
+      source.ip: 172.1.1.1
+      dns.question.name: example-9000-node-1
+      client.ip: 172.1.1.1
+      destination.ip: 172.2.2.2
+    outputEventIndex: 0
+  event:
+    rawString: '{"_path":"dns","_system_name":"example-9000","_write_ts":"2025-08-08T12:38:16.871695Z","ts":"2025-08-08T12:38:16.871368Z","uid":"CV22xq2f9UEEur4LLc","id.orig_h":"172.1.1.1","id.orig_p":12219,"id.resp_h":"172.2.2.2","id.resp_p":53,"proto":"udp","trans_id":23709,"query":"example-9000-node-1","qclass":1,"qclass_name":"C_INTERNET","qtype":28,"qtype_name":"AAAA","rcode":2,"rcode_name":"SERVFAIL","AA":false,"TC":false,"RD":true,"RA":false,"Z":0,"rejected":true,"is_trusted_domain":"true","icann_host_subdomain":"","icann_domain":"local","icann_tld":"local"}'
+- assertions:
+  - fieldsHaveValues:
       client.port: '64910'
       rule.name: intel
       event.id: CNh51N3dSRfMZG1Pt4
@@ -373,9 +658,9 @@ testCases:
   - fieldsHaveValues:
       client.port: '55726'
       event.id: Cmkj3t2oHJitbHPwq
+      network.protocol: ssh
       source.port: '55726'
       '#event.kind': event
-      network.transport: ssh
       event.category[0]: network
       source.ip: 127.0.0.1
       server.ip: 127.0.0.1
@@ -414,19 +699,17 @@ testCases:
     rawString: '{"_path":"bacnet_property","_system_name":"Lab-AP200","_write_ts":"2025-04-17T17:19:02.883084Z","ts":"2025-04-17T17:19:02.883084Z","uid":"CWb9ay4A2tI0bcs5c5","id.orig_h":"127.0.0.1","id.orig_p":33888,"id.resp_h":"127.0.0.1","id.resp_p":47807,"is_orig":true,"invoke_id":1,"pdu_service":"read-property-request","object_type":"device","instance_number":4194303,"property":"object-identifier"}'
 - assertions:
   - fieldsHaveValues:
+      client.port: '15555'
       event.id: Cj6w1N31fV2uvjdjJ1
       network.protocol: krbtgt/NM
       source.port: '15555'
       event.category[1]: authentication
       '#event.kind': event
+      event.category[0]: network
       source.ip: 127.0.0.1
       server.ip: 127.0.0.1
-      user.domain: NM
-      client.port: '15555'
       event.type[0]: connection
       observer.hostname: Lab-AP200
-      source.user.name: ''
-      event.category[0]: network
       '#event.dataset': ndr.kerberos
       event.type[1]: info
       server.port: '88'
@@ -898,10 +1181,10 @@ testCases:
       client.port: '51154'
       event.type[2]: info
       event.id: COYytu4xB5XqMAtOJk
+      network.protocol: smb
       source.port: '51154'
       event.category[1]: file
       '#event.kind': event
-      network.transport: smb
       event.category[0]: network
       source.ip: 127.0.0.1
       event.action: SMB::FILE_OPEN
@@ -1796,11 +2079,9 @@ testCases:
       event.type[2]: access
       network.vlan.id: '1'
       event.id: CPHP1L3nKik4PfQkLi
-      http.response.mime_type: text/json
       source.port: '52431'
       event.category[1]: web
       '#event.kind': event
-      network.transport: http
       event.category[0]: network
       source.ip: 127.0.0.1
       user_agent.original: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
@@ -1809,6 +2090,8 @@ testCases:
       client.port: '52431'
       event.type[0]: connection
       observer.hostname: Lab-AP200
+      network.protocol: http
+      http.response.mime_type: text/json
       '#event.dataset': ndr.http
       event.type[1]: protocol
       server.port: '65535'
@@ -1827,9 +2110,9 @@ testCases:
   - fieldsHaveValues:
       client.port: '52185'
       event.id: CIy4yz33i5xIPTrTCl
+      network.protocol: ssl
       source.port: '52185'
       '#event.kind': event
-      network.transport: ssl
       event.category[0]: network
       tls.client.ja3: e2b3f11e24dd58143ea31083d73ebd13
       source.ip: 127.0.0.1
@@ -1852,8 +2135,10 @@ testCases:
   - fieldsHaveValues:
       network.vlan.id: '12'
       event.id: CBmfLz2oqRgbUUMyhk
+      network.protocol: dns
       dns.question.type: A
       '#event.kind': event
+      dns.answers[1].ttl: '46.0'
       event.category[0]: network
       dns.answers[2].data: 127.0.0.1
       dns.response_code: NOERROR
@@ -1864,8 +2149,6 @@ testCases:
       observer.hostname: Lab-AP200
       dns.answers[0].data: 127.0.0.1
       source.port: '55503'
-      dns.answers[1].ttl: '46.0'
-      network.transport: dns
       '#event.dataset': ndr.dns
       event.type[1]: protocol
       dns.answers[1].data: 127.0.0.1
@@ -1941,12 +2224,12 @@ script: |-
   /************************************************************
   ****** Static Metadata Definitions
   ************************************************************/
-  | Parser.version := "2.0.0"
-  | Cps.version := "1.0.0"
+  | Parser.version := "3.0.1"
+  | Cps.version := "1.1.0"
   | Vendor := "corelight"
   // Corelight Sensor is part of the Corelight's OpenNDR
   | event.module := "ndr"
-  | ecs.version := "8.17.0"
+  | ecs.version := "9.0.0"
   | event.kind := "event"
 
   // #endregion
@@ -1958,8 +2241,7 @@ script: |-
   ************************************************************/
 
   // Event Fields
-  | event.action := Vendor.operation
-  | event.action := Vendor.action
+  | event.action := coalesce([Vendor.operation,Vendor.action])
   | error.message := Vendor.failure_reason
   | event.dataset := format(format="%s.%s", field=["event.module","_path"])
   | event.reason := Vendor.msg
@@ -2151,35 +2433,43 @@ script: |-
           }
       ;
       "dns" =>
-          // dns data
-          _tmp := concatArray("Vendor.answers", separator="\"},{\"data\":\"")
-          | _tmp := format(format="{\"dns.answers\":[{\"data\":\"%s\"}]}", field=[_tmp])
-          | parseJson(_tmp)
-          // dns ttl
-          | _tmp := concatArray("Vendor.TTLs", separator="\"},{\"ttl\":\"")
-          | _tmp := format(format="{\"dns.answers\":[{\"ttl\":\"%s\"}]}", field=[_tmp])
-          | parseJson(_tmp)
-          | drop([_tmp])
+          case {
+              // Pull out the answer data if there was no error
+              Vendor.rcode_name="NOERROR"
+                  // dns data - SPF Records have quotes and slashes in them that need to be escaped before processing
+                  | objectArray:eval(array="Vendor.answers[]", asArray="__tmp_dns_answers[]", var="x", function={__tmp_dns_answers := replace(field=x, regex="\\\\", with="\\\\\\\\")})
+                  | objectArray:eval(array="__tmp_dns_answers[]", asArray="__tmp_dns_answers2[]", var="x", function={__tmp_dns_answers2 := replace(field=x, regex="\"", with="\\\\\"")})
+
+                  | concatArray(field="__tmp_dns_answers2", as="__tmp_dns_answers", separator="\"},{\"data\":\"")
+                  | format(format="{\"dns.answers\":[{\"data\":\"%s\"}]}", field=[__tmp_dns_answers], as="__tmp_dns_answers")
+                  | parseJson(field=__tmp_dns_answers)
+                  | array:drop("__tmp_dns_answers[]")
+                  | array:drop("__tmp_dns_answers2[]")
+                  // dns ttl
+                  | _tmp_dns_ttl := concatArray("Vendor.TTLs", separator="\"},{\"ttl\":\"")
+                  | _tmp_dns_ttl := format(format="{\"dns.answers\":[{\"ttl\":\"%s\"}]}", field=[_tmp_dns_ttl])
+                  | parseJson(_tmp_dns_ttl)
+                  | drop([__tmp_dns_answers, _tmp_dns_ttl]);
+              *;
+          }
       ;
       "smtp" =>
-          Vendor.rcptto[0] = *
-          | objectArray:eval(array="Vendor.rcptto[]", asArray="_tmp_eta[]", var="x", function={_tmp_eta := lower(x)})
-          | concatArray(field="_tmp_eta", separator=";", as="_tmp_eta")
-          | splitString(field="_tmp_eta", by=";", as=email.to.address)
-          | drop([_tmp_eta])
-          | array:drop("_tmp_eta[]")
-      ;
+          // This should allow helo messages to pass through
+          case {
+              Vendor.rcptto[0] = *
+                  | objectArray:eval(array="Vendor.rcptto[]", asArray="_tmp_eta[]", var="x", function={_tmp_eta := lower(x)})
+                  | concatArray(field="_tmp_eta", separator=";", as="_tmp_eta")
+                  | splitString(field="_tmp_eta", by=";", as=email.to.address)
+                  | drop([_tmp_eta])
+                  | array:drop("_tmp_eta[]");
+              *;
+          };
+
       * => *;
   }
 
   // User Fields
-  | user.name := Vendor.user
-  | user.name := Vendor.username
-  | user.name := Vendor.cookie
-  | case {
-      Vendor.client = * | Vendor.client = /(?!SSH)(?<source.user.name>.*?)\/(?<user.domain>.*)/;
-      *;
-  }
+  | user.name := coalesce([Vendor.user, Vendor.username, Vendor.cookie])
   | case {
       in(field="user.name", values=["","<problem-decoding>*","<unknown>"]) | drop([user.name]);
       user.name = /(?<user.domain>.*?)\\(?<user.name>.*)/;
@@ -2191,19 +2481,11 @@ script: |-
   // Source Fields
   | source.bytes := coalesce([Vendor.orig_bytes, Vendor.orig_ip_bytes])
   | source.domain := lower(Vendor.domainname)
-  | source.ip := Vendor.id.orig_h
-  | source.ip := Vendor.client_src
-  | source.ip := Vendor.src
-  | source.ip := Vendor.dns_client
-  | source.ip := Vendor.client_addr
-  | source.ip := Vendor.data_channel.orig_h
-  | source.mac := Vendor.orig_l2_addr
-  | source.mac := Vendor.mac
-  | source.mac := Vendor.mac_src
+  | source.ip := coalesce([Vendor.id.orig_h, Vendor.client_src, Vendor.src, Vendor.dns_client, Vendor.client_addr, Vendor.data_channel.orig_h])
+  | source.mac := coalesce([Vendor.orig_l2_addr, Vendor.mac, Vendor.mac_src])
   | source.mac := replace(":", with="-", field="source.mac")
   | source.mac := upper(source.mac)
-  | source.port := Vendor.host_p
-  | source.port := Vendor.id.orig_p
+  | source.port := coalesce([Vendor.host_p, Vendor.id.orig_p])
   | source.packets := Vendor.orig_pkts
 
   | case {
@@ -2230,19 +2512,12 @@ script: |-
   | client.port := source.port
 
   // Destination Fields
-  | destination.address := lower(Vendor.server_nb_computer_name)
-  | destination.address := lower(Vendor.helo)
-  | destination.address := lower(Vendor.server_a)
-  | destination.address := lower(Vendor.server_name)
+  | destination.address := coalesce([lower(Vendor.server_nb_computer_name), lower(Vendor.helo), lower(Vendor.server_a), lower(Vendor.server_name)])
   | destination.bytes := coalesce([Vendor.resp_bytes, Vendor.resp_ip_bytes])
   | destination.domain := lower(Vendor.server_tree_name)
-  | destination.ip := Vendor.resolver
-  | destination.ip := Vendor.resp_h
-  | destination.ip := Vendor.id.resp_h
-  | destination.port := Vendor.server_p
-  | destination.port := Vendor.id.resp_p
-  | destination.mac := Vendor.resp_l2_addr
-  | destination.mac := Vendor.mac_dst
+  | destination.ip := coalesce([Vendor.resolver, Vendor.resp_h, Vendor.id.resp_h])
+  | destination.port := coalesce([Vendor.server_p, Vendor.id.resp_p])
+  | destination.mac := coalesce([Vendor.resp_l2_addr, Vendor.mac_dst])
   | destination.mac := replace(":", with="-", field="destination.mac")
   | destination.mac := upper(destination.mac)
   | destination.packets := Vendor.resp_pkts
@@ -2293,8 +2568,7 @@ script: |-
   | network.transport := Vendor.proto
   | network.inner.vlan.id := Vendor.inner_vlan
   | network.bytes := source.bytes + destination.bytes
-  | network.protocol := Vendor.source
-  | network.protocol := Vendor.service
+  | network.protocol := coalesce([Vendor.source, Vendor.service])
   | network.application := lower(Vendor.app[0])
   | case{
       Vendor.local_orig=true AND Vendor.local_resp=true | network.direction := "internal";
@@ -2306,17 +2580,17 @@ script: |-
 
   | _path match {
       "ssl" =>
-          network.transport := "ssl";
+          network.protocol := "ssl";
       "ssh" =>
-          network.transport := "ssh";
+          network.protocol := "ssh";
       "smb_files" =>
-          network.transport := "smb";
+          network.protocol := "smb";
       "dns" =>
-          network.transport := "dns";
+          network.protocol := "dns";
       "http" =>
-          network.transport := "http";
+          network.protocol := "http";
       "rdp" =>
-          network.transport := "rdp";
+          network.protocol := "rdp";
       * => *;
   }
 
@@ -2328,8 +2602,7 @@ script: |-
   | case { network.community_id = "" | drop([network.community_id]); *; }
 
   // VLAN Fields
-  | network.vlan.id := Vendor.id.vlan
-  | network.vlan.id := Vendor.vlan
+  | network.vlan.id := coalesce([Vendor.id.vlan, Vendor.vlan])
 
   // File Fields
   | file.size := Vendor.total_bytes

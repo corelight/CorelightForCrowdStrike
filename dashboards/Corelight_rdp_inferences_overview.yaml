@@ -1,4 +1,4 @@
-name: Security-CorelightRDPInferencesOverview
+name: Corelight rdp inferences overview
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -7,18 +7,19 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Security Workflow
 widgets:
   5843cb6c-a01e-45a1-800f-46016a22432f:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
-      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, function=tail(limit=20000), limit=1000000)], var="x")
+      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, function=tail(limit=max), limit=max)], var="x")
+      | timechart(span=auto, series=x, function=count())
       | rename([[x, Inferences]])
-      | timechart(span=auto, series=Inferences, function=count())
     end: now
     start: 1d
     width: 6
@@ -27,13 +28,12 @@ widgets:
     - name: Details of Inferences Over Time
       titleTemplate: Details of {{ fields.Inferences }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.rdp
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter
         | array:contains("Vendor.inferences[]", value=?inference)
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         inference: '["{{ fields.Inferences }}"]'
@@ -63,18 +63,18 @@ widgets:
       yAxisTitle: ''
       stacking: normal
     visualization: time-chart
-    title: Inferences Over Time
+    title: Inferences over time
     isLive: false
     type: query
   03ea5154-bcac-49a1-bf73-928902071f42:
     x: 4
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
-      | Vendor.auth_success != true
+      | event.outcome != /success/i
       | count()
     end: now
     start: 1d
@@ -82,15 +82,14 @@ widgets:
     y: 5
     interactions:
     - name: Details of Failed Connections
-      titleTemplate: Details of Failed Connections
+      titleTemplate: Details of failed connections
       queryString: |
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.rdp
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter
-        | Vendor.auth_success != true
+        | event.outcome != /success/i
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         system_name: '["{{ parameters.system_name }}"]'
@@ -115,18 +114,18 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Failed Connections
+    title: Failed connections
     isLive: false
     type: query
   c0e2293d-84de-48d4-89ee-98cf95a3085f:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
-      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, limit=1000000)], var="x")
+      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(x, limit=max)], var="x")
       | rename([[x, Inferences],[_count,Count]])
     end: now
     start: 1d
@@ -136,13 +135,12 @@ widgets:
     - name: Details of Inferences
       titleTemplate: Details of {{ fields.Inferences }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.rdp
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter
         | array:contains("Vendor.inferences[]", value=?inference)
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         inference: '["{{ fields.Inferences }}"]'
@@ -164,11 +162,11 @@ widgets:
     x: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
-      | Vendor.auth_success = true
+      | event.outcome = /success/i
       | count()
     end: now
     start: 1d
@@ -176,15 +174,14 @@ widgets:
     y: 5
     interactions:
     - name: Details of Successful Connections
-      titleTemplate: Details of Successful Connections
+      titleTemplate: Details of successful connections
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.rdp
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter
-        | Vendor.auth_success = true
+        | event.outcome = /success/i
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         system_name: '["{{ parameters.system_name }}"]'
@@ -209,7 +206,7 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Successful Connections
+    title: Successful connections
     isLive: false
     type: query
   4a4ff7c0-ca52-4ea4-a39d-d28d6cfedabd:
@@ -217,15 +214,14 @@ widgets:
     y: 11
     height: 5
     queryString: |
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
-      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=20000), limit=1000000)], var="inferences")
-      | groupBy([@timestamp,sensor_name,user.name,source.ip,destination.ip,destination.port,Vendor.auth_success,inferences,@rawstring], limit=1000000)
-      | rename([[inferences, Code]])
-      | lookup(from=corelight_inferences_description.csv, on=Code,include=Name)
-      | rename([["Code","Inference"],[user.name, "User Name"],[sensor_name,"Corelight Sensor"],[source.ip,"Source IP"],[destination.ip,"Destination IP"],[destination.port,"Destination Port"],[Vendor.auth_success,"Auth Success"],[@rawstring,"Raw Logs"], [Name, "Inference Name"]])
+      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(inferences, function=tail(limit=max), limit=max)], var="inferences")
+      | groupBy([@timestamp,observer.hostname,user.name,source.ip,destination.ip,destination.port,event.outcome,inferences,@rawstring], limit=max)
+      | match(file=corelight_inferences_description.csv, column=Code,field=inferences, include=Name)
+      | rename([["inferences","Inference"],[user.name, "User Name"],[observer.hostname,"Corelight Sensor"],[source.ip,"Source IP"],[destination.ip,"Destination IP"],[destination.port,"Destination Port"],[event.outcome,"Auth Success"],[@rawstring,"Raw Logs"], [Name, "Inference Name"]])
       | default(value="unknown", field=[@timestamp, "User Name","Corelight Sensor","Source IP","Destination IP","Destination Port","Inference","Inference Name","Auth Success","Raw Logs"])
       | formatTime(format="%F %r", as="Time")
       | select([Time, "User Name","Corelight Sensor","Source IP","Destination IP","Destination Port","Inference","Inference Name","Auth Success","Raw Logs"])
@@ -237,16 +233,16 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: RDP Connection Detail
+    title: RDP connection detail
     isLive: false
     type: query
   e57a3bc5-2a25-482d-afcd-005b12d212b5:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
       | top(Vendor.security_protocol)
     end: now
@@ -257,13 +253,12 @@ widgets:
     - name: Details of Security Protocol Used
       titleTemplate: Details of {{ fields.Vendor.security_protocol }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path = rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.rdp
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter
         | Vendor.security_protocol = ?protocol
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         protocol: '["{{ fields.Vendor.security_protocol }}"]'
@@ -279,34 +274,33 @@ widgets:
       legendPosition: right
       legendTitle: Security Protocols
     visualization: pie-chart
-    title: Security Protocol Used
+    title: Security protocol used
     isLive: false
     type: query
   0138ce0e-6702-4a1f-8c12-12a6ca3fd029:
     x: 8
     height: 6
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path = rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
-      | top(field=["user.name",Vendor.auth_success],limit=20)
-      | default(value="no_value", field=[Vendor.auth_success,user.name])
-      | rename([[Vendor.auth_success,"Auth Success"],[user.name,"Connecting User"],[_count,Count]])
+      | top(field=["user.name",event.outcome],limit=20)
+      | default(value="no_value", field=[event.outcome,user.name])
+      | rename([[event.outcome,"Auth Success"],[user.name,"Connecting User"],[_count,Count]])
     end: now
     start: 1d
     width: 4
     y: 5
     interactions:
     - name: Details of Connecting Users
-      titleTemplate: Details of User '{{ fields["Connecting User"] }}' and Auth Success
+      titleTemplate: Details of user '{{ fields["Connecting User"] }}' and auth success
         '{{ fields["Auth Success"] }}'
-      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| Vendor._path\
-        \ = rdp\n| in(field=\"Vendor._system_name\", values=[?system_name])  \n| ?additional_filter\n\
-        | default(value=\"no_value\", field=[Vendor.auth_success])\n| Vendor.auth_success\
-        \ = ?auth_success AND user.name = ?user_name"
+      queryString: "#Vendor = corelight and #event.module = ndr\n| #event.dataset\
+        \ = ndr.rdp\n| in(field=observer.hostname, values=[?system_name])  \n| ?additional_filter\n\
+        | default(value=\"no_value\", field=[event.outcome])\n| event.outcome = ?auth_success\
+        \ AND user.name = ?user_name"
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         auth_success: '["{{ fields[\"Auth Success\"] }}"]'
@@ -320,7 +314,7 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: Connecting Users
+    title: Connecting users
     isLive: false
     type: query
   note-1734426431234-0:
@@ -329,26 +323,26 @@ widgets:
     height: 1
     text: ''
     width: 12
-    title: RDP Inferences Overview
+    title: RDP inferences overview
     type: note
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   additional_filter:
-    label: Additional Filter
+    label: Additional filter
     order: 2
     type: text
     defaultValue: '*'
     width: 1
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = rdp
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.rdp
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: sensor_name
+    valueField: observer.hostname

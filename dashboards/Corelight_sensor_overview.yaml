@@ -38,7 +38,7 @@ sections:
     - ee75d7da-fda1-4b05-9e5b-19f90224da67
     - 8555eb96-9596-4f62-b4b0-1c1f334cd525
     - 1a66fc6a-e3d3-4101-a986-63196c3aaad9
-name: SensorOverview
+name: Corelight sensor overview
 timeSelector: {}
 sharedTimeInterval:
   enabled: true
@@ -46,14 +46,16 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- SIEM
+- Workflow
 widgets:
   a7e099ab-2ebe-41f3-a3e7-7f873c939a22:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path=corelight_metrics_iface
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | #event.dataset=ndr.corelight_metrics_iface
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=[avg("Vendor.mgmt.in.bytes.mbps", as="Inbound Traffic Rate"), avg("Vendor.mgmt.out.bytes.mbps", as="Outbound Traffic Rate")])
       | format(format="%.2f", field=["Inbound Traffic Rate"], as="Inbound Traffic Rate")
       | format(format="%.2f", field=["Outbound Traffic Rate"], as="Outbound Traffic Rate")
@@ -62,13 +64,12 @@ widgets:
     width: 6
     y: 9
     interactions:
-    - name: Details of Traffic Volume - Management Interface
+    - name: Details of traffic volume - management interface
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path=corelight_metrics_iface
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | #event.dataset=ndr.corelight_metrics_iface
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -82,7 +83,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Traffic Volume - Management Interface
+    title: Traffic volume - management interface
     isLive: false
     type: query
   8555eb96-9596-4f62-b4b0-1c1f334cd525:
@@ -90,9 +91,9 @@ widgets:
     y: 9
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_no_three_way_handshake.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -120,16 +121,16 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg TCP No Three Way Handshake
+    title: Avg TCP no three way handshake
     isLive: false
     type: query
   5a30af44-7e42-4be2-b646-91d871e75715:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path=corelight_metrics_iface
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | #event.dataset=ndr.corelight_metrics_iface
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=[avg("Vendor.monitor.total.kpps", as="Monitor Traffic Packet Rate"), avg("Vendor.monitor.total.drops.kpps", as="Monitor Traffic Drop Rate")])
       | format(format="%.1f", field=["Monitor Traffic Packet Rate"], as="Monitor Traffic Packet Rate")
     end: now
@@ -137,13 +138,12 @@ widgets:
     width: 6
     y: 5
     interactions:
-    - name: Details of Traffic Volume - Monitor Interfaces - Packets
+    - name: Details of traffic volume - monitor interfaces - packets
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path=corelight_metrics_iface
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | #event.dataset=ndr.corelight_metrics_iface
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -157,48 +157,16 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Combined Traffic Volume - Monitor Interfaces - Packets
+    title: Combined traffic volume - monitor interfaces - packets
     isLive: false
     type: query
   d48635cb-5fe7-4d5e-b626-b265b521952b:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path=corelight_metrics_bro
-      | in(field="Vendor._system_name", values=[?system_name])
-      | select([@timestamp,"Vendor.logs.conn.entries.per-second",
-              "Vendor.logs.dce_rpc.entries.per-second",
-              "Vendor.logs.dhcp.entries.per-second",
-              "Vendor.logs.dnp3.entries.per-second",
-              "Vendor.logs.dns.entries.per-second",
-              "Vendor.logs.dpd.entries.per-second",
-              "Vendor.logs.files.entries.per-second",
-              "Vendor.logs.ftp.entries.per-second",
-              "Vendor.logs.http.entries.per-second",
-              "Vendor.logs.irc.entries.per-second",
-              "Vendor.logs.kerberos.entries.per-second",
-              "Vendor.logs.modbus.entries.per-second",
-              "Vendor.logs.mysql.entries.per-second",
-              "Vendor.logs.ntlm.entries.per-second",
-              "Vendor.logs.pe.entries.per-second",
-              "Vendor.logs.radius.entries.per-second",
-              "Vendor.logs.rdp.entries.per-second",
-              "Vendor.logs.rfb.entries.per-second",
-              "Vendor.logs.sip.entries.per-second",
-              "Vendor.logs.smb_files.entries.per-second",
-              "Vendor.logs.smb_mapping.entries.per-second",
-              "Vendor.logs.smtp.entries.per-second",
-              "Vendor.logs.snmp.entries.per-second",
-              "Vendor.logs.socks.entries.per-second",
-              "Vendor.logs.software.entries.per-second",
-              "Vendor.logs.ssh.entries.per-second",
-              "Vendor.logs.ssl.entries.per-second",
-              "Vendor.logs.syslog.entries.per-second",
-              "Vendor.logs.traceroute.entries.per-second",
-              "Vendor.logs.tunnel.entries.per-second",
-              "Vendor.logs.weird.entries.per-second",
-              "Vendor.logs.x509.entries.per-second"])
+      #Vendor = corelight and #event.module="ndr"
+      | #event.dataset=ndr.corelight_metrics_bro
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=[avg("Vendor.logs.conn.entries.per-second",as="Conn"),
               avg("Vendor.logs.dce_rpc.entries.per-second",as="DCE/RPC"),
               avg("Vendor.logs.dhcp.entries.per-second",as="DHCP"),
@@ -269,13 +237,12 @@ widgets:
     width: 12
     y: 0
     interactions:
-    - name: Details of Log Rates
+    - name: Details of log rates
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path=corelight_metrics_bro
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | #event.dataset=ndr.corelight_metrics_bro
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -287,16 +254,16 @@ widgets:
       yAxisTitle: Entries per Second
       maxSeriesCount: 50
     visualization: time-chart
-    title: Log Rates
+    title: Log rates
     isLive: false
     type: query
   ae4af681-9db1-4608-b0d9-5da396df4d1b:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path=corelight_metrics_iface
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | #event.dataset=ndr.corelight_metrics_iface
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=avg("Vendor.monitor.total.mbps", as="Monitor Traffic Rate"))
       | format(format="%.1f", field=["Monitor Traffic Rate"], as="Monitor Traffic Rate")
     end: now
@@ -304,13 +271,12 @@ widgets:
     width: 6
     y: 5
     interactions:
-    - name: Details of Traffic Volume - Monitor Interfaces
+    - name: Details of traffic volume - monitor interfaces
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path=corelight_metrics_iface
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | #event.dataset=ndr.corelight_metrics_iface
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -325,16 +291,16 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Combined Traffic Volume - Monitor Interfaces
+    title: Combined traffic volume - monitor interfaces
     isLive: false
     type: query
   9074c22c-bcae-480c-805a-014d7d99ef94:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path=corelight_metrics_bro
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | #event.dataset=ndr.corelight_metrics_bro
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=[avg("Vendor.logs.splunk_export.lag", as="Splunk"), avg("Vendor.logs.syslog_export.lag", as="Syslog"), avg("Vendor.logs.json_export.lag", as="JSON"), avg("Vendor.logs.kafka_export.lag", as="Kafka")])
       | format(format="%.2f", field=[Splunk], as=Splunk)
       | format(format="%.2f", field=[JSON], as=JSON)
@@ -345,13 +311,12 @@ widgets:
     width: 6
     y: 13
     interactions:
-    - name: Details of Log Entries Export Queue
+    - name: Details of log entries export queue
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path=corelight_metrics_iface
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | #event.dataset=ndr.corelight_metrics_iface
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -365,7 +330,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Log Entries Export Queue
+    title: Log entries export queue
     isLive: false
     type: query
   ee75d7da-fda1-4b05-9e5b-19f90224da67:
@@ -373,9 +338,9 @@ widgets:
     y: 6
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_half_duplex.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -403,7 +368,7 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg TCP Half Duplex
+    title: Avg TCP half duplex
     isLive: false
     type: query
   fe46dc9d-7462-4727-98ce-bf1d4880f03b:
@@ -411,9 +376,9 @@ widgets:
     y: 3
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.bursty.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -441,7 +406,7 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg Bursty
+    title: Avg bursty
     isLive: false
     type: query
   da04c077-0131-43c4-9e75-66b9198d7736:
@@ -449,9 +414,9 @@ widgets:
     y: 3
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_scan.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -479,16 +444,16 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg TCP Scan
+    title: Avg TCP scan
     isLive: false
     type: query
   8935816b-3e8b-4223-bcfd-bf13510ea226:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_bro])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_bro])
+      | in(field=observer.hostname, values=[?system_name])
       | default(value="0", field=[Vendor.cpu])
       | timeChart(function=[avg("Vendor.cpu",as="Bro CPU Usage")])
       | format(format="%.1f", field=["Bro CPU Usage"], as="Bro CPU Usage")
@@ -498,13 +463,12 @@ widgets:
     y: 0
     interactions:
     - name: Details of Bro CPU Usage
-      titleTemplate: Details of Bro CPU Usage
+      titleTemplate: Details of Bro CPU usage
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values= [corelight_metrics_bro])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | in(field=#event.dataset, values= [ndr.corelight_metrics_bro])
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -524,7 +488,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Bro CPU Usage
+    title: Bro CPU usage
     isLive: false
     type: query
   48de63f0-3bf1-4beb-9d39-e89d29fc9b8f:
@@ -532,9 +496,9 @@ widgets:
     y: 6
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.dns_half_duplex_resp.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -562,16 +526,16 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg DNS Half Duplex Resp
+    title: Avg DNS half duplex resp
     isLive: false
     type: query
   c6a28ff8-cec3-4671-ac6e-864f7b20a691:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_memory])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_memory])
+      | in(field=observer.hostname, values=[?system_name])
       | default(value="0", field=[Vendor.usage])
       | timeChart(function=avg("Vendor.usage", as="Memory Usage"))
       | format(format="%.1f", field=["Memory Usage"], as="Memory Usage")
@@ -581,13 +545,12 @@ widgets:
     y: 0
     interactions:
     - name: Details of Memory Usage
-      titleTemplate: Details of Memory Usage
+      titleTemplate: Details of memory usage
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values= [corelight_metrics_memory])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | in(field=#event.dataset, values= [ndr.corelight_metrics_memory])
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -607,7 +570,7 @@ widgets:
       show-utc: false
       imputation: none
     visualization: time-chart
-    title: Memory Usage
+    title: Memory usage
     isLive: false
     type: query
   1a66fc6a-e3d3-4101-a986-63196c3aaad9:
@@ -615,9 +578,9 @@ widgets:
     y: 9
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_byte_counts_wrong.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -645,7 +608,7 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg TCP Byte Counts Wrong
+    title: Avg TCP byte counts wrong
     isLive: false
     type: query
   6c4e4d91-3f8d-4596-88f1-08bdd38a77d8:
@@ -653,9 +616,9 @@ widgets:
     y: 0
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.local_to_local.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -683,7 +646,7 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg Local to Local
+    title: Avg local to local
     isLive: false
     type: query
   b8340176-9711-4c95-8052-6afa843d456d:
@@ -691,9 +654,9 @@ widgets:
     y: 0
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.remote_to_remote.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -721,16 +684,16 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg Remote to Remote
+    title: Avg remote to remote
     isLive: false
     type: query
   fa60bdea-94f1-4329-99ab-17bffe779254:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path=corelight_metrics_iface
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | #event.dataset=ndr.corelight_metrics_iface
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=[avg("Vendor.mgmt.in.packets.kpps", as="Inbound Traffic Packet Rate"), avg("Vendor.mgmt.out.packets.kpps", as="Outbound Traffic Packet Rate")])
       | format(format="%.2f", field=["Inbound Traffic Packet Rate"], as="Inbound Traffic Packet Rate")
       | format(format="%.2f", field=["Outbound Traffic Packet Rate"], as="Outbound Traffic Packet Rate")
@@ -739,13 +702,12 @@ widgets:
     width: 6
     y: 9
     interactions:
-    - name: Details of Traffic Volume - Management Interface - Packets
+    - name: Details of traffic volume - management interface - packets
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path=corelight_metrics_iface
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | #event.dataset=ndr.corelight_metrics_iface
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -759,16 +721,16 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: Traffic Volume - Management Interface - Packets
+    title: Traffic volume - management interface - packets
     isLive: false
     type: query
   724b2a04-1429-47bc-8d44-c94a0c1805d6:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_system])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_system])
+      | in(field=observer.hostname, values=[?system_name])
       | default(value="0", field=[Vendor.cpu.1.temperature])
       | timeChart(function=[avg("Vendor.cpu.1.temperature", as="CPU1 Temperature")])
       | format(format="%.1f", field=["CPU1 Temperature"], as="CPU1 Temperature")
@@ -778,13 +740,12 @@ widgets:
     y: 4
     interactions:
     - name: Details of System Temperature
-      titleTemplate: Details of System Temperature
+      titleTemplate: Details of system temperature
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values= [corelight_metrics_system])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | in(field=#event.dataset, values= [ndr.corelight_metrics_system])
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -803,7 +764,7 @@ widgets:
       show-utc: false
       imputation: none
     visualization: time-chart
-    title: System Temperature
+    title: System temperature
     isLive: false
     type: query
   492d6cbf-2774-439f-85a6-20d539bf34ff:
@@ -811,9 +772,9 @@ widgets:
     y: 6
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.dns_half_duplex_orig.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -841,16 +802,16 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg DNS Half Duplex Orig
+    title: Avg DNS half duplex orig
     isLive: false
     type: query
   3604d776-29c3-4523-b321-1e8aca565ebf:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | Vendor._path=corelight_metrics_bro
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | #event.dataset=ndr.corelight_metrics_bro
+      | in(field=observer.hostname, values=[?system_name])
       | timeChart(function=[avg("Vendor.files.total", as="Extracted Files"), avg("Vendor.files.queued.sftp", as="Queued Files for SFTP"), avg("Vendor.files.queued.s3", as="Queued Files for Amazon S3")])
       | format(format="%.2f", field=["Extracted Files"], as="Extracted Files")
       | format(format="%.2f", field=["Queued Files for SFTP"], as="Queued Files for SFTP")
@@ -860,13 +821,12 @@ widgets:
     width: 6
     y: 13
     interactions:
-    - name: Details of File Extraction
+    - name: Details of file extraction
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | Vendor._path=corelight_metrics_iface
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | #event.dataset=ndr.corelight_metrics_iface
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -880,7 +840,7 @@ widgets:
       maxSeriesCount: 10
       imputation: none
     visualization: time-chart
-    title: File Extraction
+    title: File extraction
     isLive: false
     type: query
   ce8f8240-ec3a-4516-8561-5173b6495928:
@@ -888,9 +848,9 @@ widgets:
     y: 3
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_no_ssl_on_443.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -918,7 +878,7 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg No SSL On 443
+    title: Avg no SSL on 443
     isLive: false
     type: query
   cc6a6790-b6e6-4710-bff4-76ae0b1466ed:
@@ -926,9 +886,9 @@ widgets:
     y: 0
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_retransmissions.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -956,16 +916,16 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg TCP Retransmissions
+    title: Avg TCP retransmissions
     isLive: false
     type: query
   65b9f1f0-a473-4221-8063-e0b2db2c476d:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_disk])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_disk])
+      | in(field=observer.hostname, values=[?system_name])
       | default(value="0", field=[Vendor.usage.data,Vendor.usage.os])
       | timeChart(function=[avg("Vendor.usage.data", as="Data Disk Usage"), avg("Vendor.usage.os",as="OS Disk Usage")])
       | format(format="%.1f", field=["Data Disk Usage"], as="Data Disk Usage")
@@ -976,13 +936,12 @@ widgets:
     y: 4
     interactions:
     - name: Details of Disk Usage
-      titleTemplate: Details of Disk Usage
+      titleTemplate: Details of disk usage
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values= [corelight_metrics_disk])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module="ndr"
+        | in(field=#event.dataset, values= [ndr.corelight_metrics_disk])
+        | in(field=observer.hostname, values=[?system_name])
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
@@ -1003,7 +962,7 @@ widgets:
       yAxisTitle: Percent (%)
       stacking: none
     visualization: time-chart
-    title: Disk Usage
+    title: Disk usage
     isLive: false
     type: query
   996349b1-7e35-4475-85ef-b77d5558b860:
@@ -1011,9 +970,9 @@ widgets:
     y: 3
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_backscatter.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -1041,7 +1000,7 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg TCP Backscatter
+    title: Avg TCP backscatter
     isLive: false
     type: query
   note-1734525872042-0:
@@ -1060,9 +1019,9 @@ widgets:
     y: 0
     height: 3
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values= [corelight_metrics_zeek_doctor])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module="ndr"
+      | in(field=#event.dataset, values= [ndr.corelight_metrics_zeek_doctor])
+      | in(field=observer.hostname, values=[?system_name])
       | avg(Vendor.check.tcp_missed_bytes.percent)
       | default(value="0", field=[_avg])
     end: now
@@ -1090,21 +1049,21 @@ widgets:
         bg: inherit
         txt: var(--single-value-trend-positive-text-color)
     visualization: single-value
-    title: Avg TCP Missed Bytes
+    title: Avg TCP missed bytes
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | in(field="Vendor._path", values=[corelight_metrics_system, corelight_metrics_memory, corelight_metrics_disk])
-      | groupBy([Vendor._system_name], function=[])
+      | in(field=#event.dataset, values=["ndr.corelight_metrics_system", "ndr.corelight_metrics_memory", "ndr.corelight_metrics_disk"])
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: Vendor._system_name
+    valueField: observer.hostname

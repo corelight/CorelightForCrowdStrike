@@ -3,21 +3,18 @@ fieldsToBeRemovedBeforeParsing: []
 testCases:
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1748437555000'
       rule.name: NXDOMAIN Beaconing
       event.type[0]: info
       event.id: 718766cb-3627-48c7-bbbe-541fa87116b9
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
-      threat.indicator.reference: https://test.investigator.corelight.io/alert-to-detection/718766cb-3627-48c7-bbbe-541fa87116b9
       event.severity: '30'
-      event.end: '1748437555'
-      event.start: '1748437555'
-      threat.technique.name[0]: Fallback Channels
-      event.duration: '0'
       '#event.dataset': investigator.ml
-      event.type[1]: indicator
+      '#event.module': investigator
+      threat.technique.name[0]: Fallback Channels
+      threat.indicator.reference: https://test.investigator.corelight.io/alert-to-detection/718766cb-3627-48c7-bbbe-541fa87116b9
       event.reason: NXDOMAIN Beaconing
       threat.technique.name[1]: Dynamic Resolution
       source.domain: sjdncajrgbrq3gbrbjrv.net
@@ -188,25 +185,22 @@ testCases:
       }
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1748436635000'
       rule.name: NXDOMAIN Beaconing
       event.type[0]: info
       event.id: e4998c70-336b-496c-99c1-8ee5cb10e69e
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
       event.severity: '70'
-      event.end: '1748436635'
-      event.start: '1748436635'
+      '#event.dataset': investigator.ml
+      '#event.module': investigator
       threat.technique.name[0]: Fallback Channels
       destination.domain: sjdncajrgbrq3gbrbjrv.net
       threat.framework: MITRE ATT&CK
-      event.duration: '0'
       source.domain: sjdncajrgbrq3gbr.net
       threat.indicator.reference: https://test.investigator.corelight.io/alert-to-detection/e4998c70-336b-496c-99c1-8ee5cb10e69e
       threat.tactic.name[0]: Command and Control
-      '#event.dataset': investigator.ml
-      event.type[1]: indicator
       event.reason: NXDOMAIN Beaconing
       threat.technique.name[1]: Dynamic Resolution
     outputEventIndex: 0
@@ -377,25 +371,22 @@ testCases:
       }
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1748438429000'
       rule.name: NXDOMAIN Beaconing
       event.type[0]: info
       event.id: 2896f55c-ba92-41d6-8df8-fd01df9d4090
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
       event.severity: '10'
-      event.end: '1748438429'
-      event.start: '1748438429'
+      '#event.dataset': investigator.ml
+      '#event.module': investigator
       source.ip: 1.1.1.1
       threat.technique.name[0]: Fallback Channels
       threat.framework: MITRE ATT&CK
-      event.duration: '0'
       destination.ip: 1.11.1.11
       threat.indicator.reference: https://test.investigator.corelight.io/alert-to-detection/2896f55c-ba92-41d6-8df8-fd01df9d4090
       threat.tactic.name[0]: Command and Control
-      '#event.dataset': investigator.ml
-      event.type[1]: indicator
       event.reason: NXDOMAIN Beaconing
       threat.technique.name[1]: Dynamic Resolution
     outputEventIndex: 0
@@ -567,34 +558,26 @@ testCases:
 - assertions:
   - fieldsHaveValues:
       file.mime_type: application/x-dosexec
-      client.port: '58304'
+      '@timestamp': '1746710155000'
       rule.name: Yara_File_Badrabbit_Gen1
       file.hash.md5: 71b6a493388e7d0b40c83ce903bc6b04
       event.id: CLjZKhhKTlbeRVY41
       network.protocol: http
       source.port: '58304'
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
-      threat.indicator.reference: https://test.investigator.corelight.io/alert-to-detection/e80f9bcc-3d3e-4f23-a5ec-d3575aab243a
       event.severity: '30'
-      event.end: '1746710155'
+      '#event.dataset': investigator.yara_corelight
       source.ip: 1.2.1.2
       file.name: 2025-02-08/34f917aaba5684fbe56d3c57d48ef2a1aa7cf06d.exe
-      event.duration: '0'
+      destination.ip: 1.3.1.3
       event.type[0]: info
       observer.hostname: qe_replay_tool
-      '#event.dataset': investigator.yara_corelight
-      event.type[1]: indicator
-      event.start: '1746710155'
-      server.port: '80'
+      '#event.module': investigator
       destination.port: '80'
       file.hash.sha1: 34f917aaba5684fbe56d3c57d48ef2a1aa7cf06d
       event.reason: Yara_File_Badrabbit_Gen1
-      server.ip: 1.3.1.3
-      client.ip: 1.2.1.2
-      destination.ip: 1.3.1.3
     outputEventIndex: 0
   event:
     rawString: |-
@@ -707,27 +690,24 @@ testCases:
       }
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1746682209000'
       rule.name: Anomalous SSH Destination from Internal Subnet
       event.id: CPnXnxMjKRINVQL5b
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
       event.severity: '30'
-      event.end: '1746682209'
-      event.start: '1746682209'
+      '#event.dataset': investigator.anomaly
+      '#event.module': investigator
       source.ip: 1.4.1.4
       threat.technique.name[0]: Remote Services
       event.reason: Anomalous SSH Destination from Internal Subnet
       threat.framework: MITRE ATT&CK
-      event.duration: '0'
       destination.ip: 1.5.1.5
       event.type[0]: info
       observer.hostname: qe_replay_tool
       threat.indicator.reference: https://test.investigator.corelight.io/alert-to-detection/7ebd8e57-d372-447e-937c-dd4f81b7d741
       threat.tactic.name[0]: Lateral Movement
-      '#event.dataset': investigator.anomaly
-      event.type[1]: indicator
     outputEventIndex: 0
   event:
     rawString: |-
@@ -841,26 +821,23 @@ testCases:
       }
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1746710155000'
       rule.name: SSHamble scanner
       event.type[0]: info
       event.id: f2afd208-7782-4c66-84d0-c584d3ed09d8
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
       event.severity: '50'
-      event.end: '1746710155'
-      event.start: '1746710155'
+      '#event.dataset': investigator.custom_search_rule
+      '#event.module': investigator
       source.ip: 1.6.1.6
       threat.technique.name[0]: Active Scanning
       event.reason: SSHamble scanner
       threat.framework: MITRE ATT&CK
-      event.duration: '0'
       destination.ip: 1.7.1.7
       threat.indicator.reference: https://test.investigator.corelight.io/alert-to-detection/f2afd208-7782-4c66-84d0-c584d3ed09d8
       threat.tactic.name[0]: Reconnaissance
-      '#event.dataset': investigator.custom_search_rule
-      event.type[1]: indicator
     outputEventIndex: 0
   event:
     rawString: "{\n    \"alert-to-detection-url\": \"https://test.investigator.corelight.io/alert-to-detection/f2afd208-7782-4c66-84d0-c584d3ed09d8\"\
@@ -892,26 +869,22 @@ testCases:
       tenant\": \"majorthree\"\n}"
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1746655740000'
       rule.name: Attempted Connection to a DGA Domain
       event.type[0]: info
       event.id: 6476a090-b828-4072-ac04-db66f29bcbc4
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
       event.severity: '50'
-      event.end: '1746655740'
-      event.start: '1746655740'
+      '#event.dataset': investigator.ml
+      '#event.module': investigator
       threat.technique.name[0]: Dynamic Resolution
       destination.domain: 10xzveo18bql031wrnti813xpc0v.net
+      event.reason: Attempted Connection to a DGA Domain
       threat.framework: MITRE ATT&CK
-      event.duration: '0'
       threat.indicator.reference: https://eu.investigator.corelight.com/alert-to-detection/6476a090-b828-4072-ac04-db66f29bcbc4
       threat.tactic.name[0]: Command and Control
-      '#event.dataset': investigator.ml
-      event.type[1]: indicator
-      event.reason: Attempted Connection to a DGA Domain
-      threat.technique.name[1]: Fallback Channels
     outputEventIndex: 0
   event:
     rawString: "{\n    \"alert-to-detection-url\": \"https://eu.investigator.corelight.com/alert-to-detection/6476a090-b828-4072-ac04-db66f29bcbc4\"\
@@ -1019,24 +992,22 @@ testCases:
       \    \"tenant\": \"succeeded\"\n}"
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1746661551000'
       client.port: '49740'
       rule.name: ET INFO Observed Discord Domain in DNS Lookup (discordapp .com)
       event.type[0]: info
       event.id: CMjEOg2CeAgLEmsuWf
       network.protocol: dns
       source.port: '49740'
-      event.category[1]: threat
       '#event.kind': alert
       '#observer.type': ndr
       event.category[0]: network
       threat.indicator.reference: https://eu.investigator.corelight.com/alert-to-detection/b05b2c61-5a1f-4c1d-95e9-997a296a4478
       event.severity: '50'
-      event.end: '1746661551'
-      source.ip: 1.8.1.8
-      event.duration: '0'
       '#event.dataset': investigator.suricata_corelight
-      event.type[1]: indicator
-      event.start: '1746661551'
+      source.ip: 1.8.1.8
+      event.action: allowed
+      '#event.module': investigator
       server.port: '53'
       destination.port: '53'
       event.reason: ET INFO Observed Discord Domain in DNS Lookup (discordapp .com)
@@ -1130,27 +1101,25 @@ testCases:
       }
 - assertions:
   - fieldsHaveValues:
+      '@timestamp': '1746661829000'
       client.port: '60276'
       rule.name: Sliver C2 MTLS traffic detected
       event.id: Cr7TbRgPjEDvot7L6
       source.port: '60276'
-      event.category[1]: threat
       '#event.kind': alert
       event.category[0]: network
-      event.end: '1746661829'
+      '#event.dataset': investigator.notice
       source.ip: 1.10.1.10
       threat.technique.name[0]: Application Layer Protocol
+      event.action: Notice::ACTION_LOG
       threat.framework: MITRE ATT&CK
-      event.duration: '0'
       event.type[0]: info
       observer.hostname: LABSensor1
       '#observer.type': ndr
       network.transport: tcp
       threat.indicator.reference: https://me.staging.investigator.corelight.io/alert-to-detection/cfc65c93-11b8-42f5-9e10-35e04245ad91
       threat.tactic.name[0]: Command and Control
-      '#event.dataset': investigator.notice
-      event.type[1]: indicator
-      event.start: '1746661829'
+      '#event.module': investigator
       server.port: '8888'
       destination.port: '8888'
       event.reason: DetectSliver::SLIVER_MTLS_PORT
@@ -1314,163 +1283,159 @@ script: |
   // Alert type specific values
   | Vendor.alert_info.alert_type match {
       "notice" =>
-          event.id := Vendor.notice.uid
-          | event.action := Vendor.notice.actions[0]
-          | observer.hostname := Vendor.notice.system_name
-          | network.transport := Vendor.notice.proto
-          | source.ip := Vendor.notice.orig_h
-          | source.port := Vendor.notice.orig_p
-          | destination.ip := Vendor.notice.resp_h
-          | destination.port := Vendor.notice.resp_p
-          | file.mime_type := Vendor.notice.file_mime_type
-          | rule.name := Vendor.notice.msg
-          | Vendor.notice.severity_info.name match {
-              // severity.level 5, 6 & 7
-              in(values=["notification","informational*","debugging"]) =>
-                  event.severity := "10";
-              // severity.level 4
-              "warning" =>
-                  event.severity := "30";
-              // severity.level 3
-              "error" =>
-                  event.severity := "50";
-              // severity.level 2
-              "critical" =>
-                  event.severity := "70";
-              // severity.level 1 and 0
-              in(values=["alert", "emergency"]) =>
-                  event.severity := "90";
-              * => *;
-          }
-      ;
+       event.id := Vendor.notice.uid
+      | event.action := Vendor.notice.actions[0]
+      | observer.hostname := Vendor.notice.system_name
+      | network.transport := Vendor.notice.proto
+      | source.ip := Vendor.notice.orig_h
+      | source.port := Vendor.notice.orig_p
+      | destination.ip := Vendor.notice.resp_h
+      | destination.port := Vendor.notice.resp_p
+      | file.mime_type := Vendor.notice.file_mime_type
+      | rule.name := Vendor.notice.msg
+      | Vendor.notice.severity_info.name match {
+                // severity.level 5, 6 & 7
+                in(values=["notification","informational*","debugging"]) =>
+                    event.severity := "10";
+                // severity.level 4
+                "warning" =>
+                    event.severity := "30";
+                // severity.level 3
+                "error" =>
+                    event.severity := "50";
+                // severity.level 2
+                "critical" =>
+                    event.severity := "70";
+                // severity.level 1 and 0
+                in(values=["alert", "emergency"]) =>
+                    event.severity := "90";
+                * => *;
+            };
+
       "suricata_corelight" =>
-          event.id := Vendor.suricata_corelight.uid
-          | event.action := Vendor.suricata_corelight.action
-          | source.ip := Vendor.suricata_corelight.source_ip
-          | source.port := Vendor.suricata_corelight.source_port
-          | destination.ip := Vendor.suricata_corelight.destination_ip
-          | destination.port := Vendor.suricata_corelight.destination_port
-          | network.protocol := lower(Vendor.suricata_corelight.service)
-          | Vendor.severity match {
-              // "informational"
-              "4" =>
-                  event.severity := "10";
-              // "minor"
-              "3" =>
-                  event.severity := "50";
-              // "major"
-              "2" =>
-                  event.severity := "70";
-              // "critical"
-              "1" =>
-                  event.severity := "90";
-              * => *;
-          }
-      ;
+       event.id := Vendor.suricata_corelight.uid
+      | event.action := Vendor.suricata_corelight.action
+      | source.ip := Vendor.suricata_corelight.source_ip
+      | source.port := Vendor.suricata_corelight.source_port
+      | destination.ip := Vendor.suricata_corelight.destination_ip
+      | destination.port := Vendor.suricata_corelight.destination_port
+      | network.protocol := lower(Vendor.suricata_corelight.service)
+      | Vendor.severity match {
+                // "informational"
+                "4" =>
+                    event.severity := "10";
+                // "minor"
+                "3" =>
+                    event.severity := "50";
+                // "major"
+                "2" =>
+                    event.severity := "70";
+                // "critical"
+                "1" =>
+                    event.severity := "90";
+                * => *;
+            };
+
       in(values=["custom_search_rule", "ml"]) =>
-          event.id := Vendor.alert_id
-          | Vendor.related_alert_entities[0].entity_category match {
-              "source" =>
-                  Vendor.related_alert_entities[0].entity_type match {
-                      /ip/i =>
-                          source.ip := Vendor.related_alert_entities[0].entity_name;
-                      /domain/i => source.domain := Vendor.related_alert_entities[0].entity_name;
-                      * => *;
-                  };
-              "destination" =>
-                  Vendor.related_alert_entities[0].entity_type match {
-                      /ip/i =>
-                          destination.ip := Vendor.related_alert_entities[0].entity_name;
-                      /domain/i => destination.domain := Vendor.related_alert_entities[0].entity_name;
-                      * => *;
-                  };
-              * => *;
-          }
-          | Vendor.related_alert_entities[1].entity_category match{
-              "source" =>
-                  Vendor.related_alert_entities[1].entity_type match {
-                      /ip/i =>
-                          source.ip := Vendor.related_alert_entities[1].entity_name;
-                      /domain/i => source.domain := Vendor.related_alert_entities[1].entity_name;
-                      * => *;
-                  };
-              "destination" =>
-                  Vendor.related_alert_entities[1].entity_type match {
-                      /ip/i =>
-                          destination.ip := Vendor.related_alert_entities[1].entity_name;
-                      /domain/i => destination.domain := Vendor.related_alert_entities[1].entity_name;
-                      * => *;
-                  };
-              * => *;
-          }
-          | Vendor.score match{
-              in(values=[0,1, 2])=>
-                  event.severity := "10";
-              in(values=[3,4])=>
-                  event.severity := "30";
-              in(values=[5,6]) =>
-                  event.severity := "50";
-              in(values=[7,8]) =>
-                  event.severity := "70";
-              in(values=[9,10]) =>
-                  event.severity := "90";
-              * => *;
-          }
-      ;
+      event.id := Vendor.alert_id
+      | Vendor.related_alert_entities[0].entity_category match {
+        "source" =>
+            Vendor.related_alert_entities[0].entity_type match {
+                /ip/i =>
+                    source.ip := Vendor.related_alert_entities[0].entity_name;
+                /domain/i => source.domain := Vendor.related_alert_entities[0].entity_name;
+                * => *;
+            };
+        "destination" =>
+            Vendor.related_alert_entities[0].entity_type match {
+                /ip/i =>
+                    destination.ip := Vendor.related_alert_entities[0].entity_name;
+                /domain/i => destination.domain := Vendor.related_alert_entities[0].entity_name;
+                * => *;
+            };
+        * => *;
+    }
+    | Vendor.related_alert_entities[1].entity_category match{
+        "source" =>
+            Vendor.related_alert_entities[1].entity_type match {
+                /ip/i =>
+                    source.ip := Vendor.related_alert_entities[1].entity_name;
+                /domain/i => source.domain := Vendor.related_alert_entities[1].entity_name;
+                * => *;
+            };
+        "destination" =>
+            Vendor.related_alert_entities[1].entity_type match {
+                /ip/i =>
+                    destination.ip := Vendor.related_alert_entities[1].entity_name;
+                /domain/i => destination.domain := Vendor.related_alert_entities[1].entity_name;
+                * => *;
+            };
+        * => *;
+      }
+      | Vendor.score match{
+                in(values=[0,1, 2])=>
+                    event.severity := "10";
+                in(values=[3,4])=>
+                    event.severity := "30";
+               in(values=[5,6]) =>
+                    event.severity := "50";
+                in(values=[7,8]) =>
+                    event.severity := "70";
+                in(values=[9,10]) =>
+                    event.severity := "90";
+                * => *;
+            };
+
       "yara_corelight" =>
-          event.id := Vendor.yara_corelight.uid
-          | observer.hostname := Vendor.yara_corelight.system_name
-          | source.ip := Vendor.yara_corelight.orig_h
-          | source.port := Vendor.yara_corelight.orig_p
-          | destination.ip := Vendor.yara_corelight.resp_h
-          | destination.port := Vendor.yara_corelight.resp_p
-          | network.protocol := lower(Vendor.yara_corelight.source)
-          | file.name := Vendor.yara_corelight.file_name
-          | file.hash.md5 := lower(Vendor.yara_corelight.md5)
-          | file.hash.sha1 := lower(Vendor.yara_corelight.sha1)
-          | file.hash.sha256 := lower(Vendor.yara_corelight.sha256)
-          | file.mime_type := lower(Vendor.yara_corelight.mime_type)
-          | Vendor.score match {
-              in(values=[0,1, 2])=>
-                  event.severity := "10";
-              in(values=[3,4])=>
-                  event.severity := "30";
-              in(values=[5,6]) =>
-                  event.severity := "50";
-              in(values=[7,8]) =>
-                  event.severity := "70";
-              in(values=[9,10]) =>
-                  event.severity := "90";
-              * => *;
-            }
-      ;
+      event.id := Vendor.yara_corelight.uid
+      | observer.hostname := Vendor.yara_corelight.system_name
+      | source.ip := Vendor.yara_corelight.orig_h
+      | source.port := Vendor.yara_corelight.orig_p
+      | destination.ip := Vendor.yara_corelight.resp_h
+      | destination.port := Vendor.yara_corelight.resp_p
+      | network.protocol := lower(Vendor.yara_corelight.source)
+      | file.name := Vendor.yara_corelight.file_name
+      | file.hash.md5 := lower(Vendor.yara_corelight.md5)
+      | file.hash.sha1 := lower(Vendor.yara_corelight.sha1)
+      | file.hash.sha256 := lower(Vendor.yara_corelight.sha256)
+      | file.mime_type := lower(Vendor.yara_corelight.mime_type)
+      | Vendor.score match{
+                in(values=[0,1, 2])=>
+                    event.severity := "10";
+                in(values=[3,4])=>
+                    event.severity := "30";
+               in(values=[5,6]) =>
+                    event.severity := "50";
+                in(values=[7,8]) =>
+                    event.severity := "70";
+                in(values=[9,10]) =>
+                    event.severity := "90";
+                * => *;
+            };
+
       "anomaly" =>
-          event.id := Vendor.anomaly.uid
-          | observer.hostname := Vendor.anomaly.system_name
-          | source.ip := Vendor.anomaly.orig_h
-          | destination.ip := Vendor.anomaly.destination_ip
-          | Vendor.score match{
-              in(values=[0,1, 2])=>
-                  event.severity := "10";
-              in(values=[3,4])=>
-                  event.severity := "30";
-              in(values=[5,6]) =>
-                  event.severity := "50";
-              in(values=[7,8]) =>
-                  event.severity := "70";
-              in(values=[9,10]) =>
-                  event.severity := "90";
-              * => *;
-          }
+      event.id := Vendor.anomaly.uid
+      | observer.hostname := Vendor.anomaly.system_name
+      | source.ip := Vendor.anomaly.orig_h
+      | destination.ip := Vendor.anomaly.destination_ip
+      | Vendor.score match{
+                in(values=[0,1, 2])=>
+                    event.severity := "10";
+                in(values=[3,4])=>
+                    event.severity := "30";
+               in(values=[5,6]) =>
+                    event.severity := "50";
+                in(values=[7,8]) =>
+                    event.severity := "70";
+                in(values=[9,10]) =>
+                    event.severity := "90";
+                * => *;
+            }
   }
 
   // Set Client and Server Fields for notice and suricata alerts
   | Vendor.alert_info.alert_type match {
-      in(values=["notice", "suricata_corelight", "yara_corelight"]) =>
-          client.ip := source.ip
-          | client.port := source.port
-          | server.ip := destination.ip
-          | server.port := destination.port;
+      in(values=["notice", "suricata_corelight", "yara_corelight"]) => client.ip := source.ip | client.port := source.port | server.ip := destination.ip | server.port := destination.port;
       * => *;
   }
 
