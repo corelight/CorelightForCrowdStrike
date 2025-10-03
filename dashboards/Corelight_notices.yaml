@@ -1,4 +1,4 @@
-name: Security-CorelightNotices
+name: Corelight notices
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -7,34 +7,35 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Security Workflow
 widgets:
   df3035d2-752f-4ed3-9437-17ea68d0b140:
     x: 0
+    description: '"Additional filter" or severity does not apply.'
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
+      | in(field=observer.hostname, values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
-      | timeChart(Vendor._path, function=count())
+      | timeChart(#event.dataset, function=count())
     end: now
     start: 24h
     width: 4
     y: 1
     interactions:
-    - name: Details of Notices Over Time
-      titleTemplate: Details of Notices Data
+    - name: Details of notices over time
+      titleTemplate: Details of notices data
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = ?path
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module =ndr
+        | #event.dataset = ?path
+        | in(field=observer.hostname, values=[?system_name])
         | event.reason=?msg and Vendor.note=?note
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
-        path: '["{{ fields.Vendor._path }}"]'
+        path: '["{{ fields.#event.dataset }}"]'
         filter: '["{{ parameters.filter }}"]'
         note: '["{{ parameters.note }}"]'
         msg: '["{{ parameters.msg }}"]'
@@ -58,38 +59,37 @@ widgets:
       yAxisTitle: ''
       stacking: none
     visualization: time-chart
-    title: Notices Over Time (Additional Filter or Severity does not apply.)
+    title: Notices over time
     isLive: false
     type: query
   f4cc09b0-eeaf-4419-8495-567324f7a63f:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
+      | in(field=observer.hostname, values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | format(format="%s/%s", field=[network.transport, Vendor.p], as=pp)
       | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
-      | groupBy([Vendor.note, severity_display], function=collect([pp], separator=","), limit=1000000)
+      | groupBy([Vendor.note, severity_display], function=collect([pp], separator=","), limit=max)
       | rename([[Vendor.note, "Notes"], [severity_display, "Severity"], [pp, "Protocol"]])
     end: now
     start: 24h
     width: 12
     y: 5
     interactions:
-    - name: Details of Notice Details
+    - name: Details of notice details
       titleTemplate: Details of {{ fields.Notes }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = notice
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module =ndr
+        | #event.dataset = ndr.notice
+        | in(field=observer.hostname, values=[?system_name])
         | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
         | Vendor.note=?notes
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         filter: '["{{ parameters.filter }}"]'
         note: '["{{ parameters.note }}"]'
@@ -106,7 +106,7 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: Notice Details
+    title: Notice details
     isLive: false
     type: query
   note-1735646016785-0:
@@ -122,9 +122,9 @@ widgets:
     x: 8
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
+      | in(field=observer.hostname, values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
@@ -134,18 +134,17 @@ widgets:
     width: 4
     y: 1
     interactions:
-    - name: Details of Severities
+    - name: Details of severities
       titleTemplate: Details of {{ fields.severity_display }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = notice
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module =ndr
+        | #event.dataset = ndr.notice
+        | in(field=observer.hostname, values=[?system_name])
         | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
         | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
         | severity_display=?chart_severity
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         filter: '["{{ parameters.filter }}"]'
         note: '["{{ parameters.note }}"]'
@@ -172,16 +171,16 @@ widgets:
     y: 10
     height: 6
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
+      | in(field=observer.hostname, values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
       | formatTime(format="%F %r", as="Time")
-      | rename([[source.ip, "Source IP"], [severity_display, "Severity"], [@rawstring, "Raw Data"]])
-      | select(["Time", "Source IP", Severity, "Raw Data"])
+      | select(["Time", "source.ip", severity_display, "@rawstring"])
       | sort("Time", order=desc, limit=500)
+      | rename([[source.ip, "Source IP"], [severity_display, "Severity"], [@rawstring, "Raw Data"]])
     end: now
     start: 24h
     width: 12
@@ -190,16 +189,16 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: Log Data
+    title: Log data
     isLive: false
     type: query
   cb7473e4-34e0-4de7-8ddf-ea2f0b853968:
     x: 4
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
+      | in(field=observer.hostname, values=[?system_name])
       | event.reason=?{msg=*} and Vendor.note=?{note=*} Vendor.severity.name=?{severity=*} and ?{additional_filter=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or network.transport=?{filter=*} or Vendor.p=?{filter=*}
       | top([Vendor.note])
@@ -208,17 +207,16 @@ widgets:
     width: 4
     y: 1
     interactions:
-    - name: Details of Notices
+    - name: Details of notices
       titleTemplate: Details of {{ fields.Vendor.note }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = notice
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module =ndr
+        | #event.dataset = ndr.notice
+        | in(field=observer.hostname, values=[?system_name])
         | event.reason=?msg and Vendor.note=?note Vendor.severity.name=?severity and ?additional_filter
         | source.ip=?filter or destination.ip=?filter or network.transport=?filter or Vendor.p=?filter
         | Vendor.note=?chart_note
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         filter: '["{{ parameters.filter }}"]'
         chart_note: '["{{ fields.Vendor.note }}"]'
@@ -241,7 +239,7 @@ widgets:
     title: Notices
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   filter:
     label: Filter (IP, Port, Protocol)
@@ -252,12 +250,11 @@ parameters:
   note:
     label: Note
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
       | Vendor.note=*
-      | in(field="Vendor._system_name", values=[?system_name])
+      | in(field=observer.hostname, values=[?system_name])
       | top([Vendor.note], limit=100)
-      | drop([_count])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
@@ -266,30 +263,30 @@ parameters:
     order: 5
     valueField: Vendor.note
   additional_filter:
-    label: Additional Filter
+    label: Additional filter
     order: 6
     type: text
     defaultValue: '*'
     width: 1
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module =ndr
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: Vendor._system_name
+    valueField: observer.hostname
   msg:
     label: Message
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
       | event.reason=*
-      | in(field="Vendor._system_name", values=[?system_name])
+      | in(field=observer.hostname, values=[?system_name])
       | top([event.reason], limit=100)
       | drop([_count])
     timeInterval: 24h
@@ -302,9 +299,9 @@ parameters:
   severity:
     label: Severity
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = notice
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.notice
+      | in(field=observer.hostname, values=[?system_name])
       | format(format="%s (%s)", field=[Vendor.severity.name, Vendor.severity.level], as=severity_display)
       | groupBy([severity_display, Vendor.severity.name], function=[])
     timeInterval: 24h

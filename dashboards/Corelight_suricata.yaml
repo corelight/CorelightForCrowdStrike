@@ -1,14 +1,14 @@
 sections:
   section-1739535527046-0:
-    description: Choose a SID from the above 'Signature Analysis' panel to view the
+    description: Choose a SID from the above 'Signature analysis' panel to view the
       logs associated with the selected SID.
     collapsed: false
     widgetIds:
     - 28ef17dd-b865-421b-96eb-eecf517e5b5d
     - parameter-panel-1739535544047-1
     order: 0
-    title: Log Details
-name: Security-CorelightSuricata
+    title: Log details
+name: Corelight suricata
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -17,18 +17,19 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Security Workflow
 widgets:
   db49998f-ca73-4148-9c36-ee5208ff1424:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight])
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
-      | groupBy(Vendor.alert.category, limit=1000000)
+      | groupBy(Vendor.alert.category, limit=max)
+      | sort(_count, limit=max)
       | rename([[Vendor.alert.category,Category],[_count,Count]])
-      | sort(Count, limit=20000)
     end: now
     start: 1d
     width: 6
@@ -37,12 +38,11 @@ widgets:
     - name: Details of Category Analysis|
       titleTemplate: Details of {{ fields.Category }}
       queryString: |
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=[ndr.suricata_corelight,ndr.suricata_corelight_hec])
+        | in(field=observer.hostname, values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         alert_severity: '["{{ parameters.alert_severity }}"]'
         category: '["{{ fields.Category }}"]'
@@ -58,20 +58,20 @@ widgets:
           width: 500
       row-numbers-enabled: false
     visualization: table-view
-    title: Category Analysis
+    title: Category analysis
     isLive: false
     type: query
   a85b21e5-6b21-41ec-abf1-01dc77543ba0:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight])
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
-      | groupBy(source.ip, function=[count(as="# Rules",field=Vendor.alert.signature,distinct=true), count(as="# Hits")], limit=1000000)
+      | groupBy(source.ip, function=[count(as="# Rules",field=Vendor.alert.signature,distinct=true), count(as="# Hits")], limit=max)
+      | sort(field=["# Hits","# Rules"], limit=max)
       | rename(field="source.ip", as="Source IP")
-      | sort(field=["# Hits","# Rules"], limit=20000)
     end: now
     start: 1d
     width: 6
@@ -80,12 +80,11 @@ widgets:
     - name: Details of Origin Summary
       titleTemplate: Details of {{ fields["Source IP"] }}
       queryString: |
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=[ndr.suricata_corelight,ndr.suricata_corelight_hec])
+        | in(field=observer.hostname, values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         alert_severity: '["{{ parameters.alert_severity }}"]'
         category: '["{{ parameters.category }}"]'
@@ -105,7 +104,7 @@ widgets:
           width: 500
       row-numbers-enabled: false
     visualization: table-view
-    title: Origin Summary
+    title: Origin summary
     isLive: false
     type: query
   704e4c91-25c2-434b-ba84-a0e40c5ed1b5:
@@ -114,13 +113,13 @@ widgets:
       to the 'Log Details' section for more information.
     height: 5
     queryString: |
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight])
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
-      | groupBy([Vendor.alert.severity,Vendor.alert.signature,Vendor.alert.signature_id], function=[count(as="# Sources",field=source.ip,distinct=true), count(as="Count")], limit=1000000)
+      | groupBy([Vendor.alert.severity,Vendor.alert.signature,Vendor.alert.signature_id], function=[count(as="# Sources",field=source.ip,distinct=true), count(as="Count")], limit=max)
+      | sort(field=["# Sources","Count"], limit=max)
       | rename([[Vendor.alert.severity,Severity],[Vendor.alert.signature,Signature],[Vendor.alert.signature_id,SID]])
-      | sort(field=["# Sources","Count"], limit=20000)
       | replace("0",with=Informational,field=Severity)
       | replace("1",with=Critical,field=Severity)
       | replace("2",with=Medium,field=Severity)
@@ -147,7 +146,7 @@ widgets:
           width: 900
       row-numbers-enabled: false
     visualization: table-view
-    title: Signature Analysis
+    title: Signature analysis
     isLive: false
     type: query
   parameter-panel-1739535544047-1:
@@ -167,25 +166,24 @@ widgets:
     height: 1
     text: ''
     width: 12
-    title: Corelight Suricata IDS Alert Overview
+    title: Corelight suricata IDS alert overview
     type: note
   28ef17dd-b865-421b-96eb-eecf517e5b5d:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight,ndr.suricata_corelight_hec])
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*} AND event.id=*
       | Vendor.alert.signature_id = ?{sid=*}
-      | rename(field="Vendor.ts", as="Time")
-      | select(["Time",source.ip,destination.ip,destination.port,network.protocol,Vendor.alert.severity,Vendor.alert.signature,Vendor.alert.signature_id,event.id])
+      | sort(Vendor.ts,limit=max)
+      | select(["Vendor.ts",source.ip,destination.ip,destination.port,network.protocol,Vendor.alert.severity,Vendor.alert.signature,Vendor.alert.signature_id,event.id])
       | replace("0",with=Informational,field=Vendor.alert.severity)
       | replace("1",with=Critical,field=Vendor.alert.severity)
       | replace("2",with=Medium,field=Vendor.alert.severity)
       | replace("3",with=Low,field=Vendor.alert.severity)
-      | rename([[Vendor.alert.severity,Severity],[Vendor.alert.signature,Signature],[Vendor.alert.signature_id,SID],[event.id,"Session ID"],[source.ip,"Source IP"],[destination.ip,"Destination IP"],[destination.port,"Destination Port"],[network.protocol,Service]])
-      | sort(Time,limit=20000)
+      | rename([[Vendor.ts,"Time"],[Vendor.alert.severity,Severity],[Vendor.alert.signature,Signature],[Vendor.alert.signature_id,SID],[event.id,"Session ID"],[source.ip,"Source IP"],[destination.ip,"Destination IP"],[destination.port,"Destination Port"],[network.protocol,Service]])
     end: now
     start: 1d
     width: 12
@@ -194,12 +192,11 @@ widgets:
     - name: Details of Category Analysis
       titleTemplate: Details of {{ fields["Session ID"] }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=observer.hostname, values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
         | event.id = ?uid
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         alert_severity: '["{{ parameters.alert_severity }}"]'
         source_ip: '["{{ parameters.source_ip }}"]'
@@ -225,9 +222,9 @@ widgets:
     x: 0
     height: 3
     queryString: |
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight])
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | timechart(function=count(as=Count))
     end: now
@@ -236,14 +233,13 @@ widgets:
     y: 1
     interactions:
     - name: Details of Total IDS Hits
-      titleTemplate: Details of Total IDS Hits
+      titleTemplate: Details of total IDS hits
       queryString: |
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=[ndr.suricata_corelight,ndr.suricata_corelight_hec])
+        | in(field=observer.hostname, values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         alert_severity: '["{{ parameters.alert_severity }}"]'
         category: '["{{ parameters.category }}"]'
@@ -260,16 +256,16 @@ widgets:
       plotType: line
       imputation: none
     visualization: time-chart
-    title: IDS Hits Over Time
+    title: IDS hits over time
     isLive: false
     type: query
   55126ed0-a62b-4859-94d1-524dd8773fe4:
     x: 0
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight])
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | count(as=Count)
     end: now
@@ -278,14 +274,13 @@ widgets:
     y: 4
     interactions:
     - name: Details of Total IDS Hits
-      titleTemplate: Details of Total IDS Hits
+      titleTemplate: Details of total IDS hits
       queryString: |
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=[ndr.suricata_corelight,ndr.suricata_corelight_hec])
+        | in(field=observer.hostname, values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         alert_severity: '["{{ parameters.alert_severity }}"]'
         category: '["{{ parameters.category }}"]'
@@ -298,16 +293,16 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Total IDS Hits
+    title: Total IDS hits
     isLive: false
     type: query
   e692a179-f371-406d-821e-44f613cba9fc:
     x: 6
     height: 2
     queryString: |
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight])
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{source_ip=*} AND Vendor.alert.severity=?{alert_severity=*} AND Vendor.alert.category=?{category=*}
       | count(as=Count,field=Vendor.alert.signature,distinct=true)
     end: now
@@ -316,15 +311,14 @@ widgets:
     y: 4
     interactions:
     - name: Details of Events with Alerting Rules
-      titleTemplate: Details of Events with Alerting Rules
+      titleTemplate: Details of events with alerting rules
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=[ndr.suricata_corelight,ndr.suricata_corelight_hec])
+        | in(field=observer.hostname, values=[?system_name])
         | source.ip=?source_ip AND Vendor.alert.severity=?alert_severity AND Vendor.alert.category=?category
         | Vendor.alert.signature=*
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         alert_severity: '["{{ parameters.alert_severity }}"]'
         category: '["{{ parameters.category }}"]'
@@ -337,10 +331,10 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Unique Rules Alerting
+    title: Unique rules alerting
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   alert_severity:
     label: Severity
@@ -356,9 +350,9 @@ parameters:
   category:
     label: Category
     query: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field=Vendor._path, values=[suricata_corelight,suricata_corelight_hec])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=[ndr.suricata_corelight,ndr.suricata_corelight_hec])
+      | in(field=observer.hostname, values=[?system_name])
       | groupBy(Vendor.alert.category, function=[])
     timeInterval: 1d
     useDashboardTimeIfSet: true
@@ -368,7 +362,7 @@ parameters:
     order: 3
     valueField: Vendor.alert.category
   source_ip:
-    label: Source IP
+    label: Source ip
     order: 1
     type: text
     defaultValue: '*'
@@ -380,14 +374,14 @@ parameters:
     defaultValue: '*'
     width: 3
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module = ndr
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 0
-    valueField: Vendor._system_name
+    valueField: observer.hostname

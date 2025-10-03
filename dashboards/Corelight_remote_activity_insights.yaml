@@ -2,8 +2,6 @@ sections:
   section-1732705335173-0:
     description: For Further Investigations view RDP Inferences Overview Dashboard
     collapsed: false
-    order: 0
-    title: Remote Access Hygiene
     widgetIds:
     - e09d6926-2eb6-4395-a690-f94921ae7f37
     - b5cda53f-0db7-4e31-b78c-a5713bbbdd2a
@@ -11,11 +9,11 @@ sections:
     - 34362f8a-902a-4a7c-aaac-344ca9b9ca75
     - note-1732701278746-0
     - bc047ded-603e-4e86-bd57-3e2a1dfcf934
+    order: 0
+    title: Remote access hygiene
   section-1732705453173-1:
     description: For Further Investigations view VPN Insights Dashboard
     collapsed: true
-    order: 1
-    title: VPN Insights
     widgetIds:
     - 1f464bbe-a447-4cb3-b4a9-8040cf24e8a4
     - note-1732772282836-0
@@ -26,7 +24,9 @@ sections:
     - 7f51ceab-4df1-4c9a-a1e5-4eae082a905d
     - 2e64757b-d8d4-4597-bf8c-698220c06b5a
     - bf0df78c-9ce3-4f0b-9854-46d13dc8be23
-name: SIEM-Workflow-RemoteActivityInsights
+    order: 1
+    title: VPN insights
+name: Corelight remote activity insights
 updateFrequency: never
 timeSelector: {}
 sharedTimeInterval:
@@ -35,14 +35,16 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- SIEM
+- Workflow
 widgets:
   3c1ad2d7-9e25-44e1-9394-6756748e6095:
     x: 0
     height: 4
     queryString: |
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.rdp"
+      | in(field=observer.hostname, values=[?system_name])
       | !in(field=#event.outcome, values=unknown)
       | timeChart(#event.outcome)
     end: now
@@ -50,18 +52,17 @@ widgets:
     width: 6
     y: 2
     interactions:
-    - name: Details of Failed vs Successful Authentications
-      titleTemplate: Details of {{ fields.#event.outcome }}
+    - name: Details of failed vs successful authentications
+      titleTemplate: Details of {{ fields.#event.outcome}}
       queryString: |-
-        #Vendor=corelight @event_parsed!="false"
-        | Vendor._path=rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor=corelight and #event.module = ndr
+        | #event.dataset="ndr.rdp"
+        | in(field=observer.hostname, values=[?system_name])
         | !in(field=#event.outcome, values=unknown)
         | #event.outcome=?outcome
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
-        outcome: '["{{ fields.#event.outcome }}"]'
+        outcome: '["{{fields.#event.outcome}}"]'
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
       isLive: false
@@ -84,7 +85,7 @@ widgets:
       regression: false
       regressionType: linear
     visualization: time-chart
-    title: Failed vs Successful Authentications
+    title: Failed vs successful authentications
     isLive: false
     type: query
   255bad92-457d-4dbd-aaa8-716fc0650dc4:
@@ -96,9 +97,9 @@ widgets:
       deemed suspicious.
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | array:contains("Vendor.inferences[]", value="COM")
       | array:contains("Vendor.inferences[]", value="RW")
       | array:contains("Vendor.inferences[]", value="NSP")
@@ -112,26 +113,25 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Unusual Remote Activity
+    title: Unusual remote activity
     isLive: false
     type: query
   1f464bbe-a447-4cb3-b4a9-8040cf24e8a4:
     x: 0
     y: 2
     height: 4
-    queryString: |
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+    queryString: |-
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | array:contains("Vendor.inferences[]", value="COM")
       | array:contains("Vendor.inferences[]", value="RW")
       | array:contains("Vendor.inferences[]", value="NSP")
       | concatArray("Vendor.inferences", as= Inferences, separator=", ")
-      | groupBy([source.ip, destination.ip, Vendor.vpn_type, Inferences], function=count(as=Count),limit=1000000)
+      | groupBy([source.ip, destination.ip, Vendor.vpn_type, Inferences], function=count(as=Count),limit=max)
       | rename([[source.ip,"Source IP"],[destination.ip,"Destination IP"],[Vendor.vpn_type,"VPN Type"]])
       | default(value="N/A", field=["Source IP","Responder IP","VPN Type","Inferences"])
-      | select(["Source IP","Destination IP","Inferences","VPN Type",Count])
-      | sort(Count,limit=20000)
+      | table(["Source IP","Destination IP","Inferences","VPN Type",Count], sortby=Count, limit=max)
     end: now
     start: 1d
     width: 6
@@ -149,9 +149,9 @@ widgets:
       time.
     height: 2
     queryString: |
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=rdp
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.rdp"
+      | in(field=observer.hostname, values=[?system_name])
       | !in(field=#event.outcome, values=unknown)
       | count(field=#event.outcome)
     end: now
@@ -159,28 +159,23 @@ widgets:
     width: 2
     y: 0
     interactions:
-    - name: Details of RDP Authentication Attempts
-      titleTemplate: Details of RDP Authentication Attempts
+    - name: Details of RDP authentication attempts
+      titleTemplate: Details of RDP authentication attempts
       queryString: |-
-        #Vendor=corelight @event_parsed!="false"
-        | Vendor._path=rdp
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor=corelight and #event.module = ndr
+        | #event.dataset="ndr.rdp"
+        | in(field=observer.hostname, values=[?system_name])
         | !in(field=#event.outcome, values=unknown)
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
       isLive: false
       type: searchlink
     options:
-      trellisShowBorders: false
-      suffix: ''
-      yAxisTitle: ''
-      value-format: abbreviated
       default: {}
     visualization: single-value
-    title: RDP Authentication Attempts
+    title: RDP authentication attempts
     isLive: false
     type: query
   4dc7d9fb-56e5-431a-8a13-0d4e85bac777:
@@ -191,9 +186,9 @@ widgets:
       inferences.
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^RW$|^FW$",flags=i)
       | groupBy([event.id], function=[])
@@ -204,7 +199,7 @@ widgets:
     options:
       default: {}
     visualization: single-value
-    title: Possible Unauthorized Remote Access Attempts
+    title: Possible unauthorized remote access attempts
     isLive: false
     type: query
   2e64757b-d8d4-4597-bf8c-698220c06b5a:
@@ -212,15 +207,15 @@ widgets:
     y: 2
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^TLS$|^SK$",flags=i)
-      | groupBy([source.ip,destination.ip], function=[selectLast([Inferences]),collect([Vendor.resp_cc],separator=", "),collect([Vendor.vpn_type],separator=", "),count(as=Count)],limit=1000000)
+      | groupBy([source.ip,destination.ip], function=[selectLast([Inferences]),collect([Vendor.resp_cc],separator=", "),collect([Vendor.vpn_type],separator=", "),count(as=Count)],limit=max)
       | default(value="N/A", field=[source.ip,destination.ip,Vendor.resp_cc,Vendor.vpn_type,Inferences])
       | rename([[source.ip,"Source IP"],[destination.ip,"Destination IP"],[Vendor.resp_cc,"Destination Country"],[Vendor.vpn_type,"VPN Type"]])
-      | sort(Count,limit=20000)
+      | sort(Count,limit=max)
     end: now
     start: 1d
     width: 6
@@ -237,12 +232,12 @@ widgets:
     y: 8
     height: 4
     queryString: |
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^RW$|^FW$",flags=i)
-      | groupBy([event.id], function=[collect([source.ip],separator=", "),collect([destination.ip],separator=", "),collect([network.transport],separator=", "),selectLast([Inferences]),collect([destination.port],separator=","),collect([Vendor.orig_bytes],separator=", "),count(as=Count)], limit=1000000)
+      | groupBy([event.id], function=[collect([source.ip],separator=", "),collect([destination.ip],separator=", "),collect([network.transport],separator=", "),selectLast([Inferences]),collect([destination.port],separator=","),collect([Vendor.orig_bytes],separator=", "),count(as=Count)], limit=max)
       | drop([event.id])
       | default(value="N/A", field=[destination.ip,network.transport,Inferences,destination.port,Vendor.orig_bytes])
       | default(value="No Results", field=[source.ip])
@@ -264,12 +259,10 @@ widgets:
     description: Total count of users with login failures within the specified time.
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=rdp
-      | in(field="Vendor._system_name", values=[?system_name])
-      | lower(#event.outcome, as=#event.outcome)
-      | lower(Vendor.auth_success, as=Vendor.auth_success)
-      | #event.outcome = "failure" or Vendor.auth_success = "false"
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.rdp"
+      | in(field=observer.hostname, values=[?system_name])
+      | #event.outcome = /failure/i or Vendor.auth_success = /false/i
       | count(user.name,distinct=true)
     end: now
     start: 1d
@@ -278,7 +271,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Identifying Failed RDP Logins
+    title: Identifying failed RDP logins
     isLive: false
     type: query
   bc047ded-603e-4e86-bd57-3e2a1dfcf934:
@@ -299,19 +292,16 @@ widgets:
     y: 2
     height: 4
     queryString: |
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=rdp
-      | in(field="Vendor._system_name", values=[?system_name])
-      | lower(#event.outcome, as=#event.outcome)
-      | lower(Vendor.auth_success, as=Vendor.auth_success)
-      | #event.outcome = "failure" or Vendor.auth_success = "false"
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.rdp"
+      | in(field=observer.hostname, values=[?system_name])
+      | #event.outcome = /failure/i or Vendor.auth_success = /false/i
       | groupBy([user.name], function=count(as=Count))
-      | user.name =~ join(query={#Vendor = corelight and @event_parsed!="false"
-          | Vendor._path=rdp
-          | in(field="Vendor._system_name", values=[?system_name])
-          | lower(#event.outcome, as=#event.outcome)
-          | lower(Vendor.auth_success, as=Vendor.auth_success)
-          | #event.outcome = "failure" or Vendor.auth_success = "false"},
+      | user.name =~ join(query={
+          #Vendor = corelight and #event.module = ndr
+          | #event.dataset="ndr.rdp"
+          | in(field=observer.hostname, values=[?system_name])
+          | #event.outcome = /failure/i or Vendor.auth_success = /false/i},
           include=[user.name, source.ip, destination.ip, Vendor.auth_success, #event.outcome],
           mode=left)
       | default(value="N/A", field=[source.ip, destination.ip, Vendor.auth_success, #event.outcome])
@@ -347,9 +337,9 @@ widgets:
       configurations such as static TLS key auth.
     height: 2
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path=vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset="ndr.vpn"
+      | in(field=observer.hostname, values=[?system_name])
       | concatArray("Vendor.inferences", separator=":", as=Inferences)
       | array:regex(array="Vendor.inferences[]", regex="^TLS$|^SK$",flags=i)
       | groupBy([source.ip,destination.ip], function=[])
@@ -361,7 +351,7 @@ widgets:
       default: {}
       value-format: abbreviated
     visualization: single-value
-    title: Suspected Data Exfiltration
+    title: Suspected data exfiltration
     isLive: false
     type: query
   7f51ceab-4df1-4c9a-a1e5-4eae082a905d:
@@ -395,7 +385,7 @@ widgets:
     height: 1
     text: ''
     width: 12
-    title: Remote Activity Insights
+    title: Remote activity insights
     type: note
   bf0df78c-9ce3-4f0b-9854-46d13dc8be23:
     x: 2
@@ -409,17 +399,17 @@ widgets:
     width: 10
     title: ''
     type: note
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module = ndr
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: Vendor._system_name
+    valueField: observer.hostname

@@ -1,4 +1,4 @@
-name: Security-CorelightIntel
+name: Corelight intel
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -7,28 +7,29 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Security Workflow
 widgets:
   5ff4b3f0-1e3c-471c-b4c2-adbe6a394f01:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = intel
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.intel
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.seen.indicator_type=?{indicator_type=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
-      | top([source.ip, destination.ip, destination.port, Vendor.seen.indicator_type, Vendor.seen.indicator, Vendor.seen.where], limit=5, as="Total Events")
-      | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], [destination.port, "Port"], [Vendor.seen.indicator_type, "Indicator Type"], [Vendor.seen.indicator, Indicator], [Vendor.seen.where, Where]])
+      | top([source.ip, destination.ip, destination.port, Vendor.seen.indicator_type, Vendor.seen.indicator, Vendor.seen.where], limit=100, as="Total Events")
+      | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], [destination.port, "Destination Port"], [Vendor.seen.indicator_type, "Indicator Type"], [Vendor.seen.indicator, Indicator], [Vendor.seen.where, Where]])
     end: now
     start: 'calendar: now@y'
     width: 12
     y: 6
     interactions:
-    - name: Details of Intel Data
+    - name: Details of intel data
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = intel
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module =ndr
+        | #event.dataset = ndr.intel
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter and Vendor.seen.indicator_type=?indicator_type
         | source.ip=?filter or destination.ip=?filter or destination.port=?filter or Vendor.seen.indicator=?filter
         | source.ip=?table_src_ip and destination.ip=?table_dst_ip and destination.port=?table_port and Vendor.seen.indicator_type=?table_indicator_type and Vendor.seen.indicator=?table_indicator and Vendor.seen.where=?table_where
@@ -52,36 +53,36 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: Intel Details
+    title: Intel details
     isLive: false
     type: query
   219afb67-097d-4b69-a954-7a58801befab:
     x: 0
+    description: '"Additional filter", "Indicator type" filters do not apply'
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = intel
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.intel
+      | in(field=observer.hostname, values=[?system_name])
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
-      | timeChart(series=Vendor._path, function=count())
+      | timeChart(series=#event.dataset, function=count())
     end: now
     start: 'calendar: now@y'
     width: 6
     y: 1
     interactions:
-    - name: Details of Intel Logs Over Time
-      titleTemplate: Details of Intel Data
+    - name: Details of intel logs over time
+      titleTemplate: Details of intel data
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = intel
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module =ndr
+        | #event.dataset = ndr.intel
+        | in(field=observer.hostname, values=[?system_name])
         | source.ip=?filter or destination.ip=?filter or destination.port=?filter or Vendor.seen.indicator=?filter
-        | Vendor._path=?path
+        | #event.dataset=?path
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         filter: '["{{ parameters.filter }}"]'
-        path: '["{{ fields.Vendor._path }}"]'
+        path: '["{{ fields.#event.dataset }}"]'
         system_name: '["{{ parameters.system_name }}"]'
       openInNewTab: true
       isLive: false
@@ -102,8 +103,7 @@ widgets:
       yAxisTitle: ''
       stacking: none
     visualization: time-chart
-    title: Intel Logs Over Time ("Additional Filter", "Indicator Type" filters do
-      not apply)
+    title: Intel logs over time
     isLive: false
     type: query
   note-1734437563042-0:
@@ -120,9 +120,9 @@ widgets:
     x: 6
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = intel
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.intel
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.seen.indicator_type=?{indicator_type=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
       | top([Vendor.seen.indicator_type])
@@ -131,14 +131,13 @@ widgets:
     width: 6
     y: 1
     interactions:
-    - name: Details of Indicators
+    - name: Details of indicators
       titleTemplate: Details of {{ fields.Vendor.seen.indicator_type }}
-      queryString: "#Vendor = corelight and @event_parsed!=\"false\"\n| Vendor._path\
-        \ = intel\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter and\
-        \ Vendor.seen.indicator_type=?indicator_type\n| source.ip=?filter or destination.ip=?filter\
+      queryString: "#Vendor = corelight and #event.module =ndr\n| #event.dataset =\
+        \ ndr.intel\n| in(field=observer.hostname, values=[?system_name])\n| ?additional_filter\
+        \ and Vendor.seen.indicator_type=?indicator_type\n| source.ip=?filter or destination.ip=?filter\
         \ or destination.port=?filter or Vendor.seen.indicator=?filter\n| Vendor.seen.indicator_type=?chart_indicator_type "
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         filter: '["{{ parameters.filter }}"]'
         chart_indicator_type: '["{{ fields.Vendor.seen.indicator_type }}"]'
@@ -164,14 +163,14 @@ widgets:
     y: 10
     height: 6
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = intel
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.intel
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.seen.indicator_type=?{indicator_type=*}
       | source.ip=?{filter=*} or destination.ip=?{filter=*} or destination.port=?{filter=*} or Vendor.seen.indicator=?{filter=*}
       | formatTime(format="%F %r", as="Time")
-      | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], [destination.port, "Port"], [@rawstring, "Raw Data"]])
-      | select(["Time", "Source IP", "Destination IP", Port, "Raw Data"])
+      | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], [destination.port, "Destination Port"], [@rawstring, "Raw Data"]])
+      | select(["Time", "Source IP", "Destination IP", "Destination Port", "Raw Data"])
     end: now
     start: 'calendar: now@y'
     width: 12
@@ -180,13 +179,13 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: Log Data
+    title: Log data
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   additional_filter:
-    label: Additional Filter
+    label: Additional filter
     order: 3
     type: text
     defaultValue: '*'
@@ -198,12 +197,12 @@ parameters:
     defaultValue: '*'
     width: 1
   indicator_type:
-    label: Indicator Type
+    label: Indicator type
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = intel
+      #Vendor = corelight and #event.module =ndr
+      | #event.dataset = ndr.intel
       | Vendor.seen.indicator_type=*
-      | in(field="Vendor._system_name", values=[?system_name])
+      | in(field=observer.hostname, values=[?system_name])
       | groupBy([Vendor.seen.indicator_type], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
@@ -213,14 +212,14 @@ parameters:
     order: 1
     valueField: Vendor.seen.indicator_type
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module =ndr
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 0
-    valueField: Vendor._system_name
+    valueField: observer.hostname
