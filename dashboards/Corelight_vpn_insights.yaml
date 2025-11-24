@@ -1,4 +1,4 @@
-name: Security-CorelightVPNInsights
+name: Corelight vpn insights
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -7,16 +7,17 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Security Workflow
 widgets:
   5843cb6c-a01e-45a1-800f-46016a22432f:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
-      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=20000), limit=1000000)], var="Inferences")
+      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=max), limit=max)], var="Inferences")
       | Inferences=?{inference=*}
       | timeChart(Inferences, limit=10)
     end: now
@@ -24,16 +25,15 @@ widgets:
     width: 12
     y: 6
     interactions:
-    - name: Details of Inferences
+    - name: Details of inferences
       titleTemplate: Details of {{ fields.Inferences }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = vpn
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.vpn
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | array:contains(array="Vendor.inferences[]", value=?chart_inference)
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         chart_inference: '["{{ fields.Inferences }}"]'
@@ -58,7 +58,7 @@ widgets:
       yAxisTitle: ''
       stacking: normal
     visualization: time-chart
-    title: Inferences Over Time
+    title: Inferences over time
     isLive: false
     type: query
   a4ee2caf-d07f-47e2-94d8-d2f98cd7dd2b:
@@ -66,9 +66,9 @@ widgets:
     y: 16
     height: 6
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -88,16 +88,16 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: VPN Inference Log Data
+    title: VPN inference log data
     isLive: false
     type: query
   b82c8bd2-4352-4eda-89c7-2645bedeeb2c:
     x: 8
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -111,12 +111,12 @@ widgets:
     width: 4
     y: 1
     interactions:
-    - name: Details of VPN Types
+    - name: Details of vpn types
       titleTemplate: Details of {{ fields.Vendor.vpn_type }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = vpn
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.vpn
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?inference
         | case {
@@ -126,7 +126,6 @@ widgets:
         }
         | Vendor.vpn_type=?chart_vpn
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         chart_vpn: '["{{ fields.Vendor.vpn_type }}"]'
         additional_filter: '["{{ parameters.additional_filter }}"]'
@@ -143,18 +142,18 @@ widgets:
       legendPosition: right
       legendTitle: VPN Types
     visualization: pie-chart
-    title: VPN Type
+    title: VPN type
     isLive: false
     type: query
   c0e2293d-84de-48d4-89ee-98cf95a3085f:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
-      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=20000), limit=1000000)], var="Inferences")
+      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=max), limit=max)], var="Inferences")
       | Inferences=?{inference=*}
       | top([Inferences])
     end: now
@@ -162,12 +161,12 @@ widgets:
     width: 4
     y: 1
     interactions:
-    - name: Details of Inference Type
+    - name: Details of inference type
       titleTemplate: Details of {{ fields.Inferences }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = vpn
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.vpn
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?chart_inference
         | case {
@@ -176,7 +175,6 @@ widgets:
             text:contains(string=inference_filter, substring="*") | *
         }
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         chart_inference: '["{{ fields.Inferences }}"]'
@@ -191,7 +189,7 @@ widgets:
       maxSeriesCount: 10
       series: {}
     visualization: pie-chart
-    title: Inference Type
+    title: Inference type
     isLive: false
     type: query
   note-1736247990688-0:
@@ -201,15 +199,15 @@ widgets:
     height: 1
     text: ''
     width: 12
-    title: VPN Insights
+    title: VPN insights
     type: note
   d84f186f-6f5e-4259-8541-dbdefa6ae37a:
     x: 4
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -223,12 +221,12 @@ widgets:
     width: 4
     y: 1
     interactions:
-    - name: Details of Top VPN Users
+    - name: Details of top VPN users
       titleTemplate: Details of {{ fields.source.ip }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = vpn
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.vpn
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?inference
         | case {
@@ -238,7 +236,6 @@ widgets:
         }
         | source.ip=?chart_ip
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         chart_ip: '["{{ fields.source.ip }}"]'
         additional_filter: '["{{ parameters.additional_filter }}"]'
@@ -256,16 +253,16 @@ widgets:
       maxSeriesCount: 20
       withLegendTitle: true
     visualization: pie-chart
-    title: Top(20) VPN Users
+    title: Top(20) VPN users
     isLive: false
     type: query
   04784b2d-0256-41d6-a72a-772275171643:
     x: 6
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | inference_filter := ?inference
       | case {
@@ -273,8 +270,8 @@ widgets:
           array:contains(array="Vendor.inferences[]", value=?inference);
           text:contains(string=inference_filter, substring="*") | *
       }
-      | groupBy([tls.client.ja3, tls.server.ja3s], limit=1000000)
-      | sort(_count, limit=20000)
+      | groupBy([tls.client.ja3, tls.server.ja3s], limit=max)
+      | sort(_count, limit=max)
       | default(value="unknown", field=[tls.client.ja3, tls.server.ja3s])
       | default(value="0", field=[_count])
       | rename([[tls.client.ja3, JA3], [tls.server.ja3s, JA3S], [_count, Count]])
@@ -283,12 +280,12 @@ widgets:
     width: 6
     y: 11
     interactions:
-    - name: Details of VPN Finger Prints
+    - name: Details of VPN finger prints
       titleTemplate: Details of {{ fields.JA3 }}
       queryString: |-
-        #Vendor = corelight and @event_parsed!="false"
-        | Vendor._path = vpn
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | #event.dataset = ndr.vpn
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter and Vendor.vpn_type=?vpn_type
         | inference_filter := ?inference
         | case {
@@ -298,7 +295,6 @@ widgets:
         }
         | tls.client.ja3=?table_ja3 and tls.server.ja3s=?table_ja3s
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         table_ja3s: '["{{ fields.JA3S }}"]'
         additional_filter: '["{{ parameters.additional_filter }}"]'
@@ -314,7 +310,7 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: VPN JA3 Finger Prints
+    title: VPN JA3 finger prints
     isLive: false
     type: query
   2380750f-8843-4957-87ff-f67e41e98e6e:
@@ -322,9 +318,9 @@ widgets:
     y: 11
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*} and Vendor.vpn_type=?{vpn_type=*}
       | network.protocol="spicy*"
       | inference_filter := ?inference
@@ -334,7 +330,7 @@ widgets:
           text:contains(string=inference_filter, substring="*") | *
       }
       | ipLocation(destination.ip, as=GeoIP)
-      | groupBy([source.ip, destination.ip, destination.port, GeoIP.country, network.protocol, network.transport], function=[sum("Vendor.resp_bytes", as=resp_bytes_sum), sum("Vendor.orig_bytes", as=orig_bytes_sum), count()], limit=1000000)
+      | groupBy([source.ip, destination.ip, destination.port, GeoIP.country, network.protocol, network.transport], function=[sum("Vendor.resp_bytes", as=resp_bytes_sum), sum("Vendor.orig_bytes", as=orig_bytes_sum), count()], limit=max)
       | total_bytes := orig_bytes_sum + resp_bytes_sum
       | sort(total_bytes, limit=20)
       | rename([[source.ip, "Source IP"], [destination.ip, "Destination IP"], [destination.port, "Destination Port"], [network.transport, Protocol], [GeoIP.country, "Destination Country"], [network.protocol, Service], [orig_bytes_sum, "Sum of Source Bytes"], [resp_bytes_sum, "Sum of Destination Bytes"], [total_bytes, Gigabytes], [_count, "Number of Connections"]])
@@ -352,13 +348,13 @@ widgets:
           data-type: bytes
       row-numbers-enabled: false
     visualization: table-view
-    title: Largest Transfers Between Host Pairs Over VPN
+    title: Largest transfers between host pairs over VPN
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   additional_filter:
-    label: Additional Filter
+    label: Additional filter
     order: 3
     type: text
     defaultValue: '*'
@@ -366,10 +362,10 @@ parameters:
   inference:
     label: Inference
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
-      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=20000), limit=1000000)], var="Inferences")
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
+      | array:reduceAll(array="Vendor.inferences[]", function=[groupBy(Inferences, function=tail(limit=max), limit=max)], var="Inferences")
       | select([Inferences])
     timeInterval: 24h
     useDashboardTimeIfSet: true
@@ -379,25 +375,25 @@ parameters:
     order: 2
     valueField: Inferences
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 0
-    valueField: Vendor._system_name
+    valueField: observer.hostname
   vpn_type:
-    label: VPN Type
+    label: VPN type
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | Vendor._path = vpn
-      | in(field="Vendor._system_name", values=[?system_name])
-      | groupBy([Vendor.vpn_type], function=[], limit=1000000)
+      #Vendor = corelight and #event.module = ndr
+      | #event.dataset = ndr.vpn
+      | in(field=observer.hostname, values=[?system_name])
+      | groupBy([Vendor.vpn_type], function=[], limit=max)
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query

@@ -1,4 +1,4 @@
-name: Security-CorelightIPInterrogation
+name: Corelight ip interrogation
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -7,13 +7,14 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Security Workflow
 widgets:
   386b9584-79d7-4c1b-9892-1e7de62dbd39:
     x: 6
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=observer.hostname, values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
       | direction := if(is_dest_internal_ip==true, then="Internal", else=if(is_dest_internal_ip==false, then="External", else="Unknown"))
@@ -23,17 +24,16 @@ widgets:
     width: 6
     y: 1
     interactions:
-    - name: Details of Internal vs External
+    - name: Details of internal vs external
       titleTemplate: Details of {{ fields.direction }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=observer.hostname, values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
         | direction := if(is_dest_internal_ip==true, then="Internal", else=if(is_dest_internal_ip==false, then="External", else="Unknown"))
         | direction=?chart_direction
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         chart_direction: '["{{ fields.direction }}"]'
         ip: '["{{ parameters.ip }}"]'
@@ -48,16 +48,16 @@ widgets:
       legendPosition: right
       legendTitle: Direction
     visualization: pie-chart
-    title: Connections - Internal vs External
+    title: Connections - internal vs external
     isLive: false
     type: query
   688c3dc5-9c8f-4dd4-a8fb-a9ed8da8ec1f:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(Vendor._path, values=["http", "http2", "http_red"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(#event.dataset, values=["ndr.http", "ndr.http2", "ndr.http_red"])
+      | in(field=observer.hostname, values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | top([destination.ip, source.ip, http.request.method, url.path])
       | default(value="unknown", field=[destination.ip, source.ip, http.request.method, url.path])
@@ -67,15 +67,14 @@ widgets:
     width: 12
     y: 10
     interactions:
-    - name: Details of Top Destination IP, Method, & URI
+    - name: Details of top destination ip, method, & URI
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(Vendor._path, values=["http", "http2", "http_red"])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(#event.dataset, values=["ndr.http", "ndr.http2", "ndr.http_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | source.ip=?src_ip and destination.ip=?dst_ip and http.request.method=?method and url.path=?uri
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         ip: '["{{ parameters.ip }}"]'
         uri: '["{{ fields.URI }}"]'
@@ -91,7 +90,7 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: HTTP - Top Destination IP, Method, & URI
+    title: HTTP - top Destination ip, method, & URI
     isLive: false
     type: query
   note-1734440593707-0:
@@ -101,33 +100,32 @@ widgets:
     height: 1
     text: ''
     width: 12
-    title: IP Interrogation
+    title: IP interrogation
     type: note
   a77364af-464d-4850-898d-56e22df3ef21:
     x: 4
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(Vendor._path, values=["http", "http2", "http_red"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(#event.dataset, values=["ndr.http", "ndr.http2", "ndr.http_red"])
+      | in(field=observer.hostname, values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
-      | groupBy([Vendor.user_agent], limit=1000000)
+      | groupBy([Vendor.user_agent], limit=max)
       | sort(_count, order=asc, limit=10)
     end: now
     start: 24h
     width: 4
     y: 15
     interactions:
-    - name: Details of Rare User Agents
+    - name: Details of rare user agents
       titleTemplate: Details of {{ fields.Vendor.user_agent }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(Vendor._path, values=["http", "http2", "http_red"])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(#event.dataset, values=["ndr.http", "ndr.http2", "ndr.http_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | Vendor.user_agent=?user_agent
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         ip: '["{{ parameters.ip }}"]'
         system_name: '["{{ parameters.system_name }}"]'
@@ -143,16 +141,16 @@ widgets:
       legendPosition: bottom
       legendTitle: User Agent
     visualization: pie-chart
-    title: HTTP - Rare User Agents
+    title: HTTP - rare user agents
     isLive: false
     type: query
   9ac59228-7821-465a-8b42-f0aad2dc6772:
     x: 8
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red", "ndr.smtp"])
+      | in(field=observer.hostname, values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | in(field="destination.port", values=[80, 8080, 443])
       | top([destination.port])
@@ -161,16 +159,15 @@ widgets:
     width: 4
     y: 15
     interactions:
-    - name: Details of Web Ports Breakdown
+    - name: Details of web ports breakdown
       titleTemplate: Details of {{ fields.destination.port }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red"])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | destination.port=?port
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         ip: '["{{ parameters.ip }}"]'
         port: '["{{ fields.destination.port }}"]'
@@ -186,16 +183,16 @@ widgets:
       legendPosition: bottom
       legendTitle: Destination Port
     visualization: pie-chart
-    title: HTTP - Web Ports Breakdown
+    title: HTTP - web ports breakdown
     isLive: false
     type: query
   dd09419e-78fb-4667-8dbb-7c14e6e50630:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
+      #Vendor = corelight and #event.module = ndr
       | !in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      | in(field=observer.hostname, values=[?system_name])
       |(source.ip=?{ip=*} or destination.ip=?{ip=*})
       | top([Vendor._path])
     end: now
@@ -203,15 +200,14 @@ widgets:
     width: 4
     y: 15
     interactions:
-    - name: Details of Corelight supporting data sources for source
+    - name: Details of corelight supporting data sources for source
       titleTemplate: Details of {{ fields.Vendor._path }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=observer.hostname, values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | Vendor._path=?sourcetype
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         ip: '["{{ parameters.ip }}"]'
         sourcetype: '["{{ fields.Vendor._path }}"]'
@@ -227,29 +223,21 @@ widgets:
       legendPosition: bottom
       legendTitle: Source Type
     visualization: pie-chart
-    title: Corelight Data Sets - Corelight Supporting Data Sources For Source
+    title: Corelight data sets - corelight supporting sata sources for source
     isLive: false
     type: query
   30c37611-749f-40d1-b70e-085f1d9adff0:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red", "ndr.smtp"])
+      | in(field=observer.hostname, values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
-      | case {
-          in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
-          is_broadcast := true;
-          in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
-          is_broadcast := true;
-          * |
-          is_broadcast := false;
-      }
-      | is_broadcast = false
-      | !"192.168.0.255"
+      | !in(field="source.ip", values=["0.0.0.0", "255.255.255.255"])
+      | !in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"])
       | format(format="%s/%s", field=[network.transport, destination.port], as=pr)
-      | groupBy([source.ip, destination.ip, event.id], function=[collect([pr], separator=","), sum("network.bytes", as=Bytes)], limit=1000000)
+      | groupBy([source.ip, destination.ip, event.id], function=[collect([pr], separator=","), sum("network.bytes", as=Bytes)], limit=max)
       | sort(Bytes, order=desc, limit=10)
       | ipLocation(destination.ip)
       | default(value="unknown", field=[source.ip, destination.ip, event.id, pr, destination.ip.country])
@@ -261,23 +249,15 @@ widgets:
     width: 12
     y: 5
     interactions:
-    - name: Details of Top Connections/Services by Bytes Transferred
+    - name: Details of top connections/services by bytes transferred
       titleTemplate: Details of {{ fields.UID }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red"])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
-        | case {
-            in(field="source.ip", values=["0.0.0.0", "255.255.255.255"]) |
-            is_broadcast := true;
-            in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"]) |
-            is_broadcast := true;
-            * |
-            is_broadcast := false;
-        }
-        | is_broadcast = false
-        | !"192.168.0.255"
+        | !in(field="source.ip", values=["0.0.0.0", "255.255.255.255"])
+        | !in(field="destination.ip", values=["255.255.255.255", "0.0.0.0"])
         | format(format="%s/%s", field=[network.transport, destination.port], as=pr)
         | ipLocation(destination.ip)
         | default(value="unknown", field=[source.ip, destination.ip, event.id, pr, destination.ip.country])
@@ -285,7 +265,6 @@ widgets:
         | rename([[source.ip, Source], [destination.ip, Destination], [pr, Service], [event.id, UID], [destination.ip.country, Country]])
         | UID=?table_uid
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         ip: '["{{ parameters.ip }}"]'
         system_name: '["{{ parameters.system_name }}"]'
@@ -300,16 +279,16 @@ widgets:
           data-type: bytes
       row-numbers-enabled: false
     visualization: table-view
-    title: Connections - Top Connections/Services by Bytes Transferred
+    title: Connections - top connections/services by bytes transferred
     isLive: false
     type: query
   d693ac88-8ff0-4314-af48-f315ab05fbf6:
     x: 0
     height: 4
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red", "smtp"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red", "ndr.smtp"])
+      | in(field=observer.hostname, values=[?system_name])
       | (source.ip=?{ip=*} or destination.ip=?{ip=*})
       | !in(field=destination.port, values=[80,443,8080])
       | format("%s/%s", field=[network.transport, destination.port], as=tp)
@@ -319,18 +298,17 @@ widgets:
     width: 6
     y: 1
     interactions:
-    - name: Details of Top Non-Web Protocol Usage
+    - name: Details of top non-web protocol usage
       titleTemplate: Details of {{ fields.tp }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(Vendor._path, values=["conn", "conn_red", "conn_long", "dns", "dns_red", "files", "files_red", "http", "http2", "http_red", "ssl", "ssl_red"])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(#event.dataset, values=["ndr.conn", "ndr.conn_red", "ndr.conn_long", "ndr.dns", "ndr.dns_red", "ndr.files", "ndr.files_red", "ndr.http", "ndr.http2", "ndr.http_red", "ndr.ssl", "ndr.ssl_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | (source.ip=?ip or destination.ip=?ip)
         | !in(field=destination.port, values=[80,443,8080])
         | format("%s/%s", field=[network.transport, destination.port], as=tp)
         | tp=?chart_tp
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         chart_tp: '["{{ fields.tp }}"]'
         ip: '["{{ parameters.ip }}"]'
@@ -340,14 +318,15 @@ widgets:
       type: searchlink
     options:
       xAxisTitle: Protocol/Port
+      barChartType: stacked
       yAxisTitle: Count
       maxSeriesCount: 10
       series: {}
     visualization: bar-chart
-    title: Connections - Top Non-Web Protocol Usage
+    title: Connections - top non-web protocol usage
     isLive: false
     type: query
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   ip:
     label: IP
@@ -356,14 +335,14 @@ parameters:
     defaultValue: '*'
     width: 1
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
       #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name],function=[])
+      | groupBy([observer.hostname],function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 10
-    valueField: Vendor._system_name
+    valueField: observer.hostname
