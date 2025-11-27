@@ -1,4 +1,4 @@
-name: Data-Corelightx509
+name: Corelight x509
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -7,40 +7,40 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Data
 widgets:
   b73340f1-5ede-4d9e-930e-164e77d5e456:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=["x509", "x509_red"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.x509", "ndr.x509_red"])
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
-      | groupBy([Vendor.certificate.not_valid_after,Vendor.certificate.subject], function=[], limit=1000000)
+      | groupBy([Vendor.certificate.not_valid_after,Vendor.certificate.subject], function=[], limit=max)
       | ts_now := now()
       | parseTimestamp(field=Vendor.certificate.not_valid_after, as=ts_then)
       | now_now := ts_now-ts_then
       | now_now := round(now_now)
       | now_now > 0
+      | sort(field=Vendor.certificate.not_valid_after, order=asc, limit=max)
       | select([Vendor.certificate.not_valid_after, Vendor.certificate.subject])
       | rename([[Vendor.certificate.not_valid_after, "Certificate Not Valid After"], [Vendor.certificate.subject, "Certificate Subject"]])
-      | sort(field="Certificate Not Valid After", order=asc, limit=20000)
     end: now
     start: 1d
     width: 12
     y: 6
     interactions:
-    - name: 'Details of Certificate Expiration '
-      titleTemplate: 'Details of Certificate : {{ fields["Certificate Subject"] }}
-        and Expiry Date : {{ fields["Certificate Not Valid After"] }}'
+    - name: 'Details of certificate expiration'
+      titleTemplate: 'Details of certificate : {{ fields["Certificate Subject"] }}
+        and expiry date : {{ fields["Certificate Not Valid After"] }}'
       queryString: |
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._path", values=["x509", "x509_red"])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.x509", "ndr.x509_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter
         | Vendor.certificate.subject = ?subject AND Vendor.certificate.not_valid_after = ?expiry_time_stamp
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         expiry_time_stamp: '["{{ fields[\"Certificate Not Valid After\"] }}"]'
@@ -54,16 +54,16 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: x509 Expired Certificates
+    title: x509 expired certificates
     isLive: false
     type: query
   c67041b9-f8e6-4f85-8178-57ce67f280c0:
     x: 6
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=["x509", "x509_red", "ssl", "ssl_red", "conn", "conn_long", "conn_red"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.x509", "ndr.x509_red", "ndr.ssl", "ndr.ssl_red", "ndr.conn", "ndr.conn_long", "ndr.conn_red"])
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
       | is_src_internal_ip := if(cidr(source.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(source.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(source.ip, subnet="192.168.0.0/16"), then=true, else=false)))
       | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
@@ -80,20 +80,20 @@ widgets:
           | direction := "unknown"
       }
       | direction=?{direction=*}
-      | groupBy([Vendor.certificate.subject],limit=100000)
+      | groupBy([Vendor.certificate.subject],limit=max)
+      | sort(_count, order=asc, limit=10)
       | rename([[_count, Count], [Vendor.certificate.subject, "SSL Subject"]])
-      | sort(Count, order=asc, limit=10)
     end: now
     start: 1d
     width: 6
     y: 1
     interactions:
-    - name: Details of x509 Rare Subjects
+    - name: Details of x509 rare subjects
       titleTemplate: Details of {{ fields["SSL Subject"] }}
       queryString: |-
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._path", values=["x509", "x509_red", "ssl", "ssl_red", "conn", "conn_long", "conn_red"])
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=#event.dataset, values=["ndr.x509", "ndr.x509_red", "ndr.ssl", "ndr.ssl_red", "ndr.conn", "ndr.conn_long", "ndr.conn_red"])
+        | in(field=observer.hostname, values=[?system_name])
         | ?additional_filter
         | is_src_internal_ip := if(cidr(source.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(source.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(source.ip, subnet="192.168.0.0/16"), then=true, else=false)))
         | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
@@ -112,7 +112,6 @@ widgets:
         | direction=?direction
         | Vendor.certificate.subject = ?ssl_subject
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         direction: '["{{ parameters.direction }}"]'
@@ -126,16 +125,16 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: x509 Rare Subjects
+    title: x509 rare subjects
     isLive: false
     type: query
   fcc40a8f-7f51-41e2-be82-cecb32ce91fe:
     x: 0
     height: 5
     queryString: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._path", values=["x509", "x509_red", "ssl", "ssl_red", "conn", "conn_long", "conn_red"])
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=#event.dataset, values=["ndr.x509", "ndr.x509_red", "ndr.ssl", "ndr.ssl_red", "ndr.conn", "ndr.conn_long", "ndr.conn_red"])
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
       | is_src_internal_ip := if(cidr(source.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(source.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(source.ip, subnet="192.168.0.0/16"), then=true, else=false)))
       | is_dest_internal_ip := if(cidr(destination.ip, subnet="10.0.0.0/8"), then=true, else=if(cidr(destination.ip, subnet="172.16.0.0/12"), then=true, else=if(cidr(destination.ip, subnet="192.168.0.0/16"), then=true, else=false)))
@@ -161,11 +160,10 @@ widgets:
     width: 6
     y: 1
     interactions:
-    - name: Details of x509 Top Subjects
+    - name: Details of x509 top subjects
       titleTemplate: Details of {{ fields["SSL Subject"] }}
-      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"\
-        Vendor._path\", values=[\"x509\", \"x509_red\", \"ssl\", \"ssl_red\", \"conn\"\
-        , \"conn_long\", \"conn_red\"])\n| in(field=\"Vendor._system_name\", values=[?system_name])\n| ?additional_filter\n\
+      queryString: "#Vendor = corelight and #event.module = \"ndr\"\n| in(field=\"#event.dataset\", values=[\"ndr.x509\", \"ndr.x509_red\", \"ndr.ssl\", \"ndr.ssl_red\", \"ndr.conn\"\
+        , \"ndr.conn_long\", \"ndr.conn_red\"])\n| in(field=\"observer.hostname\", values=[?system_name])\n| ?additional_filter\n\
         | is_src_internal_ip := if(cidr(source.ip, subnet=\"10.0.0.0/8\"), then=true,\
         \ else=if(cidr(source.ip, subnet=\"172.16.0.0/12\"), then=true, else=if(cidr(source.ip,\
         \ subnet=\"192.168.0.0/16\"), then=true, else=false)))\n| is_dest_internal_ip\
@@ -179,7 +177,6 @@ widgets:
         \   | direction := \"unknown\"\n}\n| direction=?direction \n| Vendor.certificate.subject\
         \ = ?ssl_subject"
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         direction: '["{{ parameters.direction }}"]'
@@ -193,7 +190,7 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: x509 Top Subjects
+    title: x509 top subjects
     isLive: false
     type: query
   note-1734413690233-0:
@@ -209,7 +206,7 @@ widgets:
 $schema: https://schemas.humio.com/dashboard/v0.17.0
 parameters:
   additional_filter:
-    label: Additional Filter
+    label: Additional filter
     order: 3
     type: text
     defaultValue: '*'
@@ -227,14 +224,14 @@ parameters:
     defaultValue: '*'
     width: 1
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |-
-      #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module = ndr
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: Vendor._system_name
+    valueField: observer.hostname

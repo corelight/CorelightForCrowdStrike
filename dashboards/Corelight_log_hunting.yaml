@@ -1,4 +1,4 @@
-name: Security-CorelightLogHunting
+name: Corelight log hunting
 description: ''
 timeSelector: {}
 sharedTimeInterval:
@@ -7,18 +7,19 @@ sharedTimeInterval:
   start: 1d
 labels:
 - Corelight
+- Security Workflow
 widgets:
   17d56b3f-fe43-4372-bba3-f08d75f88a3f:
     x: 0
     height: 4
     queryString: |
-      #Vendor = corelight and @event_parsed != "false"
+      #Vendor = corelight and #event.module = ndr
       | !in(field=Vendor._path, values=[corelight_audit_log,corelight_metrics_bro,corelight_metrics_cpu,corelight_metrics_disk,corelight_metrics_docker,
           corelight_metrics_iface,corelight_metrics_memory,corelight_metrics_s,corelight_metrics_smartpcap,
           corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
           corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
       | in(Vendor._path,values=[?sourcetype])
-      | in(field="Vendor._system_name", values=[?system_name])
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
       | source.ip =?{filter=*} OR destination.ip=?{filter=*} OR event.id=?{filter=*} OR Vendor.fuid=?{filter=*} OR network.community_id=?{filter=*}
       | top(Vendor._path)
@@ -27,14 +28,13 @@ widgets:
     width: 6
     y: 1
     interactions:
-    - name: Details of Filtered Corelight Data for This Unique Entity
+    - name: Details of filtered corelight data for this unique entity
       titleTemplate: Details of Log type {{ fields.Vendor._path }}
-      queryString: "#Vendor = corelight and @event_parsed != \"false\"\n| in(field=\"Vendor._system_name\", values=[?system_name])\n\
+      queryString: "#Vendor = corelight and #event.module = \"ndr\"\n| in(field=\"observer.hostname\", values=[?system_name])\n\
         | ?additional_filter \n| source.ip =?filter OR destination.ip=?filter OR event.id=?filter\
         \ OR Vendor.fuid=?filter OR network.community_id=?filter\n| Vendor._path =\
         \ ?sourcetype\n"
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         additional_filter: '["{{ parameters.additional_filter }}"]'
         filter: '["{{ parameters.filter }}"]'
@@ -50,7 +50,7 @@ widgets:
       legendPosition: right
       legendTitle: Source Types
     visualization: pie-chart
-    title: Filtered Corelight Data for This Unique Entity
+    title: Filtered corelight data for this unique entity
     isLive: false
     type: query
   2d38934a-a9cf-47b3-baac-8640233e3aa9:
@@ -58,13 +58,13 @@ widgets:
     y: 5
     height: 6
     queryString: |
-      #Vendor = corelight and @event_parsed != "false"
+      #Vendor = corelight and #event.module = ndr
       | !in(field=Vendor._path, values=[corelight_audit_log,corelight_metrics_bro,corelight_metrics_cpu,corelight_metrics_disk,corelight_metrics_docker,
           corelight_metrics_iface,corelight_metrics_memory,corelight_metrics_s,corelight_metrics_smartpcap,
           corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
           corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
       | in(Vendor._path,values=[?sourcetype])
-      | in(field="Vendor._system_name", values=[?system_name])
+      | in(field=observer.hostname, values=[?system_name])
       | ?{additional_filter=*}
       | source.ip =?{filter=*} OR destination.ip=?{filter=*} OR event.id=?{filter=*} OR Vendor.fuid=?{filter=*} OR network.community_id=?{filter=*}
       | formatTime(format="%F %r", as="Time")
@@ -78,33 +78,32 @@ widgets:
       configured-columns: {}
       row-numbers-enabled: false
     visualization: table-view
-    title: Log Data
+    title: Log data
     isLive: false
     type: query
   88cb7e27-1710-47c4-b716-d80a037cff10:
     x: 6
     height: 4
     queryString: |
-      #Vendor = corelight and @event_parsed != "false"
+      #Vendor = corelight and #event.module = ndr
       | !in(field=Vendor._path, values=[corelight_audit_log,corelight_metrics_bro,corelight_metrics_cpu,corelight_metrics_disk,corelight_metrics_docker,
           corelight_metrics_iface,corelight_metrics_memory,corelight_metrics_s,corelight_metrics_smartpcap,
           corelight_metrics_suricata,corelight_metrics_system,corelight_metrics_utilizationcorelight_metrics_zeek_doctor,
           corelight_overall_capture_losscorelight_pipeline_test,corelight_service_status])
-      | in(field="Vendor._system_name", values=[?system_name])
+      | in(field=observer.hostname, values=[?system_name])
       | top(Vendor._path,limit=10)
     end: now
     start: 1d
     width: 6
     y: 1
     interactions:
-    - name: Details of All Corelight Data for This Unique Entity
-      titleTemplate: Details of Log type {{ fields.Vendor._path }}
+    - name: Details of all corelight data for this unique entity
+      titleTemplate: Details of log type {{ fields.Vendor._path }}
       queryString: |
-        #Vendor = corelight and @event_parsed != "false"
-        | in(field="Vendor._system_name", values=[?system_name])
+        #Vendor = corelight and #event.module = ndr
+        | in(field=observer.hostname, values=[?system_name])
         | Vendor._path = ?sourcetype
       useWidgetTimeWindow: true
-      repoOrViewName: search-all
       arguments:
         sourcetype: '["{{ fields.Vendor._path }}"]'
         system_name: '["{{ parameters.system_name }}"]'
@@ -131,7 +130,7 @@ widgets:
       categoryPadding: 0.05
       inputDataFormat: ''
     visualization: bar-chart
-    title: All Corelight Data for This Unique Entity (Only Time Range filter applies
+    title: All corelight data for this unique entity (Only time range filter applies
       to this graph)
     isLive: false
     type: query
@@ -141,12 +140,12 @@ widgets:
     height: 1
     text: ''
     width: 12
-    title: Log Hunting
+    title: Log hunting
     type: note
-$schema: https://schemas.humio.com/dashboard/v0.17.0
+$schema: https://schemas.humio.com/dashboard/v0.20.0
 parameters:
   additional_filter:
-    label: Additional Filter
+    label: Additional filter
     order: 4
     type: text
     defaultValue: '*'
@@ -158,10 +157,10 @@ parameters:
     defaultValue: '*'
     width: 1
   sourcetype:
-    label: Source Type
+    label: Source type
     query: |-
-      #Vendor = corelight and @event_parsed != "false"
-      | in(field="Vendor._system_name", values=[?system_name])
+      #Vendor = corelight and #event.module = ndr
+      | in(field=observer.hostname, values=[?system_name])
       | !in(field=Vendor._path, values=[corelight_audit_log,
                                           corelight_metrics_bro,
                                           corelight_metrics_cpu,
@@ -187,14 +186,14 @@ parameters:
     order: 2
     valueField: Vendor._path
   system_name:
-    label: Corelight Sensor
+    label: Corelight sensor
     query: |
-      #Vendor = corelight and @event_parsed!="false"
-      | groupBy([Vendor._system_name], function=[])
+      #Vendor = corelight and #event.module = ndr
+      | groupBy([observer.hostname], function=[])
     timeInterval: 24h
     useDashboardTimeIfSet: true
     type: query
     defaultValue: '*'
     width: 1
     order: 1
-    valueField: Vendor._system_name
+    valueField: observer.hostname
